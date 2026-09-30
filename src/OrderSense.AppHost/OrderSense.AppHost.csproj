@@ -1,0 +1,17 @@
+<Project Sdk="Aspire.AppHost.Sdk/13.5.4">
+
+  <ItemGroup>
+    <ProjectReference Include="..\OrderSense.Api\OrderSense.Api.csproj" />
+    <ProjectReference Include="..\OrderSense.PredictionService\OrderSense.PredictionService.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AspireUseCliBundle>true</AspireUseCliBundle>
+    <UserSecretsId>3227f561-4d54-4d8f-a4b5-656b97d62c29</UserSecretsId>
+  </PropertyGroup>
+
+</Project>
