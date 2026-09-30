@@ -1,0 +1,17 @@
+name: Telegram Notification 
+
+on:                     
+  push:
+    branches: [ "main", "staging", "dev" ]  
+  pull_request:
+    branches: [ "main", "staging", "dev" ]
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Github Telegram Notifier
+        uses: EverythingSuckz/github-telegram-notify@v1.1.2
+        with:
+          bot_token: ${{ secrets.BOT_TOKEN }}
+          chat_id: ${{ secrets.CHAT_ID }}
