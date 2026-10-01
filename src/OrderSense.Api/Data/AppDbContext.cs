@@ -21,6 +21,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<BatchJob> BatchJobs => Set<BatchJob>();
     public DbSet<BatchResult> BatchResults => Set<BatchResult>();
     public DbSet<DeviceToken> DeviceTokens => Set<DeviceToken>();
+    public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
@@ -67,6 +68,12 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
         });
 
         builder.Entity<DeviceToken>(e =>
+        {
+            e.HasOne<AppUser>().WithMany().HasForeignKey(t => t.UserId);
+            e.Property(t => t.CreatedAt).HasDefaultValueSql("now()");
+        });
+
+        builder.Entity<RefreshToken>(e =>
         {
             e.HasOne<AppUser>().WithMany().HasForeignKey(t => t.UserId);
             e.Property(t => t.CreatedAt).HasDefaultValueSql("now()");
