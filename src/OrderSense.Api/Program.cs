@@ -1,6 +1,12 @@
+using Microsoft.EntityFrameworkCore;
+using OrderSense.Api.Data;
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
+
+builder.AddNpgsqlDbContext<AppDbContext>("ordersense",
+    configureDbContextOptions: options => options.UseSnakeCaseNamingConvention());
 
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
