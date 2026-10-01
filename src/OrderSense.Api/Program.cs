@@ -55,6 +55,9 @@ builder.Services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationSc
         };
     });
 
+builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddScoped<TokenService>();
+
 builder.Services.AddAuthorization();
 
 builder.Services.AddProblemDetails();
