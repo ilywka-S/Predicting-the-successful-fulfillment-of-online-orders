@@ -17,6 +17,12 @@ public static class MauiProgram
                 fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
             });
 
+			builder.Services.AddTransient<OrderSense.Maui.ViewModels.MainViewModel>();
+			builder.Services.AddTransient<OrderSense.Maui.ViewModels.DetailsViewModel>();
+
+			builder.Services.AddTransient<OrderSense.Maui.Views.MainPage>();
+			builder.Services.AddTransient<OrderSense.Maui.Views.DetailsPage>();
+
 
         return builder.Build();
     }

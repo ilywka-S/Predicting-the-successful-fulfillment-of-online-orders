@@ -3,12 +3,16 @@
     x:Class="OrderSense.Maui.AppShell"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:local="clr-namespace:OrderSense.Maui"
-    Title="OrderSense.Maui">
+    xmlns:views="clr-namespace:OrderSense.Maui.Views"
+    FlyoutBehavior="{OnIdiom Phone=Disabled, Default=Flyout}">
 
-    <ShellContent
-        Title="Home"
-        ContentTemplate="{DataTemplate local:MainPage}"
-        Route="MainPage" />
+    <TabBar>
+        <Tab Title="Головна" Icon="dotnet_bot.png">
+            <ShellContent Route="MainPage" ContentTemplate="{DataTemplate views:MainPage}" />
+        </Tab>
+        <Tab Title="Профіль" Icon="dotnet_bot.png">
+            <ShellContent Route="ProfilePage" ContentTemplate="{DataTemplate views:MainPage}" />
+        </Tab>
+    </TabBar>
 
 </Shell>
