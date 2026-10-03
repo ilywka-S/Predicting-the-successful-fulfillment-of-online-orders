@@ -25,7 +25,7 @@ var geolocation = ReadCsv<GeolocationRow>("olist_geolocation_dataset.csv");
 Console.WriteLine($"orders: {orders.Count}, items: {items.Count}, products: {products.Count}, " +
     $"sellers: {sellers.Count}, customers: {customers.Count}, payments: {payments.Count}, geo: {geolocation.Count}");
 
-// Усереднюємо координати по кожному zip-префіксу
+//середнє по координатинатах по кожному zip-префіксу
 var zipToCoords = geolocation
     .GroupBy(g => g.ZipCodePrefix)
     .ToDictionary(
@@ -34,12 +34,12 @@ var zipToCoords = geolocation
 
 Console.WriteLine($"Унікальних zip-префіксів: {zipToCoords.Count}");
 
-// Швидкий пошук за ключем
+//пошук за ключем
 var productsById = products.ToDictionary(p => p.ProductId);
 var sellersById = sellers.ToDictionary(s => s.SellerId);
 var customersById = customers.ToDictionary(c => c.CustomerId);
 
-// Групування: кілька рядків на одне замовлення
+//кілька рядків на одне замовлення
 var itemsByOrder = items.ToLookup(i => i.OrderId);
 var paymentsByOrder = payments.ToLookup(p => p.OrderId);
 
@@ -62,61 +62,81 @@ double HaversineKm(double lat1, double lng1, double lat2, double lng2)
 OrderCard? BuildCard(OrderRow order)
 {
     var orderItems = itemsByOrder[order.OrderId].ToList();
-    if (orderItems.Count == 0) return null; // замовлення без позицій — пропускаємо
+    if (orderItems.Count == 0) return null; //замовлення без позицій пропускаємо
 
     var card = new OrderCard { OrderId = order.OrderId };
 
-    // --- товари ---
+    //товари
     card.ItemsCount = orderItems.Count;
     card.TotalPrice = orderItems.Sum(i => i.Price);
     card.TotalFreight = orderItems.Sum(i => i.FreightValue);
-    card.FreightShare = card.TotalPrice > 0
-        ? (double)(card.TotalFreight / card.TotalPrice)
+
+    var totalPriceAndFreight = card.TotalPrice + card.TotalFreight;
+    card.FreightShare = totalPriceAndFreight > 0
+        ? (double)(card.TotalFreight / totalPriceAndFreight)
         : 0;
 
     card.SellersCount = orderItems.Select(i => i.SellerId).Distinct().Count();
 
-    // головний продавець = найбільша сума по товарах
+    //головний продавець = найбільша сума по товарах
     var mainSellerId = orderItems
         .GroupBy(i => i.SellerId)
         .OrderByDescending(g => g.Sum(i => i.Price))
         .First().Key;
     if (sellersById.TryGetValue(mainSellerId, out var mainSeller))
+    { 
         card.SellerState = mainSeller.SellerState;
+    }
 
-    // головна категорія = товар з найбільшою ціною
+    //головна категорія - товар з найбільшою ціною
     var mainItem = orderItems.OrderByDescending(i => i.Price).First();
     if (productsById.TryGetValue(mainItem.ProductId, out var mainProduct))
+    {
         card.MainCategory = mainProduct.ProductCategoryName;
+    }
 
-    // вага/об'єм — сума по всіх товарах, де відомі габарити
-    float? totalWeight = 0;
-    float? totalVolume = 0;
+    // вага/об'єм — сума по товарах, де відомі габарити; якщо невідомо у всіх — null, не 0
+    float totalWeight = 0;
+    float totalVolume = 0;
+    bool anyWeight = false;
+    bool anyVolume = false;
     foreach (var item in orderItems)
     {
-        if (!productsById.TryGetValue(item.ProductId, out var p)) continue;
-        if (p.ProductWeightG.HasValue) totalWeight += p.ProductWeightG.Value;
+        if (!productsById.TryGetValue(item.ProductId, out var p)) 
+        {
+            continue;
+        }
+        if (p.ProductWeightG.HasValue) 
+        { 
+            totalWeight += p.ProductWeightG.Value; 
+            anyWeight = true; 
+        }
         if (p.ProductLengthCm.HasValue && p.ProductHeightCm.HasValue && p.ProductWidthCm.HasValue)
+        {
             totalVolume += p.ProductLengthCm.Value * p.ProductHeightCm.Value * p.ProductWidthCm.Value;
+            anyVolume = true;
+        }
     }
-    card.TotalWeightG = totalWeight;
-    card.TotalVolumeCm3 = totalVolume;
+    card.TotalWeightG = anyWeight ? totalWeight : null;
+    card.TotalVolumeCm3 = anyVolume ? totalVolume : null;
 
-        // --- оплати ---
+    //оплати
     var orderPayments = paymentsByOrder[order.OrderId].ToList();
     card.PaymentsCount = orderPayments.Count;
     if (orderPayments.Count > 0)
     {
         var mainPayment = orderPayments.OrderByDescending(p => p.PaymentValue).First();
         card.MainPaymentType = mainPayment.PaymentType;
-        card.PaymentInstallments = orderPayments.Sum(p => p.PaymentInstallments);
+        card.PaymentInstallments = mainPayment.PaymentInstallments; // кількість платежів основної оплати, не сума по всіх
     }
 
-    // --- клієнт ---
+    //клієнт
     if (customersById.TryGetValue(order.CustomerId, out var customer))
+    {
         card.CustomerState = customer.CustomerState;
+    }
 
-    // --- дати ---
+    //дати
     if (order.OrderPurchaseTimestamp.HasValue)
     {
         card.PurchaseDayOfWeek = (int)order.OrderPurchaseTimestamp.Value.DayOfWeek;
@@ -128,7 +148,7 @@ OrderCard? BuildCard(OrderRow order)
                               order.OrderPurchaseTimestamp.Value.Date).TotalDays;
     }
 
-    // --- відстань продавець → клієнт ---
+    //відстань продавець - клієнт
     if (customer != null && sellersById.TryGetValue(mainSellerId, out var sellerForDistance))
     {
         if (zipToCoords.TryGetValue(customer.CustomerZipCodePrefix, out var custCoords) &&
@@ -138,17 +158,22 @@ OrderCard? BuildCard(OrderRow order)
         }
     }
 
-    // --- мітка (розділ 4) ---
     bool isLate = order.OrderDeliveredCustomerDate.HasValue &&
                   order.OrderEstimatedDeliveryDate.HasValue &&
                   order.OrderDeliveredCustomerDate.Value.Date > order.OrderEstimatedDeliveryDate.Value.Date;
 
     if (order.OrderStatus is "canceled" or "unavailable")
+    {
         card.Label = "problem";
+    }
     else if (order.OrderStatus == "delivered" && order.OrderDeliveredCustomerDate.HasValue)
+    {
         card.Label = isLate ? "problem" : "success";
+    }
     else
+    {
         card.Label = null; // не враховуємо
+    }
 
     return card;
 }
@@ -159,7 +184,10 @@ var cards = new List<OrderCard>();
 foreach (var order in orders)
 {
     var card = BuildCard(order);
-    if (card != null) cards.Add(card);
+    if (card != null) 
+    {
+        cards.Add(card);
+    }
 }
 
 Console.WriteLine($"Побудовано карток: {cards.Count} (пропущено без позицій: {orders.Count - cards.Count})");
@@ -173,7 +201,7 @@ using (var csvWriter = new CsvWriter(writer, csvConfig))
 
 Console.WriteLine("Записано: data/processed/order_cards.csv");
 
-// --- підрахунок пропусків по кожному полю ---
+//підрахунок пропусків по кожному полю
 Console.WriteLine("\nПропуски по полях:");
 Console.WriteLine($"  MainCategory: {cards.Count(c => c.MainCategory == null)}");
 Console.WriteLine($"  TotalWeightG: {cards.Count(c => c.TotalWeightG == null)}");
