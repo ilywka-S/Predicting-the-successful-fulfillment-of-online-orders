@@ -5,33 +5,67 @@ on:
     branches: [ "main", "staging" ]
 
 jobs:
-  build-and-test:
-    name: Build & Test
-    runs-on: windows-latest
-
+  backend:
+    name: Backend & ML Tests
+    runs-on: ubuntu-latest
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
+    - uses: actions/checkout@v4
     - name: Setup .NET 10
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '10.0.x'
-
-    - name: Install MAUI Workload
-      run: dotnet workload install maui
-
-    - name: Restore dependencies
-      run: dotnet restore OrderSense.sln
-
-    - name: Build Backend & ML (Backend.slnf)
+    - name: Cache NuGet Packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget-
+    - name: Restore Backend
+      run: dotnet restore OrderSense.Backend.slnf
+    - name: Build Backend
       run: dotnet build OrderSense.Backend.slnf --no-restore
-
-    - name: Run Tests & Collect Coverage
+    - name: Run Tests
       run: dotnet test OrderSense.Backend.slnf --no-build --verbosity normal --collect:"XPlat Code Coverage"
 
-    - name: Build MAUI (Android)
-      run: dotnet build src/OrderSense.Maui/OrderSense.Maui.csproj -c Release -f net10.0-android --no-restore
+  maui-android:
+    name: MAUI Android Build
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup .NET 10
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0.x'
+    - name: Cache NuGet Packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget-
+    - name: Restore Workloads
+      run: dotnet workload restore OrderSense.sln
+    - name: Build Android
+      run: dotnet build src/OrderSense.Maui/OrderSense.Maui.csproj -c Release -f net10.0-android
 
-    - name: Build MAUI (Windows)
-      run: dotnet build src/OrderSense.Maui/OrderSense.Maui.csproj -c Release -f net10.0-windows10.0.19041.0 --no-restore
+  maui-windows:
+    name: MAUI Windows Build
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup .NET 10
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0.x'
+    - name: Cache NuGet Packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget-
+    - name: Restore Workloads
+      run: dotnet workload restore OrderSense.sln
+    - name: Build Windows
+      run: dotnet build src/OrderSense.Maui/OrderSense.Maui.csproj -c Release -f net10.0-windows10.0.19041.0
