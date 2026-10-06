@@ -2,8 +2,4 @@
 
 namespace OrderSense.Api.Dtos;
 
-public record CreateUserRequest(
-    [property: Required, EmailAddress] string Email,
-    [property: Required] string Password,
-    [property: MaxLength(100)] string? FullName,
-    [property: Required] string Role);
+public record CreateUserRequest([Required, EmailAddress] string Email, [Required] string Password, [MaxLength(100)] string? FullName, [Required] string Role);

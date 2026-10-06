@@ -2,12 +2,9 @@
 
 namespace OrderSense.Api.Dtos;
 
-public record LoginRequest(
-    [property: Required, EmailAddress] string Email,
-    [property: Required] string Password);
+public record LoginRequest([Required, EmailAddress] string Email, [Required] string Password);
 
-public record RefreshRequest(
-    [property: Required] string RefreshToken);
+public record RefreshRequest([Required] string RefreshToken);
 
 public record UserDto(Guid Id, string Email, string? Name, string Role);
 
