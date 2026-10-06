@@ -1,0 +1,37 @@
+name: CI Pipeline
+
+on:
+  pull_request:
+    branches: [ "main", "staging" ]
+
+jobs:
+  build-and-test:
+    name: Build & Test
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET 10
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0.x'
+
+    - name: Install MAUI Workload
+      run: dotnet workload install maui
+
+    - name: Restore dependencies
+      run: dotnet restore OrderSense.sln
+
+    - name: Build Backend & ML (Backend.slnf)
+      run: dotnet build OrderSense.Backend.slnf --no-restore
+
+    - name: Run Tests & Collect Coverage
+      run: dotnet test OrderSense.Backend.slnf --no-build --verbosity normal --collect:"XPlat Code Coverage"
+
+    - name: Build MAUI (Android)
+      run: dotnet build src/OrderSense.Maui/OrderSense.Maui.csproj -c Release -f net10.0-android --no-restore
+
+    - name: Build MAUI (Windows)
+      run: dotnet build src/OrderSense.Maui/OrderSense.Maui.csproj -c Release -f net10.0-windows10.0.19041.0 --no-restore

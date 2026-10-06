@@ -1,0 +1,16 @@
+# екрани та стилі
+/src/OrderSense.Maui/Views/ @lia945785
+/src/OrderSense.Maui/Controls/ @lia945785
+/src/OrderSense.Maui/Resources/Styles/ @lia945785
+
+# MAUI та ядро
+/src/OrderSense.Maui/ @ilywka-S
+/src/OrderSense.Client.Core/ @ilywka-S
+
+# бекенд і розгортання
+/src/OrderSense.Api/ @flxnsee
+/src/OrderSense.AppHost/ @flxnsee
+
+# ML та контракти
+/ml/ @Olga-Yezerska
+/src/OrderSense.Contracts/ @Olga-Yezerska
