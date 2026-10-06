@@ -1,0 +1,15 @@
+{
+  "solution": {
+    "path": "OrderSense.sln",
+    "projects": [
+      "src\\OrderSense.Api\\OrderSense.Api.csproj",
+      "src\\OrderSense.PredictionService\\OrderSense.PredictionService.csproj",
+      "src\\OrderSense.AppHost\\OrderSense.AppHost.csproj",
+      "src\\OrderSense.ServiceDefaults\\OrderSense.ServiceDefaults.csproj",
+      "src\\OrderSense.Contracts\\OrderSense.Contracts.csproj",
+      "src\\OrderSense.Client.Core\\OrderSense.Client.Core.csproj",
+      "ml\\OrderSense.ML.Training\\OrderSense.ML.Training.csproj",
+      "tests\\OrderSense.Api.Tests\\OrderSense.Api.Tests.csproj"
+    ]
+  }
+}
