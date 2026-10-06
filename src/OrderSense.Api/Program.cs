@@ -7,7 +7,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using OrderSense.Api.Auth;
 using OrderSense.Api.Data;
-using OrderSense.Api.Data.Entities;
+using OrderSense.Api.Data.Entities; // Hello Artem
 
 var isOpenApiGeneration = Assembly.GetEntryAssembly()?.GetName().Name == "GetDocument.Insider";
 
