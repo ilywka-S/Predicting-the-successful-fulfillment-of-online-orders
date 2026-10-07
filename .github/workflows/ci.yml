@@ -70,8 +70,10 @@ jobs:
       uses: actions/cache@v4
       with:
         path: |
-          ~/.dotnet
-          ~/.nuget/workloads
+          ~/.nuget/packages
+          C:\Program Files\dotnet\packs
+          C:\Program Files\dotnet\sdk-manifests
+          C:\Program Files\dotnet\library-packs
         key: ${{ runner.os }}-dotnet-workloads-${{ hashFiles('**/*.csproj') }}
         restore-keys: |
           ${{ runner.os }}-dotnet-workloads-
@@ -105,8 +107,10 @@ jobs:
       uses: actions/cache@v4
       with:
         path: |
-          ~/.dotnet
-          ~/.nuget/workloads
+          ~/.nuget/packages
+          C:\Program Files\dotnet\packs
+          C:\Program Files\dotnet\sdk-manifests
+          C:\Program Files\dotnet\library-packs
         key: ${{ runner.os }}-dotnet-workloads-${{ hashFiles('**/*.csproj') }}
         restore-keys: |
           ${{ runner.os }}-dotnet-workloads-
