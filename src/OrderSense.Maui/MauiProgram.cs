@@ -1,4 +1,6 @@
-﻿using CommunityToolkit.Maui;
+﻿using Microsoft.Extensions.DependencyInjection;
+using CommunityToolkit.Maui;
+using OrderSense.Client.Core;
 
 namespace OrderSense.Maui;
 
@@ -23,7 +25,14 @@ public static class MauiProgram
 			builder.Services.AddTransient<OrderSense.Maui.Views.MainPage>();
 			builder.Services.AddTransient<OrderSense.Maui.Views.DetailsPage>();
 
-
+            builder.Services.AddHttpClient<OrderClient>(client =>
+            {
+                var baseUrl = DeviceInfo.Platform == DevicePlatform.Android 
+                    ? "http://10.0.2.2:5266" 
+                    : "http://localhost:5266";
+                    
+                client.BaseAddress = new Uri(baseUrl);
+            });
         return builder.Build();
     }
 }

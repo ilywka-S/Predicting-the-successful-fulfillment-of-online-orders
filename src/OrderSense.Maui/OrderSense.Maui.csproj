@@ -68,9 +68,14 @@
 	<ItemGroup>
 		<PackageReference Include="CommunityToolkit.Maui" Version="15.0.1" />
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+		<PackageReference Include="Microsoft.Extensions.Http" Version="10.0.12" />
 		<PackageReference Include="Microsoft.Maui.Controls" Version="10.0.90" />
 <PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="10.0.90" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\OrderSense.Client.Core\OrderSense.Client.Core.csproj" />
 	</ItemGroup>
 
 </Project>
