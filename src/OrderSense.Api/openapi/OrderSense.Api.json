@@ -532,7 +532,7 @@
       "OrderListItemDto": {
         "required": [
           "id",
-          "purchaseAt",
+          "purchasedAt",
           "status",
           "customerState",
           "itemsCount",
@@ -545,7 +545,7 @@
           "id": {
             "type": "string"
           },
-          "purchaseAt": {
+          "purchasedAt": {
             "type": "string",
             "format": "date-time"
           },

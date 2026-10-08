@@ -6,7 +6,7 @@ public record PagedResponse<T>(IReadOnlyList<T> Items, int Page, int PageSize, i
 
 public record OrderListItemDto(
     string Id,
-    DateTime PurchaseAt,
+    DateTime PurchasedAt,
     string Status,
     string CustomerState,
     int ItemsCount,
