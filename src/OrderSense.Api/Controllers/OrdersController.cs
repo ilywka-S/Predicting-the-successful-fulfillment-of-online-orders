@@ -12,7 +12,7 @@ namespace OrderSense.Api.Controllers;
 [Authorize]
 public class OrdersController(AppDbContext db) : ControllerBase
 {
-    [HttpGet]
+    [HttpGet(Name = "GetOrders")]
     [ProducesResponseType<PagedResponse<OrderListItemDto>>(StatusCodes.Status200OK)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
     public async Task<PagedResponse<OrderListItemDto>> GetAll([FromQuery] OrderQuery query, CancellationToken ct)
@@ -77,7 +77,7 @@ public class OrdersController(AppDbContext db) : ControllerBase
         return new PagedResponse<OrderListItemDto>(items, query.Page, query.PageSize, total);
     }
     
-    [HttpGet("{id}")]
+    [HttpGet("{id}", Name = "GetOrder")]
     [ProducesResponseType<OrderDetailsDto>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<OrderDetailsDto>> GetById(string id, CancellationToken ct)
