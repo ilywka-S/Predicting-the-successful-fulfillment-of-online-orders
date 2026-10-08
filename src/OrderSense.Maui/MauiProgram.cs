@@ -1,5 +1,8 @@
 ﻿using CommunityToolkit.Maui;
-
+using OrderSense.Client.Core.Auth;
+using Microsoft.Extensions.DependencyInjection;
+using OrderSense.Maui.Services;
+using OrderSense.Client.Core;
 namespace OrderSense.Maui;
 
 public static class MauiProgram
@@ -22,6 +25,17 @@ public static class MauiProgram
 
 			builder.Services.AddTransient<OrderSense.Maui.Views.MainPage>();
 			builder.Services.AddTransient<OrderSense.Maui.Views.DetailsPage>();
+
+            builder.Services.AddSingleton<ITokenStorage, SecureTokenStorage>();
+
+            builder.Services.AddTransient<JwtAuthHandler>();
+
+            builder.Services.AddHttpClient<OrderClient>(client =>
+            {
+                var baseAddress = DeviceInfo.Platform == DevicePlatform.Android ? "http://10.0.2.2:5000" : "http://localhost:5000";
+                client.BaseAddress = new Uri(baseAddress);
+            })
+            .AddHttpMessageHandler<JwtAuthHandler>();
 
 
         return builder.Build();
