@@ -76,4 +76,58 @@ public class OrdersController(AppDbContext db) : ControllerBase
 
         return new PagedResponse<OrderListItemDto>(items, query.Page, query.PageSize, total);
     }
+    
+    [HttpGet("{id}")]
+    [ProducesResponseType<OrderDetailsDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<OrderDetailsDto>> GetById(string id, CancellationToken ct)
+    {
+        var order = await db.Orders
+            .AsNoTracking()
+            .AsSingleQuery()
+            .Where(o => o.Id == id)
+            .Select(o => new
+            {
+                o.Id,
+                o.Status,
+                o.PurchasedAt,
+                o.ApprovedAt,
+                o.EstimatedDeliveryAt,
+                o.DeliveredCustomerAt,
+                Customer = new CustomerDto(o.Customer.City, o.Customer.State),
+                Items = o.Items
+                    .OrderBy(i => i.ItemNo)
+                    .Select(i => new OrderItemDto(i.ItemNo, i.ProductId, i.Product.CategoryEn ?? i.Product.Category, i.SellerId, i.Seller.State, i.Price, i.FreightValue, i.Product.WeightG))
+                    .ToList(),
+                Payments = o.Payments
+                    .OrderBy(p => p.Sequential)
+                    .Select(p => new PaymentDto(p.Type, p.Installments, p.Value))
+                    .ToList(),
+                Prediction = o.Predictions
+                    .OrderByDescending(p => p.CreatedAt)
+                    .Select(p => new { p.Probability, p.RiskLevel, p.ModelVersion.Version, p.CreatedAt, p.Factors })
+                    .FirstOrDefault(),
+            })
+            .SingleOrDefaultAsync(ct);
+
+        if (order is null)
+        {
+            return Problem(statusCode: StatusCodes.Status404NotFound, title: $"Order '{id}' not found");
+        }
+
+        var prediction = order.Prediction is null
+            ? null
+            : new PredictionDto(
+                order.Prediction.Probability,
+                order.Prediction.RiskLevel,
+                order.Prediction.Version,
+                order.Prediction.CreatedAt,
+                order.Prediction.Factors
+                    .OrderByDescending(f => Math.Abs(f.Contribution))
+                    .Take(5)
+                    .Select(RiskFactorMapping.ToDto)
+                    .ToList());
+
+        return new OrderDetailsDto(order.Id, order.Status, order.PurchasedAt, order.ApprovedAt, order.EstimatedDeliveryAt, order.DeliveredCustomerAt, order.Customer, order.Items, order.Payments, prediction);
+    }
 }
