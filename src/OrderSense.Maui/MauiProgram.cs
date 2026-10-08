@@ -28,11 +28,13 @@ public static class MauiProgram
 
             builder.Services.AddSingleton<ITokenStorage, SecureTokenStorage>();
 
-            builder.Services.AddTransient<JwtAuthHandler>();
+            var baseAddress = DeviceInfo.Platform == DevicePlatform.Android ? "http://10.0.2.2:5000" : "http://localhost:5000";
+
+            builder.Services.AddTransient<JwtAuthHandler>(sp => 
+                new JwtAuthHandler(sp.GetRequiredService<ITokenStorage>(), baseAddress));
 
             builder.Services.AddHttpClient<OrderClient>(client =>
             {
-                var baseAddress = DeviceInfo.Platform == DevicePlatform.Android ? "http://10.0.2.2:5000" : "http://localhost:5000";
                 client.BaseAddress = new Uri(baseAddress);
             })
             .AddHttpMessageHandler<JwtAuthHandler>();
