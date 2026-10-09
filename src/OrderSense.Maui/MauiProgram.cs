@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using CommunityToolkit.Maui;
 using OrderSense.Client.Core;
-
 namespace OrderSense.Maui;
 
 public static class MauiProgram
@@ -40,6 +39,12 @@ public static class MauiProgram
             {
                 client.BaseAddress = new Uri(baseAddress);
             });
+
+            builder.Services.AddHttpClient<MyNamespace.IClient, MyNamespace.Client>(client =>
+            {
+                client.BaseAddress = new Uri(baseAddress);
+            })
+            .AddHttpMessageHandler<JwtAuthHandler>();
 
         return builder.Build();
     }
