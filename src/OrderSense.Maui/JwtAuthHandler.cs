@@ -50,6 +50,12 @@ public class JwtAuthHandler(ITokenStorage tokenStorage, IHttpClientFactory httpC
             if (string.IsNullOrWhiteSpace(refreshToken) || !await PerformRefreshAsync(refreshToken, cancellationToken))
             {
                 await tokenStorage.ClearAsync();
+                
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    Microsoft.Maui.Controls.Shell.Current.GoToAsync("//LoginPage"); 
+                });
+
                 return originalResponse;
             }
 
