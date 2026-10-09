@@ -95,6 +95,9 @@ app.MapDefaultEndpoints();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+}
+else
+{
     app.UseHttpsRedirection();
 }
 
