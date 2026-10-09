@@ -3,9 +3,9 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using OrderSense.Client.Core;
 
-namespace OrderSense.Maui;
+namespace OrderSense.Client.Core;
 
-public class JwtAuthHandler(ITokenStorage tokenStorage, IHttpClientFactory httpClientFactory) : DelegatingHandler
+public class JwtAuthHandler(ITokenStorage tokenStorage, IHttpClientFactory httpClientFactory, IAuthNavigation authNavigation) : DelegatingHandler
 {
     private readonly SemaphoreSlim _semaphore = new(1, 1);
 
@@ -50,12 +50,7 @@ public class JwtAuthHandler(ITokenStorage tokenStorage, IHttpClientFactory httpC
             if (string.IsNullOrWhiteSpace(refreshToken) || !await PerformRefreshAsync(refreshToken, cancellationToken))
             {
                 await tokenStorage.ClearAsync();
-                
-                MainThread.BeginInvokeOnMainThread(() =>
-                {
-                    Microsoft.Maui.Controls.Shell.Current.GoToAsync("//LoginPage"); 
-                });
-
+                authNavigation.NavigateToLogin(); 
                 return originalResponse;
             }
 
@@ -102,5 +97,3 @@ public class JwtAuthHandler(ITokenStorage tokenStorage, IHttpClientFactory httpC
         return clone;
     }
 }
-
-public record AuthResponse(string AccessToken, string RefreshToken);

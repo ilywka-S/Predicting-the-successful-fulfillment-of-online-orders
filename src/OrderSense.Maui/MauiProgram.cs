@@ -27,6 +27,8 @@ public static class MauiProgram
             builder.Services.AddTransient<JwtAuthHandler>();
             builder.Services.AddSingleton<ITokenStorage, SecureTokenStorage>();
 
+            builder.Services.AddSingleton<IAuthNavigation, MauiAuthNavigation>();
+
             string baseAddress = "https://ordersense-api.onrender.com"; 
 
             #if DEBUG
