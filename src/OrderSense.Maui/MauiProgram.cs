@@ -28,19 +28,19 @@ public static class MauiProgram
             builder.Services.AddTransient<JwtAuthHandler>();
             builder.Services.AddSingleton<ITokenStorage, SecureTokenStorage>();
 
+            string baseAddress = "https://ordersense-api.onrender.com"; 
+
+            #if DEBUG
+                baseAddress = DeviceInfo.Platform == DevicePlatform.Android 
+                    ? "https://10.0.2.2:7250" 
+                    : "https://localhost:7250";
+            #endif
+
             builder.Services.AddHttpClient("AuthClient", client => 
             {
-                client.BaseAddress = new Uri("https://localhost:7250"); 
+                client.BaseAddress = new Uri(baseAddress);
             });
 
-            builder.Services.AddHttpClient<OrderClient>(client =>
-            {
-                var baseUrl = DeviceInfo.Platform == DevicePlatform.Android 
-                    ? "http://10.0.2.2:5266" 
-                    : "http://localhost:5266";
-                    
-                client.BaseAddress = new Uri(baseUrl);
-            });
         return builder.Build();
     }
 }
