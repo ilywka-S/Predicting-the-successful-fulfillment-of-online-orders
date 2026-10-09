@@ -341,3 +341,18 @@ var modelDir = $"../../ml/models/{modelVersion}";
 Directory.CreateDirectory(modelDir);
 mlContext.Model.Save(model, trainData.Schema, $"{modelDir}/model.zip");
 Console.WriteLine($"Модель збережено: ml/models/{modelVersion}/model.zip");
+
+//базова модель: однакова ймовірність для всіх (частота проблем у train)
+var baseRate = (float)trainRows.Count(r => r.IsProblem) / trainRows.Count;
+var baselineData = mlContext.Data.LoadFromEnumerable(
+    testRows.Select(r => new BaselinePrediction
+    {
+        IsProblem = r.IsProblem,
+        Score = baseRate,
+        Probability = baseRate,
+        PredictedLabel = false
+    }));
+var baseMetrics = mlContext.BinaryClassification.Evaluate(baselineData, labelColumnName: "IsProblem");
+
+Console.WriteLine($"\nБазова модель: ROC-AUC {baseMetrics.AreaUnderRocCurve:F4}, PR-AUC {baseMetrics.AreaUnderPrecisionRecallCurve:F4}");
+Console.WriteLine($"Модель v1:     ROC-AUC {metrics.AreaUnderRocCurve:F4}, PR-AUC {metrics.AreaUnderPrecisionRecallCurve:F4}");
