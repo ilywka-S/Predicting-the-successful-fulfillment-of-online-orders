@@ -54,7 +54,6 @@ jobs:
     - uses: actions/checkout@v4
     
     - name: Setup .NET 10
-      id: setup-dotnet
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '10.0.x'
@@ -67,22 +66,14 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-nuget-
           
-    - name: Cache .NET Workloads
-      uses: actions/cache@v4
-      with:
-        path: |
-          C:\Program Files\dotnet\packs
-          C:\Program Files\dotnet\sdk-manifests
-          C:\Program Files\dotnet\library-packs
-          C:\Program Files\dotnet\metadata
-          C:\Program Files\dotnet\template-packs
-        key: ${{ runner.os }}-dotnet-workloads-${{ steps.setup-dotnet.outputs.dotnet-version }}
-          
-    - name: Restore Workloads
-      run: dotnet workload restore OrderSense.sln
+    - name: Install .NET MAUI Workload Android
+      run: dotnet workload install maui-android
+      
+    - name: Restore MAUI Android
+      run: dotnet restore src/OrderSense.Maui/OrderSense.Maui.csproj
       
     - name: Build Android
-      run: dotnet build src/OrderSense.Maui/OrderSense.Maui.csproj -c Release -f net10.0-android
+      run: dotnet build src/OrderSense.Maui/OrderSense.Maui.csproj -c Release -f net10.0-android --no-restore
 
   maui-windows:
     name: MAUI Windows Build
@@ -91,7 +82,6 @@ jobs:
     - uses: actions/checkout@v4
     
     - name: Setup .NET 10
-      id: setup-dotnet
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '10.0.x'
@@ -104,19 +94,11 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-nuget-
           
-    - name: Cache .NET Workloads
-      uses: actions/cache@v4
-      with:
-        path: |
-          C:\Program Files\dotnet\packs
-          C:\Program Files\dotnet\sdk-manifests
-          C:\Program Files\dotnet\library-packs
-          C:\Program Files\dotnet\metadata
-          C:\Program Files\dotnet\template-packs
-        key: ${{ runner.os }}-dotnet-workloads-${{ steps.setup-dotnet.outputs.dotnet-version }}
-          
-    - name: Restore Workloads
-      run: dotnet workload restore OrderSense.sln
+    - name: Install .NET MAUI Workload Windows
+      run: dotnet workload install maui-windows
+      
+    - name: Restore MAUI Windows
+      run: dotnet restore src/OrderSense.Maui/OrderSense.Maui.csproj
       
     - name: Build Windows
-      run: dotnet build src/OrderSense.Maui/OrderSense.Maui.csproj -c Release -f net10.0-windows10.0.19041.0
+      run: dotnet build src/OrderSense.Maui/OrderSense.Maui.csproj -c Release -f net10.0-windows10.0.19041.0 --no-restore
