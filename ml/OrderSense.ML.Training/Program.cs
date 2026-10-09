@@ -2,6 +2,7 @@
 using CsvHelper.Configuration;
 using System.Globalization;
 using OrderSense.ML.Training;
+using OrderSense.Contracts;
 
 var csvConfig = new CsvConfiguration(CultureInfo.InvariantCulture);
 
@@ -57,6 +58,19 @@ double HaversineKm(double lat1, double lng1, double lat2, double lng2)
 
     double c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
     return earthRadiusKm * c;
+}
+
+string? GetLabel(OrderRow order)
+{
+    if (order.OrderStatus is "canceled" or "unavailable") return "problem";
+    if (order.OrderStatus == "delivered"
+        && order.OrderDeliveredCustomerDate.HasValue
+        && order.OrderEstimatedDeliveryDate.HasValue)
+    {
+        var late = order.OrderDeliveredCustomerDate.Value.Date > order.OrderEstimatedDeliveryDate.Value.Date;
+        return late ? "problem" : "success";
+    }
+    return null; // не враховуємо
 }
 
 OrderCard? BuildCard(OrderRow order)
@@ -158,24 +172,52 @@ OrderCard? BuildCard(OrderRow order)
         }
     }
 
-    bool isLate = order.OrderDeliveredCustomerDate.HasValue &&
-                  order.OrderEstimatedDeliveryDate.HasValue &&
-                  order.OrderDeliveredCustomerDate.Value.Date > order.OrderEstimatedDeliveryDate.Value.Date;
-
-    if (order.OrderStatus is "canceled" or "unavailable")
-    {
-        card.Label = "problem";
-    }
-    else if (order.OrderStatus == "delivered" && order.OrderDeliveredCustomerDate.HasValue)
-    {
-        card.Label = isLate ? "problem" : "success";
-    }
-    else
-    {
-        card.Label = null; // не враховуємо
-    }
+    card.Label = GetLabel(order);
 
     return card;
+}
+
+TrainingRow? BuildTrainingRow(OrderRow order)
+{
+    var label = GetLabel(order);
+    if (label == null || !order.OrderPurchaseTimestamp.HasValue) return null;
+
+    var orderItems = itemsByOrder[order.OrderId].ToList();
+    if (orderItems.Count == 0) return null;
+
+    var itemInputs = orderItems.Select(i =>
+    {
+        productsById.TryGetValue(i.ProductId, out var p);
+        return new OrderItemInput((float)i.Price, (float)i.FreightValue, p?.ProductCategoryName, p?.ProductWeightG);
+    }).ToList();
+
+    var paymentInputs = paymentsByOrder[order.OrderId]
+        .Select(p => new OrderPaymentInput(p.PaymentType, p.PaymentInstallments, (float)p.PaymentValue))
+        .ToList();
+
+    customersById.TryGetValue(order.CustomerId, out var customer);
+
+    var mainSellerId = orderItems
+        .GroupBy(i => i.SellerId)
+        .OrderByDescending(g => g.Sum(i => i.Price))
+        .First().Key;
+    sellersById.TryGetValue(mainSellerId, out var seller);
+
+    (double Lat, double Lng)? customerCoords = null;
+    if (customer != null && zipToCoords.TryGetValue(customer.CustomerZipCodePrefix, out var cc))
+        customerCoords = cc;
+
+    (double Lat, double Lng)? sellerCoords = null;
+    if (seller != null && zipToCoords.TryGetValue(seller.SellerZipCodePrefix, out var sc))
+        sellerCoords = sc;
+
+    var features = OrderFeatureBuilder.Build(
+        itemInputs, paymentInputs,
+        customer?.CustomerState ?? "", seller?.SellerState ?? "",
+        customerCoords, sellerCoords,
+        order.OrderPurchaseTimestamp, order.OrderEstimatedDeliveryDate);
+
+    return TrainingRow.From(features, label == "success", order.OrderPurchaseTimestamp.Value);
 }
 
 Console.WriteLine("\nБудую картки...");
@@ -231,3 +273,16 @@ foreach (var g in byMonth)
 
     Console.WriteLine($"  {g.Key:yyyy-MM}: замовлень={g.Count()}, враховано={considered}, проблемних={pct:F1}%");
 }
+
+// --- тренувальні рядки: лише робочий період 2017-01 .. 2018-08 ---
+var periodStart = new DateTime(2017, 1, 1);
+var periodEnd = new DateTime(2018, 9, 1);
+
+var trainingRows = orders
+    .Select(BuildTrainingRow)
+    .Where(r => r != null && r.PurchasedAt >= periodStart && r.PurchasedAt < periodEnd)
+    .Select(r => r!)
+    .ToList();
+
+Console.WriteLine($"\nТренувальних рядків: {trainingRows.Count}");
+Console.WriteLine($"  успіх: {trainingRows.Count(r => r.Label)}, проблема: {trainingRows.Count(r => !r.Label)}");
