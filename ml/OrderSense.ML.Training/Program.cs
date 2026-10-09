@@ -52,9 +52,7 @@ double HaversineKm(double lat1, double lng1, double lat2, double lng2)
     double dLat = (lat2 - lat1) * Math.PI / 180.0;
     double dLng = (lng2 - lng1) * Math.PI / 180.0;
 
-    double a = Math.Sin(dLat / 2) * Math.Sin(dLat / 2) +
-               Math.Cos(lat1 * Math.PI / 180.0) * Math.Cos(lat2 * Math.PI / 180.0) *
-               Math.Sin(dLng / 2) * Math.Sin(dLng / 2);
+    double a = Math.Sin(dLat / 2) * Math.Sin(dLat / 2) + Math.Cos(lat1 * Math.PI / 180.0) * Math.Cos(lat2 * Math.PI / 180.0) * Math.Sin(dLng / 2) * Math.Sin(dLng / 2);
 
     double c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
     return earthRadiusKm * c;
@@ -63,9 +61,7 @@ double HaversineKm(double lat1, double lng1, double lat2, double lng2)
 string? GetLabel(OrderRow order)
 {
     if (order.OrderStatus is "canceled" or "unavailable") return "problem";
-    if (order.OrderStatus == "delivered"
-        && order.OrderDeliveredCustomerDate.HasValue
-        && order.OrderEstimatedDeliveryDate.HasValue)
+    if (order.OrderStatus == "delivered" && order.OrderDeliveredCustomerDate.HasValue && order.OrderEstimatedDeliveryDate.HasValue)
     {
         var late = order.OrderDeliveredCustomerDate.Value.Date > order.OrderEstimatedDeliveryDate.Value.Date;
         return late ? "problem" : "success";
@@ -76,7 +72,10 @@ string? GetLabel(OrderRow order)
 OrderCard? BuildCard(OrderRow order)
 {
     var orderItems = itemsByOrder[order.OrderId].ToList();
-    if (orderItems.Count == 0) return null; //замовлення без позицій пропускаємо
+    if (orderItems.Count == 0) 
+    {
+        return null; //замовлення без позицій пропускаємо
+    }
 
     var card = new OrderCard { OrderId = order.OrderId };
 
@@ -158,8 +157,7 @@ OrderCard? BuildCard(OrderRow order)
     }
     if (order.OrderPurchaseTimestamp.HasValue && order.OrderEstimatedDeliveryDate.HasValue)
     {
-        card.PromisedDays = (order.OrderEstimatedDeliveryDate.Value.Date -
-                              order.OrderPurchaseTimestamp.Value.Date).TotalDays;
+        card.PromisedDays = (order.OrderEstimatedDeliveryDate.Value.Date - order.OrderPurchaseTimestamp.Value.Date).TotalDays;
     }
 
     //відстань продавець - клієнт
@@ -180,10 +178,16 @@ OrderCard? BuildCard(OrderRow order)
 TrainingRow? BuildTrainingRow(OrderRow order)
 {
     var label = GetLabel(order);
-    if (label == null || !order.OrderPurchaseTimestamp.HasValue) return null;
+    if (label == null || !order.OrderPurchaseTimestamp.HasValue) 
+    {
+        return null;
+    }
 
     var orderItems = itemsByOrder[order.OrderId].ToList();
-    if (orderItems.Count == 0) return null;
+    if (orderItems.Count == 0) 
+    {
+        return null;
+    }
 
     var itemInputs = orderItems.Select(i =>
     {
@@ -205,11 +209,15 @@ TrainingRow? BuildTrainingRow(OrderRow order)
 
     (double Lat, double Lng)? customerCoords = null;
     if (customer != null && zipToCoords.TryGetValue(customer.CustomerZipCodePrefix, out var cc))
+    {
         customerCoords = cc;
+    }
 
     (double Lat, double Lng)? sellerCoords = null;
     if (seller != null && zipToCoords.TryGetValue(seller.SellerZipCodePrefix, out var sc))
+    {
         sellerCoords = sc;
+    }
 
     var features = OrderFeatureBuilder.Build(
         itemInputs, paymentInputs,
@@ -286,3 +294,11 @@ var trainingRows = orders
 
 Console.WriteLine($"\nТренувальних рядків: {trainingRows.Count}");
 Console.WriteLine($"  успіх: {trainingRows.Count(r => r.Label)}, проблема: {trainingRows.Count(r => !r.Label)}");
+
+// --- поділ за часом: останні 3 місяці — тест ---
+var testStart = new DateTime(2018, 6, 1);
+var trainRows = trainingRows.Where(r => r.PurchasedAt < testStart).ToList();
+var testRows = trainingRows.Where(r => r.PurchasedAt >= testStart).ToList();
+
+Console.WriteLine($"\nTrain: {trainRows.Count} (проблемних {100.0 * trainRows.Count(r => !r.Label) / trainRows.Count:F1}%)");
+Console.WriteLine($"Test:  {testRows.Count} (проблемних {100.0 * testRows.Count(r => !r.Label) / testRows.Count:F1}%)");
