@@ -72,6 +72,12 @@ public sealed class TrainingRow
         set;
     }  // лише для поділу за часом
 
+    public bool IsProblem 
+    { 
+        get; 
+        set; 
+    }        // true = проблема (для навчання й метрик)
+
     public static TrainingRow From(OrderFeatures f, bool isSuccess, DateTime purchasedAt) => new()
     {
         ItemsCount = f.ItemsCount,
@@ -87,6 +93,7 @@ public sealed class TrainingRow
         Installments = f.Installments,
         PurchaseDayOfWeek = f.PurchaseDayOfWeek,
         Label = isSuccess,
+        IsProblem = !isSuccess,
         PurchasedAt = purchasedAt
     };
 }

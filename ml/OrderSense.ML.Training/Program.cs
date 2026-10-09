@@ -3,6 +3,8 @@ using CsvHelper.Configuration;
 using System.Globalization;
 using OrderSense.ML.Training;
 using OrderSense.Contracts;
+using Microsoft.ML;
+using Microsoft.ML.Transforms;
 
 var csvConfig = new CsvConfiguration(CultureInfo.InvariantCulture);
 
@@ -295,10 +297,40 @@ var trainingRows = orders
 Console.WriteLine($"\nТренувальних рядків: {trainingRows.Count}");
 Console.WriteLine($"  успіх: {trainingRows.Count(r => r.Label)}, проблема: {trainingRows.Count(r => !r.Label)}");
 
-// --- поділ за часом: останні 3 місяці — тест ---
+//поділ за часом: останні 3 місяці — тест
 var testStart = new DateTime(2018, 6, 1);
 var trainRows = trainingRows.Where(r => r.PurchasedAt < testStart).ToList();
 var testRows = trainingRows.Where(r => r.PurchasedAt >= testStart).ToList();
 
 Console.WriteLine($"\nTrain: {trainRows.Count} (проблемних {100.0 * trainRows.Count(r => !r.Label) / trainRows.Count:F1}%)");
 Console.WriteLine($"Test:  {testRows.Count} (проблемних {100.0 * testRows.Count(r => !r.Label) / testRows.Count:F1}%)");
+
+//навчання FastTree
+var mlContext = new MLContext(seed: 42);
+var trainData = mlContext.Data.LoadFromEnumerable(trainRows);
+var testData = mlContext.Data.LoadFromEnumerable(testRows);
+
+var numericCols = new[] { "ItemsCount", "TotalPrice", "FreightShare", "TotalWeightG", "PromisedDays", "DistanceKm", "Installments", "PurchaseDayOfWeek" };
+
+var pipeline = mlContext.Transforms
+    .ReplaceMissingValues(numericCols.Select(c => new InputOutputColumnPair(c)).ToArray(), MissingValueReplacingEstimator.ReplacementMode.Mean)
+    .Append(mlContext.Transforms.Categorical.OneHotEncoding(new[]
+    {
+        new InputOutputColumnPair("CustomerStateEnc", "CustomerState"),
+        new InputOutputColumnPair("SellerStateEnc", "SellerState"),
+        new InputOutputColumnPair("MainCategoryEnc", "MainCategory"),
+        new InputOutputColumnPair("PaymentTypeEnc", "PaymentType"),
+    }))
+    .Append(mlContext.Transforms.Concatenate("Features", numericCols.Concat(new[] { "CustomerStateEnc", "SellerStateEnc", "MainCategoryEnc", "PaymentTypeEnc" }).ToArray()))
+    .Append(mlContext.BinaryClassification.Trainers.FastTree(labelColumnName: "IsProblem", featureColumnName: "Features"));
+
+Console.WriteLine("\nНавчаю модель...");
+var model = pipeline.Fit(trainData);
+
+var predictions = model.Transform(testData);
+var metrics = mlContext.BinaryClassification.Evaluate(predictions, labelColumnName: "IsProblem");
+
+Console.WriteLine($"ROC-AUC: {metrics.AreaUnderRocCurve:F4}");
+Console.WriteLine($"PR-AUC (клас «проблема»): {metrics.AreaUnderPrecisionRecallCurve:F4}");
+Console.WriteLine($"F1 (поріг 0.5): {metrics.F1Score:F4}");
+Console.WriteLine(metrics.ConfusionMatrix.GetFormattedConfusionTable());
