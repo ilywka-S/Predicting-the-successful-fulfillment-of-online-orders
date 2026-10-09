@@ -1,0 +1,23 @@
+using OrderSense.Client.Core;
+
+namespace OrderSense.Maui;
+
+public class SecureTokenStorage : ITokenStorage
+{
+    public Task<string?> GetAccessTokenAsync() => SecureStorage.Default.GetAsync("access_token");
+    
+    public Task<string?> GetRefreshTokenAsync() => SecureStorage.Default.GetAsync("refresh_token");
+
+    public async Task SaveTokensAsync(string accessToken, string refreshToken)
+    {
+        await SecureStorage.Default.SetAsync("access_token", accessToken);
+        await SecureStorage.Default.SetAsync("refresh_token", refreshToken);
+    }
+
+    public Task ClearAsync()
+    {
+        SecureStorage.Default.Remove("access_token");
+        SecureStorage.Default.Remove("refresh_token");
+        return Task.CompletedTask;
+    }
+}

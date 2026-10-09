@@ -1,0 +1,26 @@
+{
+  "runtime": "Net100",
+  "documentGenerator": {
+    "fromDocument": {
+      "url": "https://localhost:7250/openapi/v1.json",
+      "output": "openapi/OrderSense.Api.json"
+    }
+  },
+  "codeGenerators": {
+    "openApiToCSharpClient": {
+      "generateClientClasses": true,
+      "generateClientInterfaces": true,
+      "injectHttpClient": true,
+      "disposeHttpClient": true,
+      "exceptionClass": "ApiException",
+      "generateResponseClasses": true,
+      "responseClass": "SwaggerResponse",
+      "jsonLibrary": "SystemTextJson",
+      "arrayType": "System.Collections.Generic.ICollection",
+      "dictionaryType": "System.Collections.Generic.IDictionary",
+      "datetimeType": "System.DateTimeOffset",
+      "generateDtoTypes": true,
+      "output": "Generated/ApiClient.g.cs"
+    }
+  }
+}

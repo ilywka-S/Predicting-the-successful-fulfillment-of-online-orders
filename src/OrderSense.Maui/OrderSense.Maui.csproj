@@ -72,6 +72,10 @@
 		<PackageReference Include="Microsoft.Maui.Controls" Version="10.0.90" />
 <PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="10.0.90" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
+		<PackageReference Include="NSwag.MSBuild" Version="14.7.1">
+		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		  <PrivateAssets>all</PrivateAssets>
+		</PackageReference>
 	</ItemGroup>
 
 	<ItemGroup>
