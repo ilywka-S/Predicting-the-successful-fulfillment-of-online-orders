@@ -334,3 +334,10 @@ Console.WriteLine($"ROC-AUC: {metrics.AreaUnderRocCurve:F4}");
 Console.WriteLine($"PR-AUC (клас «проблема»): {metrics.AreaUnderPrecisionRecallCurve:F4}");
 Console.WriteLine($"F1 (поріг 0.5): {metrics.F1Score:F4}");
 Console.WriteLine(metrics.ConfusionMatrix.GetFormattedConfusionTable());
+
+//збереження моделі
+const string modelVersion = "v1";
+var modelDir = $"../../ml/models/{modelVersion}";
+Directory.CreateDirectory(modelDir);
+mlContext.Model.Save(model, trainData.Schema, $"{modelDir}/model.zip");
+Console.WriteLine($"Модель збережено: ml/models/{modelVersion}/model.zip");
