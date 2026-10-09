@@ -25,6 +25,14 @@ public static class MauiProgram
 			builder.Services.AddTransient<OrderSense.Maui.Views.MainPage>();
 			builder.Services.AddTransient<OrderSense.Maui.Views.DetailsPage>();
 
+            builder.Services.AddTransient<JwtAuthHandler>();
+            builder.Services.AddSingleton<ITokenStorage, SecureTokenStorage>();
+
+            builder.Services.AddHttpClient("AuthClient", client => 
+            {
+                client.BaseAddress = new Uri("https://localhost:7250"); 
+            });
+
             builder.Services.AddHttpClient<OrderClient>(client =>
             {
                 var baseUrl = DeviceInfo.Platform == DevicePlatform.Android 
