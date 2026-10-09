@@ -2,6 +2,9 @@
 using CsvHelper.Configuration;
 using System.Globalization;
 using OrderSense.ML.Training;
+using OrderSense.Contracts;
+using Microsoft.ML;
+using Microsoft.ML.Transforms;
 
 var csvConfig = new CsvConfiguration(CultureInfo.InvariantCulture);
 
@@ -51,18 +54,30 @@ double HaversineKm(double lat1, double lng1, double lat2, double lng2)
     double dLat = (lat2 - lat1) * Math.PI / 180.0;
     double dLng = (lng2 - lng1) * Math.PI / 180.0;
 
-    double a = Math.Sin(dLat / 2) * Math.Sin(dLat / 2) +
-               Math.Cos(lat1 * Math.PI / 180.0) * Math.Cos(lat2 * Math.PI / 180.0) *
-               Math.Sin(dLng / 2) * Math.Sin(dLng / 2);
+    double a = Math.Sin(dLat / 2) * Math.Sin(dLat / 2) + Math.Cos(lat1 * Math.PI / 180.0) * Math.Cos(lat2 * Math.PI / 180.0) * Math.Sin(dLng / 2) * Math.Sin(dLng / 2);
 
     double c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
     return earthRadiusKm * c;
 }
 
+string? GetLabel(OrderRow order)
+{
+    if (order.OrderStatus is "canceled" or "unavailable") return "problem";
+    if (order.OrderStatus == "delivered" && order.OrderDeliveredCustomerDate.HasValue && order.OrderEstimatedDeliveryDate.HasValue)
+    {
+        var late = order.OrderDeliveredCustomerDate.Value.Date > order.OrderEstimatedDeliveryDate.Value.Date;
+        return late ? "problem" : "success";
+    }
+    return null; // не враховуємо
+}
+
 OrderCard? BuildCard(OrderRow order)
 {
     var orderItems = itemsByOrder[order.OrderId].ToList();
-    if (orderItems.Count == 0) return null; //замовлення без позицій пропускаємо
+    if (orderItems.Count == 0) 
+    {
+        return null; //замовлення без позицій пропускаємо
+    }
 
     var card = new OrderCard { OrderId = order.OrderId };
 
@@ -144,8 +159,7 @@ OrderCard? BuildCard(OrderRow order)
     }
     if (order.OrderPurchaseTimestamp.HasValue && order.OrderEstimatedDeliveryDate.HasValue)
     {
-        card.PromisedDays = (order.OrderEstimatedDeliveryDate.Value.Date -
-                              order.OrderPurchaseTimestamp.Value.Date).TotalDays;
+        card.PromisedDays = (order.OrderEstimatedDeliveryDate.Value.Date - order.OrderPurchaseTimestamp.Value.Date).TotalDays;
     }
 
     //відстань продавець - клієнт
@@ -158,24 +172,62 @@ OrderCard? BuildCard(OrderRow order)
         }
     }
 
-    bool isLate = order.OrderDeliveredCustomerDate.HasValue &&
-                  order.OrderEstimatedDeliveryDate.HasValue &&
-                  order.OrderDeliveredCustomerDate.Value.Date > order.OrderEstimatedDeliveryDate.Value.Date;
-
-    if (order.OrderStatus is "canceled" or "unavailable")
-    {
-        card.Label = "problem";
-    }
-    else if (order.OrderStatus == "delivered" && order.OrderDeliveredCustomerDate.HasValue)
-    {
-        card.Label = isLate ? "problem" : "success";
-    }
-    else
-    {
-        card.Label = null; // не враховуємо
-    }
+    card.Label = GetLabel(order);
 
     return card;
+}
+
+TrainingRow? BuildTrainingRow(OrderRow order)
+{
+    var label = GetLabel(order);
+    if (label == null || !order.OrderPurchaseTimestamp.HasValue) 
+    {
+        return null;
+    }
+
+    var orderItems = itemsByOrder[order.OrderId].ToList();
+    if (orderItems.Count == 0) 
+    {
+        return null;
+    }
+
+    var itemInputs = orderItems.Select(i =>
+    {
+        productsById.TryGetValue(i.ProductId, out var p);
+        return new OrderItemInput((float)i.Price, (float)i.FreightValue, p?.ProductCategoryName, p?.ProductWeightG);
+    }).ToList();
+
+    var paymentInputs = paymentsByOrder[order.OrderId]
+        .Select(p => new OrderPaymentInput(p.PaymentType, p.PaymentInstallments, (float)p.PaymentValue))
+        .ToList();
+
+    customersById.TryGetValue(order.CustomerId, out var customer);
+
+    var mainSellerId = orderItems
+        .GroupBy(i => i.SellerId)
+        .OrderByDescending(g => g.Sum(i => i.Price))
+        .First().Key;
+    sellersById.TryGetValue(mainSellerId, out var seller);
+
+    (double Lat, double Lng)? customerCoords = null;
+    if (customer != null && zipToCoords.TryGetValue(customer.CustomerZipCodePrefix, out var cc))
+    {
+        customerCoords = cc;
+    }
+
+    (double Lat, double Lng)? sellerCoords = null;
+    if (seller != null && zipToCoords.TryGetValue(seller.SellerZipCodePrefix, out var sc))
+    {
+        sellerCoords = sc;
+    }
+
+    var features = OrderFeatureBuilder.Build(
+        itemInputs, paymentInputs,
+        customer?.CustomerState ?? "", seller?.SellerState ?? "",
+        customerCoords, sellerCoords,
+        order.OrderPurchaseTimestamp, order.OrderEstimatedDeliveryDate);
+
+    return TrainingRow.From(features, label == "success", order.OrderPurchaseTimestamp.Value);
 }
 
 Console.WriteLine("\nБудую картки...");
@@ -231,3 +283,76 @@ foreach (var g in byMonth)
 
     Console.WriteLine($"  {g.Key:yyyy-MM}: замовлень={g.Count()}, враховано={considered}, проблемних={pct:F1}%");
 }
+
+// --- тренувальні рядки: лише робочий період 2017-01 .. 2018-08 ---
+var periodStart = new DateTime(2017, 1, 1);
+var periodEnd = new DateTime(2018, 9, 1);
+
+var trainingRows = orders
+    .Select(BuildTrainingRow)
+    .Where(r => r != null && r.PurchasedAt >= periodStart && r.PurchasedAt < periodEnd)
+    .Select(r => r!)
+    .ToList();
+
+Console.WriteLine($"\nТренувальних рядків: {trainingRows.Count}");
+Console.WriteLine($"  успіх: {trainingRows.Count(r => r.Label)}, проблема: {trainingRows.Count(r => !r.Label)}");
+
+//поділ за часом: останні 3 місяці — тест
+var testStart = new DateTime(2018, 6, 1);
+var trainRows = trainingRows.Where(r => r.PurchasedAt < testStart).ToList();
+var testRows = trainingRows.Where(r => r.PurchasedAt >= testStart).ToList();
+
+Console.WriteLine($"\nTrain: {trainRows.Count} (проблемних {100.0 * trainRows.Count(r => !r.Label) / trainRows.Count:F1}%)");
+Console.WriteLine($"Test:  {testRows.Count} (проблемних {100.0 * testRows.Count(r => !r.Label) / testRows.Count:F1}%)");
+
+//навчання FastTree
+var mlContext = new MLContext(seed: 42);
+var trainData = mlContext.Data.LoadFromEnumerable(trainRows);
+var testData = mlContext.Data.LoadFromEnumerable(testRows);
+
+var numericCols = new[] { "ItemsCount", "TotalPrice", "FreightShare", "TotalWeightG", "PromisedDays", "DistanceKm", "Installments", "PurchaseDayOfWeek" };
+
+var pipeline = mlContext.Transforms
+    .ReplaceMissingValues(numericCols.Select(c => new InputOutputColumnPair(c)).ToArray(), MissingValueReplacingEstimator.ReplacementMode.Mean)
+    .Append(mlContext.Transforms.Categorical.OneHotEncoding(new[]
+    {
+        new InputOutputColumnPair("CustomerStateEnc", "CustomerState"),
+        new InputOutputColumnPair("SellerStateEnc", "SellerState"),
+        new InputOutputColumnPair("MainCategoryEnc", "MainCategory"),
+        new InputOutputColumnPair("PaymentTypeEnc", "PaymentType"),
+    }))
+    .Append(mlContext.Transforms.Concatenate("Features", numericCols.Concat(new[] { "CustomerStateEnc", "SellerStateEnc", "MainCategoryEnc", "PaymentTypeEnc" }).ToArray()))
+    .Append(mlContext.BinaryClassification.Trainers.FastTree(labelColumnName: "IsProblem", featureColumnName: "Features"));
+
+Console.WriteLine("\nНавчаю модель...");
+var model = pipeline.Fit(trainData);
+
+var predictions = model.Transform(testData);
+var metrics = mlContext.BinaryClassification.Evaluate(predictions, labelColumnName: "IsProblem");
+
+Console.WriteLine($"ROC-AUC: {metrics.AreaUnderRocCurve:F4}");
+Console.WriteLine($"PR-AUC (клас «проблема»): {metrics.AreaUnderPrecisionRecallCurve:F4}");
+Console.WriteLine($"F1 (поріг 0.5): {metrics.F1Score:F4}");
+Console.WriteLine(metrics.ConfusionMatrix.GetFormattedConfusionTable());
+
+//збереження моделі
+const string modelVersion = "v1";
+var modelDir = $"../../ml/models/{modelVersion}";
+Directory.CreateDirectory(modelDir);
+mlContext.Model.Save(model, trainData.Schema, $"{modelDir}/model.zip");
+Console.WriteLine($"Модель збережено: ml/models/{modelVersion}/model.zip");
+
+//базова модель: однакова ймовірність для всіх (частота проблем у train)
+var baseRate = (float)trainRows.Count(r => r.IsProblem) / trainRows.Count;
+var baselineData = mlContext.Data.LoadFromEnumerable(
+    testRows.Select(r => new BaselinePrediction
+    {
+        IsProblem = r.IsProblem,
+        Score = baseRate,
+        Probability = baseRate,
+        PredictedLabel = false
+    }));
+var baseMetrics = mlContext.BinaryClassification.Evaluate(baselineData, labelColumnName: "IsProblem");
+
+Console.WriteLine($"\nБазова модель: ROC-AUC {baseMetrics.AreaUnderRocCurve:F4}, PR-AUC {baseMetrics.AreaUnderPrecisionRecallCurve:F4}");
+Console.WriteLine($"Модель v1:     ROC-AUC {metrics.AreaUnderRocCurve:F4}, PR-AUC {metrics.AreaUnderPrecisionRecallCurve:F4}");
