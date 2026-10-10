@@ -1,4 +1,5 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using OrderSense.Client.Core.Interfaces;
 
 namespace OrderSense.Client.Core.ViewModels;
 

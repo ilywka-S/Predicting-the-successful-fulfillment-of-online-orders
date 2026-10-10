@@ -1,4 +1,4 @@
-namespace OrderSense.Client.Core;
+namespace OrderSense.Client.Core.Interfaces;
 
 public interface ITokenStorage
 {
@@ -6,4 +6,6 @@ public interface ITokenStorage
     Task<string?> GetRefreshTokenAsync();
     Task SaveTokensAsync(string accessToken, string refreshToken);
     Task ClearAsync();
+    Task ClearTokensAsync();
+    
 }

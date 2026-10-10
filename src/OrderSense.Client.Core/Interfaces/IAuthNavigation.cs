@@ -1,4 +1,4 @@
-namespace OrderSense.Client.Core;
+namespace OrderSense.Client.Core.Interfaces;
 
 public interface IAuthNavigation
 {

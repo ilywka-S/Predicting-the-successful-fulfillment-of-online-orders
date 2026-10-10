@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using OrderSense.Client.Core.Interfaces;
 namespace OrderSense.Client.Core.ViewModels;
 
 public partial class LoginViewModel : ObservableObject

@@ -1,4 +1,4 @@
-using OrderSense.Client.Core;
+using OrderSense.Client.Core.Interfaces;
 
 namespace OrderSense.Maui;
 
@@ -19,5 +19,12 @@ public class SecureTokenStorage : ITokenStorage
         SecureStorage.Default.Remove("access_token");
         SecureStorage.Default.Remove("refresh_token");
         return Task.CompletedTask;
+    }
+
+    public async Task ClearTokensAsync()
+    {
+        SecureStorage.Default.Remove("access_token");
+        SecureStorage.Default.Remove("refresh_token");
+        await Task.CompletedTask;
     }
 }

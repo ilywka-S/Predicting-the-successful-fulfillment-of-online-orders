@@ -1,12 +1,17 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="OrderSense.Maui.Views.MainPage"
-             xmlns:viewmodels="clr-namespace:OrderSense.Maui.ViewModels"
+             xmlns:viewmodels="clr-namespace:OrderSense.Client.Core.ViewModels;assembly=OrderSense.Client.Core"
              x:DataType="viewmodels:MainViewModel">
     
     <VerticalStackLayout Spacing="20" Padding="30" VerticalOptions="Center">
         
        <Label Text="Успішний вхід! Це Головна сторінка." FontSize="24" TextColor="Green" />
+
+       <Button Text="Вийти" 
+            Command="{Binding LogoutCommand}" 
+            BackgroundColor="Red" 
+            TextColor="White" />
         
     </VerticalStackLayout>
 </ContentPage>

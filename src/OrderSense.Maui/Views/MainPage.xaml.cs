@@ -1,5 +1,4 @@
-using OrderSense.Maui.ViewModels;
-
+using OrderSense.Client.Core.ViewModels;
 namespace OrderSense.Maui.Views;
 
 public partial class MainPage : ContentPage

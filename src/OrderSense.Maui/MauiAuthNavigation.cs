@@ -1,4 +1,4 @@
-using OrderSense.Client.Core;
+using OrderSense.Client.Core.Interfaces;
 
 namespace OrderSense.Maui;
 

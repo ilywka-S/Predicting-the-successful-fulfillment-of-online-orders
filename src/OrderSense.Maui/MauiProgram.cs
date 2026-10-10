@@ -4,6 +4,7 @@ using OrderSense.Client.Core;
 using OrderSense.Maui.ViewModels;
 using OrderSense.Maui.Views;
 using OrderSense.Client.Core.ViewModels;
+using OrderSense.Client.Core.Interfaces;
 namespace OrderSense.Maui;
 
 public static class MauiProgram

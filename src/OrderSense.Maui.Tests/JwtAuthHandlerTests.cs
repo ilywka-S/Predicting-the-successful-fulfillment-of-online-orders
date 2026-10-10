@@ -3,6 +3,7 @@ using System.Text.Json;
 using Moq;
 using Moq.Protected;
 using OrderSense.Client.Core;
+using OrderSense.Client.Core.Interfaces;
 
 namespace OrderSense.Maui.Tests;
 
