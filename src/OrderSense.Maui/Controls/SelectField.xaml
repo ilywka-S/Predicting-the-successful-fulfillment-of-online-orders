@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:controls="clr-namespace:OrderSense.Maui.Controls"
+             x:Class="OrderSense.Maui.Controls.SelectField"
+             x:Name="Root"
+             x:DataType="controls:SelectField">
+
+    <VerticalStackLayout Spacing="8">
+
+        <Label x:Name="LabelView"
+               Style="{StaticResource TextLabel}"
+               Text="{Binding Label, Source={x:Reference Root}}" />
+
+        <Border x:Name="InputBorder" Style="{StaticResource InputFrame}">
+            <Grid ColumnDefinitions="*,Auto">
+
+                <controls:BorderlessPicker x:Name="Input"
+                        Grid.ColumnSpan="2"
+                        Title="{Binding Placeholder, Source={x:Reference Root}}"
+                        ItemsSource="{Binding ItemsSource, Source={x:Reference Root}}"
+                        SelectedItem="{Binding SelectedItem, Source={x:Reference Root}, Mode=TwoWay}"
+                        Focused="OnInputFocusChanged"
+                        Unfocused="OnInputFocusChanged" />
+
+                <Label Grid.Column="1"
+                       Style="{StaticResource IconMuted}"
+                       Text="{x:Static controls:Icons.ChevronDown}"
+                       InputTransparent="True"
+                       IsVisible="{OnPlatform WinUI=False, Default=True}" />
+
+            </Grid>
+        </Border>
+
+    </VerticalStackLayout>
+
+</ContentView>
