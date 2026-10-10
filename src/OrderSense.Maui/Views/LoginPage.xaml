@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="OrderSense.Maui.Views.LoginPage"
+             Title="Вхід у систему">
+
+    <VerticalStackLayout Padding="30" Spacing="15" VerticalOptions="Center">
+        
+        <Label Text="Авторизація" FontSize="24" HorizontalOptions="Center" />
+
+        <Entry Placeholder="Email" 
+               Text="{Binding Email}" 
+               Keyboard="Email" />
+
+        <Entry Placeholder="Пароль" 
+               Text="{Binding Password}" 
+               IsPassword="True" />
+
+        <Label Text="{Binding ErrorMessage}" 
+                TextColor="Red" 
+                IsVisible="{Binding HasError}" />
+
+        <!-- Кнопка входу -->
+        <Button Text="Увійти" 
+                Command="{Binding LoginCommand}" 
+                IsEnabled="{Binding IsNotBusy}" />
+
+        <ActivityIndicator IsRunning="{Binding IsBusy}" 
+                           IsVisible="{Binding IsBusy}" />
+
+    </VerticalStackLayout>
+</ContentPage>

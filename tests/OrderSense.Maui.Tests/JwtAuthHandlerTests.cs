@@ -3,6 +3,7 @@ using System.Text.Json;
 using Moq;
 using Moq.Protected;
 using OrderSense.Client.Core;
+using OrderSense.Client.Core.Interfaces;
 
 namespace OrderSense.Maui.Tests;
 
@@ -133,6 +134,6 @@ public class JwtAuthHandlerTests
         // Assert
         _tokenStorageMock.Verify(x => x.ClearAsync(), Times.Once);
         
-        _authNavigationMock.Verify(x => x.NavigateToLogin(), Times.Once);
+        _authNavigationMock.Verify(x => x.NavigateToLoginAsync(), Times.Once);
     }
 }

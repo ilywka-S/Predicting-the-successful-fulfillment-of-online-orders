@@ -1,14 +1,22 @@
-using OrderSense.Client.Core;
+using OrderSense.Client.Core.Interfaces;
 
 namespace OrderSense.Maui;
 
 public class MauiAuthNavigation : IAuthNavigation
 {
-    public void NavigateToLogin()
+    public async Task NavigateToMainAsync()
     {
-        MainThread.BeginInvokeOnMainThread(() =>
+        await MainThread.InvokeOnMainThreadAsync(async () =>
         {
-            Microsoft.Maui.Controls.Shell.Current.GoToAsync("//LoginPage");
+            await Shell.Current.GoToAsync("//MainPage"); 
         });
     }
+
+    public async Task NavigateToLoginAsync()
+{
+    await MainThread.InvokeOnMainThreadAsync(async () =>
+    {
+        await Shell.Current.GoToAsync("//LoginPage");
+    });
+}
 }

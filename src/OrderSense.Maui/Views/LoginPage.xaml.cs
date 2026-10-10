@@ -1,9 +1,10 @@
 using OrderSense.Client.Core.ViewModels;
+
 namespace OrderSense.Maui.Views;
 
-public partial class MainPage : ContentPage
+public partial class LoginPage : ContentPage
 {
-    public MainPage(MainViewModel viewModel)
+    public LoginPage(LoginViewModel viewModel)
     {
         InitializeComponent();
         BindingContext = viewModel;
