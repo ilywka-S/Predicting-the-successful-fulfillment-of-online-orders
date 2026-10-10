@@ -21,10 +21,21 @@ public class SecureTokenStorage : ITokenStorage
         return Task.CompletedTask;
     }
 
+    public async Task SetRoleAsync(string role)
+    {
+        await SecureStorage.Default.SetAsync("user_role", role ?? string.Empty);
+    }
+
+    public async Task<string> GetRoleAsync()
+    {
+        return await SecureStorage.Default.GetAsync("user_role");
+    }
+
     public async Task ClearTokensAsync()
     {
         SecureStorage.Default.Remove("access_token");
         SecureStorage.Default.Remove("refresh_token");
+        SecureStorage.Default.Remove("user_role");
         await Task.CompletedTask;
     }
 }

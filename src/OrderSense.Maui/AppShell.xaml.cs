@@ -1,5 +1,4 @@
-﻿using OrderSense.Maui.Views;
-
+﻿using OrderSense.Client.Core.ViewModels;
 namespace OrderSense.Maui;
 
 public partial class AppShell : Shell
@@ -7,7 +6,14 @@ public partial class AppShell : Shell
     public AppShell()
     {
         InitializeComponent();
-        
-        Routing.RegisterRoute("DetailsPage", typeof(DetailsPage));
+    }
+
+    public AppShell(AppShellViewModel? viewModel = null)
+    {
+        InitializeComponent();
+        if (viewModel != null)
+        {
+            BindingContext = viewModel;
+        }
     }
 }

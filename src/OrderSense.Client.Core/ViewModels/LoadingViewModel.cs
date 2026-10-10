@@ -20,11 +20,11 @@ public partial class LoadingViewModel : ObservableObject
 
         if (!string.IsNullOrEmpty(token))
         {
-            _navigation.NavigateToMain();
+            await _navigation.NavigateToMainAsync();
         }
         else
         {
-            _navigation.NavigateToLogin();
+            await _navigation.NavigateToLoginAsync();
         }
     }
 }

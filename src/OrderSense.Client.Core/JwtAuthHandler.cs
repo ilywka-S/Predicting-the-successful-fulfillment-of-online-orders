@@ -11,13 +11,10 @@ public class JwtAuthHandler(ITokenStorage tokenStorage, IHttpClientFactory httpC
 
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
-        // 1. Додаємо актуальний токен до запиту
         await AddTokenAsync(request);
 
-        // 2. Відправляємо запит
         var response = await base.SendAsync(request, cancellationToken);
 
-        // 3. Якщо отримали 401 Unauthorized — намагаємося оновити токен і повторити запит
         if (response.StatusCode == HttpStatusCode.Unauthorized)
         {
             return await HandleUnauthorizedAsync(request, response, cancellationToken);
@@ -28,7 +25,7 @@ public class JwtAuthHandler(ITokenStorage tokenStorage, IHttpClientFactory httpC
 
     private async Task AddTokenAsync(HttpRequestMessage request)
     {
-        var token = await tokenStorage.GetAccessTokenAsync(); // або SecureStorage.GetAsync(...)
+        var token = await tokenStorage.GetAccessTokenAsync();
         if (!string.IsNullOrEmpty(token))
         {
             request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
@@ -50,7 +47,7 @@ public class JwtAuthHandler(ITokenStorage tokenStorage, IHttpClientFactory httpC
             if (string.IsNullOrWhiteSpace(refreshToken) || !await PerformRefreshAsync(refreshToken, cancellationToken))
             {
                 await tokenStorage.ClearAsync();
-                authNavigation.NavigateToLogin(); 
+                await authNavigation.NavigateToLoginAsync(); 
                 return originalResponse;
             }
 

@@ -4,19 +4,11 @@ namespace OrderSense.Maui;
 
 public class MauiAuthNavigation : IAuthNavigation
 {
-    public void NavigateToLogin()
+    public async Task NavigateToMainAsync()
     {
-        MainThread.BeginInvokeOnMainThread(() =>
+        await MainThread.InvokeOnMainThreadAsync(async () =>
         {
-            Shell.Current.GoToAsync("//LoginPage");
-        });
-    }
-
-    public void NavigateToMain()
-    {
-        MainThread.BeginInvokeOnMainThread(() =>
-        {
-            Shell.Current.GoToAsync("//MainPage"); 
+            await Shell.Current.GoToAsync("//MainPage"); 
         });
     }
 

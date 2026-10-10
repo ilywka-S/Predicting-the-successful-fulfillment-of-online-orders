@@ -134,6 +134,6 @@ public class JwtAuthHandlerTests
         // Assert
         _tokenStorageMock.Verify(x => x.ClearAsync(), Times.Once);
         
-        _authNavigationMock.Verify(x => x.NavigateToLogin(), Times.Once);
+        _authNavigationMock.Verify(x => x.NavigateToLoginAsync(), Times.Once);
     }
 }

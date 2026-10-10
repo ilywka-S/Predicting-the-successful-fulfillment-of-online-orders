@@ -7,5 +7,8 @@ public interface ITokenStorage
     Task SaveTokensAsync(string accessToken, string refreshToken);
     Task ClearAsync();
     Task ClearTokensAsync();
+
+    Task SetRoleAsync(string role);
+    Task<string> GetRoleAsync();
     
 }
