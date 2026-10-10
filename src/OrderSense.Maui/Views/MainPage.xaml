@@ -6,21 +6,7 @@
     
     <VerticalStackLayout Spacing="20" Padding="30" VerticalOptions="Center">
         
-        <Label Text="Sign In" FontSize="24" HorizontalOptions="Center" />
-
-        <Entry Placeholder="Enter email" 
-               Text="{Binding Email}" 
-               Keyboard="Email" 
-               ClearButtonVisibility="WhileEditing" />
-        <Entry Placeholder="Enter password" 
-               Text="{Binding Password}" 
-               IsPassword="True" 
-               ClearButtonVisibility="WhileEditing" />
-
-        <Button Text="Login Test Auth" 
-                Command="{Binding TestAuthCommand}" 
-                HorizontalOptions="Center" 
-                Margin="0,20,0,0" />
+       <Label Text="Успішний вхід! Це Головна сторінка." FontSize="24" TextColor="Green" />
         
     </VerticalStackLayout>
 </ContentPage>

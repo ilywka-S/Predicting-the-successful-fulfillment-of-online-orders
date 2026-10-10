@@ -19,4 +19,12 @@ public class MauiAuthNavigation : IAuthNavigation
             Shell.Current.GoToAsync("//MainPage"); 
         });
     }
+
+    public async Task NavigateToLoginAsync()
+{
+    await MainThread.InvokeOnMainThreadAsync(async () =>
+    {
+        await Shell.Current.GoToAsync("//LoginPage");
+    });
+}
 }

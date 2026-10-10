@@ -4,4 +4,5 @@ public interface IAuthNavigation
 {
     void NavigateToLogin();
     void NavigateToMain();
+    Task NavigateToLoginAsync();
 }

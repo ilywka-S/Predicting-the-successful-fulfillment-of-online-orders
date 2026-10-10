@@ -28,6 +28,8 @@ public static class MauiProgram
 			builder.Services.AddTransient<DetailsPage>();
             builder.Services.AddTransient<LoginViewModel>();
             builder.Services.AddTransient<LoginPage>();
+            builder.Services.AddTransient<LoadingViewModel>();
+            builder.Services.AddTransient<LoadingPage>();
 
             builder.Services.AddTransient<JwtAuthHandler>();
             builder.Services.AddSingleton<ITokenStorage, SecureTokenStorage>();
