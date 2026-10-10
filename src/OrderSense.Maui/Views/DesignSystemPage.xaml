@@ -1,0 +1,275 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:controls="clr-namespace:OrderSense.Maui.Controls"
+             x:Class="OrderSense.Maui.Views.DesignSystemPage"
+             Title="Дизайн-система">
+
+    <ContentPage.Resources>
+        <Style x:Key="Swatch" TargetType="Border">
+            <Setter Property="WidthRequest" Value="96" />
+            <Setter Property="HeightRequest" Value="48" />
+            <Setter Property="StrokeThickness" Value="1" />
+            <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource BorderLight}, Dark={StaticResource BorderDark}}" />
+            <Setter Property="StrokeShape" Value="RoundRectangle 8" />
+        </Style>
+        <Style x:Key="SwatchCell" TargetType="VerticalStackLayout">
+            <Setter Property="Spacing" Value="4" />
+            <Setter Property="Margin" Value="0,0,12,12" />
+        </Style>
+    </ContentPage.Resources>
+
+    <ScrollView>
+        <VerticalStackLayout Style="{StaticResource PageStack}">
+
+            <VerticalStackLayout Spacing="12">
+                <VerticalStackLayout Spacing="4">
+                    <Label Style="{StaticResource TextH1}" Text="Дизайн-система" />
+                    <Label Style="{StaticResource TextMuted}"
+                           Text="shadcn/ui, перенесений у .NET MAUI. Токени — Resources/Styles, компоненти — Controls." />
+                </VerticalStackLayout>
+                <controls:SegmentedControl x:Name="ThemeSwitch">
+                    <controls:SegmentItem Text="Системна" Value="system" Icon="{x:Static controls:Icons.Monitor}" />
+                    <controls:SegmentItem Text="Світла" Value="light" Icon="{x:Static controls:Icons.Sun}" />
+                    <controls:SegmentItem Text="Темна" Value="dark" Icon="{x:Static controls:Icons.Moon}" />
+                </controls:SegmentedControl>
+            </VerticalStackLayout>
+
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="12">
+                    <Label Style="{StaticResource TextH3}" Text="Кольори · Colors.xaml" />
+                    <Label Style="{StaticResource TextMuted}"
+                           Text="Монохромна база shadcn «neutral». Колір має лише два значення: рівень ризику й небезпечна дія." />
+                    <FlexLayout Wrap="Wrap">
+                        <VerticalStackLayout Style="{StaticResource SwatchCell}">
+                            <Border Style="{StaticResource Swatch}" BackgroundColor="{AppThemeBinding Light={StaticResource BackgroundLight}, Dark={StaticResource BackgroundDark}}" />
+                            <Label Style="{StaticResource TextSmall}" Text="Background" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Style="{StaticResource SwatchCell}">
+                            <Border Style="{StaticResource Swatch}" BackgroundColor="{AppThemeBinding Light={StaticResource CardLight}, Dark={StaticResource CardDark}}" />
+                            <Label Style="{StaticResource TextSmall}" Text="Card" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Style="{StaticResource SwatchCell}">
+                            <Border Style="{StaticResource Swatch}" BackgroundColor="{AppThemeBinding Light={StaticResource ForegroundLight}, Dark={StaticResource ForegroundDark}}" />
+                            <Label Style="{StaticResource TextSmall}" Text="Foreground" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Style="{StaticResource SwatchCell}">
+                            <Border Style="{StaticResource Swatch}" BackgroundColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryDark}}" />
+                            <Label Style="{StaticResource TextSmall}" Text="Primary" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Style="{StaticResource SwatchCell}">
+                            <Border Style="{StaticResource Swatch}" BackgroundColor="{AppThemeBinding Light={StaticResource SecondaryLight}, Dark={StaticResource SecondaryDark}}" />
+                            <Label Style="{StaticResource TextSmall}" Text="Secondary · Muted" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Style="{StaticResource SwatchCell}">
+                            <Border Style="{StaticResource Swatch}" BackgroundColor="{AppThemeBinding Light={StaticResource MutedForegroundLight}, Dark={StaticResource MutedForegroundDark}}" />
+                            <Label Style="{StaticResource TextSmall}" Text="MutedForeground" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Style="{StaticResource SwatchCell}">
+                            <Border Style="{StaticResource Swatch}" BackgroundColor="{AppThemeBinding Light={StaticResource BorderLight}, Dark={StaticResource BorderDark}}" />
+                            <Label Style="{StaticResource TextSmall}" Text="Border" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Style="{StaticResource SwatchCell}">
+                            <Border Style="{StaticResource Swatch}" BackgroundColor="{AppThemeBinding Light={StaticResource FocusLight}, Dark={StaticResource FocusDark}}" />
+                            <Label Style="{StaticResource TextSmall}" Text="Focus" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Style="{StaticResource SwatchCell}">
+                            <Border Style="{StaticResource Swatch}" BackgroundColor="{AppThemeBinding Light={StaticResource DestructiveLight}, Dark={StaticResource DestructiveDark}}" />
+                            <Label Style="{StaticResource TextSmall}" Text="Destructive" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Style="{StaticResource SwatchCell}">
+                            <Border Style="{StaticResource Swatch}" BackgroundColor="{AppThemeBinding Light={StaticResource RiskLowSolidLight}, Dark={StaticResource RiskLowSolidDark}}" />
+                            <Label Style="{StaticResource TextSmall}" Text="RiskLow" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Style="{StaticResource SwatchCell}">
+                            <Border Style="{StaticResource Swatch}" BackgroundColor="{AppThemeBinding Light={StaticResource RiskMediumSolidLight}, Dark={StaticResource RiskMediumSolidDark}}" />
+                            <Label Style="{StaticResource TextSmall}" Text="RiskMedium" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Style="{StaticResource SwatchCell}">
+                            <Border Style="{StaticResource Swatch}" BackgroundColor="{AppThemeBinding Light={StaticResource RiskHighSolidLight}, Dark={StaticResource RiskHighSolidDark}}" />
+                            <Label Style="{StaticResource TextSmall}" Text="RiskHigh" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Style="{StaticResource SwatchCell}">
+                            <Border Style="{StaticResource Swatch}" BackgroundColor="{AppThemeBinding Light={StaticResource Chart1Light}, Dark={StaticResource Chart1Dark}}" />
+                            <Label Style="{StaticResource TextSmall}" Text="Chart1" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Style="{StaticResource SwatchCell}">
+                            <Border Style="{StaticResource Swatch}" BackgroundColor="{AppThemeBinding Light={StaticResource Chart2Light}, Dark={StaticResource Chart2Dark}}" />
+                            <Label Style="{StaticResource TextSmall}" Text="Chart2" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Style="{StaticResource SwatchCell}">
+                            <Border Style="{StaticResource Swatch}" BackgroundColor="{AppThemeBinding Light={StaticResource Chart3Light}, Dark={StaticResource Chart3Dark}}" />
+                            <Label Style="{StaticResource TextSmall}" Text="Chart3" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Style="{StaticResource SwatchCell}">
+                            <Border Style="{StaticResource Swatch}" BackgroundColor="{AppThemeBinding Light={StaticResource Chart4Light}, Dark={StaticResource Chart4Dark}}" />
+                            <Label Style="{StaticResource TextSmall}" Text="Chart4" />
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Style="{StaticResource SwatchCell}">
+                            <Border Style="{StaticResource Swatch}" BackgroundColor="{AppThemeBinding Light={StaticResource Chart5Light}, Dark={StaticResource Chart5Dark}}" />
+                            <Label Style="{StaticResource TextSmall}" Text="Chart5" />
+                        </VerticalStackLayout>
+                    </FlexLayout>
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="12">
+                    <Label Style="{StaticResource TextH3}" Text="Типографіка · Inter" />
+                    <Label Style="{StaticResource TextDisplay}" Text="82 %" />
+                    <Label Style="{StaticResource TextH1}" Text="TextH1 · Заголовок сторінки 24" />
+                    <Label Style="{StaticResource TextH2}" Text="TextH2 · Заголовок секції 18" />
+                    <Label Style="{StaticResource TextH3}" Text="TextH3 · Заголовок картки 16" />
+                    <Label Text="Основний текст 14 · Замовлення доставлять вчасно з ймовірністю 82 %." />
+                    <Label Style="{StaticResource TextMuted}" Text="TextMuted · другорядний текст, підписи" />
+                    <Label Style="{StaticResource TextSmall}" Text="TextSmall 12 · модель v1.0 · 06.10.2026 14:35" />
+                    <Label Style="{StaticResource TextError}" Text="TextError · Неправильний email або пароль." />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="12">
+                    <Label Style="{StaticResource TextH3}" Text="Кнопки · Button" />
+                    <FlexLayout Wrap="Wrap" AlignItems="Center">
+                        <Button Margin="0,0,8,8" Text="Default" />
+                        <Button Style="{StaticResource ButtonSecondary}" Margin="0,0,8,8" Text="Secondary" />
+                        <Button Style="{StaticResource ButtonOutline}" Margin="0,0,8,8" Text="Outline" />
+                        <Button Style="{StaticResource ButtonGhost}" Margin="0,0,8,8" Text="Ghost" />
+                        <Button Style="{StaticResource ButtonDestructive}" Margin="0,0,8,8" Text="Destructive" />
+                        <Button Margin="0,0,8,8" Text="Disabled" IsEnabled="False" />
+                        <Button Style="{StaticResource ButtonIconOutline}" Margin="0,0,8,8"
+                                Text="{x:Static controls:Icons.RefreshCw}"
+                                SemanticProperties.Description="Оновити" />
+                        <Button Style="{StaticResource ButtonIcon}" Margin="0,0,8,8"
+                                Text="{x:Static controls:Icons.SlidersHorizontal}"
+                                SemanticProperties.Description="Фільтри" />
+                    </FlexLayout>
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="16" MaximumWidthRequest="480" HorizontalOptions="Start">
+                    <Label Style="{StaticResource TextH3}" Text="Поля · TextField, SelectField" />
+                    <controls:TextField Label="Email" Icon="{x:Static controls:Icons.Mail}" Placeholder="name@company.com" Keyboard="Email" />
+                    <controls:TextField Label="Пароль" Icon="{x:Static controls:Icons.Lock}" IsPassword="True" Text="secret" />
+                    <controls:TextField Label="З помилкою" Text="anna" ErrorText="Введіть email у форматі name@company.com" />
+                    <controls:SelectField x:Name="SampleSelect" Label="Статус" Placeholder="Оберіть статус" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="12">
+                    <Label Style="{StaticResource TextH3}" Text="Бейджі · Badge, RiskBadge" />
+                    <FlexLayout Wrap="Wrap" AlignItems="Center">
+                        <Border Style="{StaticResource Badge}" Margin="0,0,8,8">
+                            <Label Style="{StaticResource BadgeText}" Text="Default" />
+                        </Border>
+                        <Border Style="{StaticResource BadgeSecondary}" Margin="0,0,8,8">
+                            <Label Style="{StaticResource BadgeSecondaryText}" Text="Аналітик" />
+                        </Border>
+                        <Border Style="{StaticResource BadgeOutline}" Margin="0,0,8,8">
+                            <Label Style="{StaticResource BadgeOutlineText}" Text="Відправлено" />
+                        </Border>
+                    </FlexLayout>
+                    <FlexLayout Wrap="Wrap" AlignItems="Center">
+                        <controls:RiskBadge Level="low" Margin="0,0,8,8" />
+                        <controls:RiskBadge Level="medium" Margin="0,0,8,8" />
+                        <controls:RiskBadge Level="high" Margin="0,0,8,8" />
+                        <controls:RiskBadge Margin="0,0,8,8" />
+                    </FlexLayout>
+                    <FlexLayout Wrap="Wrap" AlignItems="Center">
+                        <controls:RiskBadge Level="low" Compact="True" Margin="0,0,8,8" />
+                        <controls:RiskBadge Level="medium" Compact="True" Margin="0,0,8,8" />
+                        <controls:RiskBadge Level="high" Compact="True" Margin="0,0,8,8" />
+                    </FlexLayout>
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="12">
+                    <Label Style="{StaticResource TextH3}" Text="Ймовірність · Meter, чинники ризику" />
+                    <controls:Meter Value="0.93" Level="low" />
+                    <controls:Meter Value="0.74" Level="medium" />
+                    <controls:Meter Value="0.41" Level="high" />
+                    <controls:Meter Value="0.6" />
+
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12" Padding="0,10,0,0">
+                        <Border Style="{StaticResource IconTileRiskUp}">
+                            <Label Style="{StaticResource IconRiskUp}" Text="{x:Static controls:Icons.TrendingUp}" />
+                        </Border>
+                        <VerticalStackLayout Grid.Column="1" Spacing="2">
+                            <Label>
+                                <Label.FormattedText>
+                                    <FormattedString>
+                                        <Span Text="Відстань продавець → клієнт" FontFamily="{StaticResource FontMedium}" />
+                                        <Span Text=": 2 300 км" />
+                                    </FormattedString>
+                                </Label.FormattedText>
+                            </Label>
+                            <Label Style="{StaticResource TextRiskUp}" FontSize="{StaticResource TextXs}" Text="↑ підвищує ризик" />
+                        </VerticalStackLayout>
+                    </Grid>
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                        <Border Style="{StaticResource IconTileRiskDown}">
+                            <Label Style="{StaticResource IconRiskDown}" Text="{x:Static controls:Icons.TrendingDown}" />
+                        </Border>
+                        <VerticalStackLayout Grid.Column="1" Spacing="2">
+                            <Label>
+                                <Label.FormattedText>
+                                    <FormattedString>
+                                        <Span Text="Обіцяний строк доставки" FontFamily="{StaticResource FontMedium}" />
+                                        <Span Text=": 24 дн." />
+                                    </FormattedString>
+                                </Label.FormattedText>
+                            </Label>
+                            <Label Style="{StaticResource TextRiskDown}" FontSize="{StaticResource TextXs}" Text="↓ знижує ризик" />
+                        </VerticalStackLayout>
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="16">
+                    <Label Style="{StaticResource TextH3}" Text="Стани екранів · Skeleton, EmptyState, Alert" />
+
+                    <Label Style="{StaticResource TextMuted}" Text="Завантаження" />
+                    <VerticalStackLayout Spacing="8">
+                        <controls:Skeleton HeightRequest="16" WidthRequest="200" HorizontalOptions="Start" />
+                        <controls:Skeleton HeightRequest="16" />
+                        <controls:Skeleton HeightRequest="16" WidthRequest="280" HorizontalOptions="Start" />
+                    </VerticalStackLayout>
+
+                    <BoxView Style="{StaticResource Separator}" />
+                    <controls:EmptyState Icon="{x:Static controls:Icons.Inbox}"
+                                         Title="Замовлень не знайдено"
+                                         Description="Змініть пошуковий запит або фільтри."
+                                         ActionText="Скинути фільтри" />
+
+                    <BoxView Style="{StaticResource Separator}" />
+                    <controls:EmptyState IsError="True"
+                                         Icon="{x:Static controls:Icons.WifiOff}"
+                                         Title="Немає з'єднання"
+                                         Description="Перевірте інтернет і спробуйте ще раз."
+                                         ActionText="Спробувати знову" />
+
+                    <Border Style="{StaticResource AlertDestructive}">
+                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                            <Label Style="{StaticResource IconError}" VerticalOptions="Start" Text="{x:Static controls:Icons.ServerCrash}" />
+                            <Label Grid.Column="1" Style="{StaticResource TextError}"
+                                   Text="Сервіс прогнозування тимчасово недоступний. Спробуйте за хвилину." />
+                        </Grid>
+                    </Border>
+
+                    <Border Style="{StaticResource Alert}">
+                        <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                            <Label Style="{StaticResource Icon}" VerticalOptions="Start" Text="{x:Static controls:Icons.Info}" />
+                            <Label Grid.Column="1" Text="Немає мережі — показано збережену копію списку." />
+                        </Grid>
+                    </Border>
+                </VerticalStackLayout>
+            </Border>
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

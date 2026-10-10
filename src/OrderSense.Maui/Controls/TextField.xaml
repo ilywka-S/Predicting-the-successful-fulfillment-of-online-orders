@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:controls="clr-namespace:OrderSense.Maui.Controls"
+             x:Class="OrderSense.Maui.Controls.TextField"
+             x:Name="Root"
+             x:DataType="controls:TextField">
+
+    <VerticalStackLayout Spacing="8">
+
+        <Label x:Name="LabelView"
+               Style="{StaticResource TextLabel}"
+               Text="{Binding Label, Source={x:Reference Root}}" />
+
+        <Border x:Name="InputBorder" Style="{StaticResource InputFrame}">
+            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+
+                <Label x:Name="IconView"
+                       Style="{StaticResource IconMuted}"
+                       Text="{Binding Icon, Source={x:Reference Root}}" />
+
+                <controls:BorderlessEntry x:Name="Input"
+                       Grid.Column="1"
+                       Text="{Binding Text, Source={x:Reference Root}, Mode=TwoWay}"
+                       Placeholder="{Binding Placeholder, Source={x:Reference Root}}"
+                       Keyboard="{Binding Keyboard, Source={x:Reference Root}}"
+                       ReturnType="{Binding ReturnType, Source={x:Reference Root}}"
+                       ReturnCommand="{Binding ReturnCommand, Source={x:Reference Root}}"
+                       Focused="OnInputFocusChanged"
+                       Unfocused="OnInputFocusChanged" />
+
+                <Grid x:Name="RevealToggle"
+                      Grid.Column="2"
+                      WidthRequest="32"
+                      HeightRequest="32">
+                    <Grid.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnRevealTapped" />
+                    </Grid.GestureRecognizers>
+                    <Label x:Name="RevealIcon" Style="{StaticResource IconMuted}" HorizontalOptions="Center" />
+                </Grid>
+
+            </Grid>
+        </Border>
+
+        <Label x:Name="ErrorView"
+               Style="{StaticResource TextError}"
+               Text="{Binding ErrorText, Source={x:Reference Root}}" />
+
+    </VerticalStackLayout>
+
+</ContentView>
