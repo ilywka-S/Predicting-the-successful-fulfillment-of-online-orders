@@ -1,6 +1,5 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using MyNamespace;
 using OrderSense.Client.Core;
 
 namespace OrderSense.Maui.ViewModels;
@@ -28,7 +27,7 @@ public partial class MainViewModel : ObservableObject
     {
         try
         {
-            var response = await _client.LoginAsync(new MyNamespace.LoginRequest 
+            var response = await _client.LoginAsync(new LoginRequest 
             { 
                 Email = this.Email, 
                 Password = this.Password 

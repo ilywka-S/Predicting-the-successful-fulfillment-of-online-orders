@@ -8,7 +8,15 @@ public class MauiAuthNavigation : IAuthNavigation
     {
         MainThread.BeginInvokeOnMainThread(() =>
         {
-            Microsoft.Maui.Controls.Shell.Current.GoToAsync("//LoginPage");
+            Shell.Current.GoToAsync("//LoginPage");
+        });
+    }
+
+    public void NavigateToMain()
+    {
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            Shell.Current.GoToAsync("//MainPage"); 
         });
     }
 }
