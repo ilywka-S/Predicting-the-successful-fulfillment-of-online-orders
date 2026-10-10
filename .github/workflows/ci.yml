@@ -118,7 +118,7 @@ jobs:
       run: dotnet workload install maui-windows
       
     - name: Restore MAUI Windows
-      run: dotnet restore src/OrderSense.Maui/OrderSense.Maui.csproj
+      run: dotnet restore src/OrderSense.Maui/OrderSense.Maui.csproj --runtime win-x64
       
     - name: Build Windows
-      run: dotnet build src/OrderSense.Maui/OrderSense.Maui.csproj -c Release -f net10.0-windows10.0.19041.0 --no-restore
+      run: dotnet build src/OrderSense.Maui/OrderSense.Maui.csproj -c Release -f net10.0-windows10.0.19041.0 -r win-x64 --no-restore

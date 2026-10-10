@@ -10,6 +10,7 @@ using Microsoft.IdentityModel.Tokens;
 using OrderSense.Api.Auth;
 using OrderSense.Api.Data;
 using OrderSense.Api.Data.Entities;
+using OrderSense.Api.Demo;
 
 var isOpenApiGeneration = Assembly.GetEntryAssembly()?.GetName().Name == "GetDocument.Insider";
 
@@ -85,6 +86,7 @@ if (!isOpenApiGeneration)
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     await db.Database.MigrateAsync();
     await IdentitySeeder.SeedAsync(scope.ServiceProvider, app.Configuration, app.Logger);
+    await DemoDataSeeder.SeedAsync(db, app.Environment, app.Configuration.GetValue("Seed:DemoOrders", 0), app.Logger);
 }
 
 app.UseExceptionHandler();

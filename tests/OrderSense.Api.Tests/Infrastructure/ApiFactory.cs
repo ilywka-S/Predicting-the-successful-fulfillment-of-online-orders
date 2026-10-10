@@ -3,10 +3,7 @@ using System.Net.Http.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Npgsql;
 using OrderSense.Api.Data;
 using OrderSense.Api.Data.Entities;
 using OrderSense.Api.Dtos;
@@ -18,11 +15,10 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
     public const string AdminEmail = "admin@ordersense.test";
     public const string AdminPassword = "Admin12345";
     public const string UserPassword = "Password123";
-
-    private const string UserSecretsId = "ordersense-api-tests";
+    
     private const string JwtKey = "integration-tests-signing-key-0123456789";
 
-    private readonly string _connectionString = BuildConnectionString();
+    private readonly string _connectionString = TestConnectionString.CreateUnique();
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -84,21 +80,6 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         await using var scope = Services.CreateAsyncScope();
 
         return await action(scope.ServiceProvider.GetRequiredService<AppDbContext>());
-    }
-
-    private static string BuildConnectionString()
-    {
-        var configuration = new ConfigurationBuilder()
-            .AddUserSecrets(UserSecretsId)
-            .AddEnvironmentVariables()
-            .Build();
-
-        var connectionString = configuration.GetConnectionString("TestPostgres") ?? throw new InvalidOperationException("Set ConnectionStrings:TestPostgres in the test project's user-secrets " + "or the ConnectionStrings__TestPostgres environment variable");
-
-        return new NpgsqlConnectionStringBuilder(connectionString)
-        {
-            Database = $"ordersense_test_{Guid.NewGuid():N}"
-        }.ConnectionString;
     }
 
     private static void EnsureSucceeded(IdentityResult result)
