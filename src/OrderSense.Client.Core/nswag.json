@@ -8,6 +8,7 @@
   },
   "codeGenerators": {
     "openApiToCSharpClient": {
+      "namespace": "OrderSense.Client.Core",
       "generateClientClasses": true,
       "generateClientInterfaces": true,
       "injectHttpClient": true,

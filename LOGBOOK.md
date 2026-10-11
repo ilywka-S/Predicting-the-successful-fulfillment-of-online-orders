@@ -30,6 +30,11 @@
 10. **Проблема:** NSwag-клієнт отримував enum числами, числа в OpenAPI мали тип `["integer","string"]`, а методи називались за шляхом (`UsersAllAsync`).
    * **Рішення:** Enum - рядки camelCase (`low/medium/high`), `NumberHandling.Strict` для строгих числових типів, явні `operationId` (`GetOrders`, `GetOrder`).
 
+11. **Проблема:** Під час спроби запустити `dotnet test` для `OrderSense.Maui.Tests` виникала помилка дублювання файлів. Тестовий проєкт транзитивно тягнув правила генерації ресурсів з основного проєкту і намагався згенерувати іконки вдруге.
+   * **Рішення:** 
+  - У тестовому `.csproj` жорстко вимкнено ресурси: додано `<EnableDefaultMauiItems>false</EnableDefaultMauiItems>` та `<SkipResizetizer>true</SkipResizetizer>`.
+  - У `<ProjectReference>` для основного MAUI-додатка додано атрибут `<ExcludeAssets>buildTransitive</ExcludeAssets>`, щоб відсікти правила обробки картинок.
+
 #### Приклад:
 1. **Проблема:** Щось сталось.
    * **Рішення:** Якось відремонтували.

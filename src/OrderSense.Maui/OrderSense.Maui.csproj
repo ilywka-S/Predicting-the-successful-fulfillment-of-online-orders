@@ -79,7 +79,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\OrderSense.Client.Core\OrderSense.Client.Core.csproj" />
+		<ProjectReference Include="..\OrderSense.Client.Core\OrderSense.Client.Core.csproj" />
 	</ItemGroup>
 
 </Project>

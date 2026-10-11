@@ -1,6 +1,10 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using CommunityToolkit.Maui;
 using OrderSense.Client.Core;
+using OrderSense.Maui.ViewModels;
+using OrderSense.Maui.Views;
+using OrderSense.Client.Core.ViewModels;
+using OrderSense.Client.Core.Interfaces;
 namespace OrderSense.Maui;
 
 public static class MauiProgram
@@ -18,11 +22,16 @@ public static class MauiProgram
                 fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
             });
 
-			builder.Services.AddTransient<OrderSense.Maui.ViewModels.MainViewModel>();
-			builder.Services.AddTransient<OrderSense.Maui.ViewModels.DetailsViewModel>();
+			builder.Services.AddTransient<MainViewModel>();
+			builder.Services.AddTransient<DetailsViewModel>();
 
-			builder.Services.AddTransient<OrderSense.Maui.Views.MainPage>();
-			builder.Services.AddTransient<OrderSense.Maui.Views.DetailsPage>();
+			builder.Services.AddTransient<MainPage>();
+			builder.Services.AddTransient<DetailsPage>();
+            builder.Services.AddTransient<LoginViewModel>();
+            builder.Services.AddTransient<LoginPage>();
+            builder.Services.AddTransient<LoadingViewModel>();
+            builder.Services.AddTransient<LoadingPage>();
+            builder.Services.AddTransient<AppShell>();
 
             builder.Services.AddTransient<JwtAuthHandler>();
             builder.Services.AddSingleton<ITokenStorage, SecureTokenStorage>();
@@ -42,7 +51,7 @@ public static class MauiProgram
                 client.BaseAddress = new Uri(baseAddress);
             });
 
-            builder.Services.AddHttpClient<MyNamespace.IClient, MyNamespace.Client>(client =>
+            builder.Services.AddHttpClient<IClient, Client.Core.Client>(client =>
             {
                 client.BaseAddress = new Uri(baseAddress);
             })
