@@ -233,6 +233,191 @@
         }
       }
     },
+    "/api/orders": {
+      "get": {
+        "tags": [
+          "Orders"
+        ],
+        "operationId": "GetOrders",
+        "parameters": [
+          {
+            "name": "Status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "From",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "To",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "CustomerState",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Z]{2}$"
+            }
+          },
+          {
+            "name": "RiskLevel",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/RiskLevel"
+            }
+          },
+          {
+            "name": "Search",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "maxLength": 32
+            }
+          },
+          {
+            "name": "Sort",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/OrderSort"
+            }
+          },
+          {
+            "name": "Page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "maximum": 100000.0,
+              "minimum": 1.0
+            }
+          },
+          {
+            "name": "PageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "maximum": 100.0,
+              "minimum": 1.0
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResponseOfOrderListItemDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResponseOfOrderListItemDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResponseOfOrderListItemDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/orders/{id}": {
+      "get": {
+        "tags": [
+          "Orders"
+        ],
+        "operationId": "GetOrder",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderDetailsDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderDetailsDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderDetailsDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/users": {
       "get": {
         "tags": [
@@ -393,6 +578,30 @@
           }
         }
       },
+      "CustomerDto": {
+        "type": "object",
+        "required": [
+          "city",
+          "state"
+        ],
+        "properties": {
+          "city": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "state": {
+            "type": "string"
+          }
+        }
+      },
+      "FactorImpact": {
+        "enum": [
+          "increases",
+          "decreases"
+        ]
+      },
       "LoginRequest": {
         "type": "object",
         "required": [
@@ -405,6 +614,266 @@
           },
           "password": {
             "type": "string"
+          }
+        }
+      },
+      "OrderDetailsDto": {
+        "type": "object",
+        "required": [
+          "id",
+          "status",
+          "purchasedAt",
+          "approvedAt",
+          "estimatedDeliveryAt",
+          "deliveredCustomerAt",
+          "customer",
+          "items",
+          "payments",
+          "latestPrediction"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "purchasedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "approvedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "estimatedDeliveryAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "deliveredCustomerAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "customer": {
+            "$ref": "#/components/schemas/CustomerDto"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OrderItemDto"
+            }
+          },
+          "payments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PaymentDto"
+            }
+          },
+          "latestPrediction": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/PredictionDto"
+              }
+            ]
+          }
+        }
+      },
+      "OrderItemDto": {
+        "type": "object",
+        "required": [
+          "itemNo",
+          "productId",
+          "category",
+          "sellerId",
+          "sellerState",
+          "price",
+          "freightValue",
+          "weightG"
+        ],
+        "properties": {
+          "itemNo": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "productId": {
+            "type": "string"
+          },
+          "category": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sellerId": {
+            "type": "string"
+          },
+          "sellerState": {
+            "type": "string"
+          },
+          "price": {
+            "type": "number",
+            "format": "double"
+          },
+          "freightValue": {
+            "type": "number",
+            "format": "double"
+          },
+          "weightG": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "OrderListItemDto": {
+        "type": "object",
+        "required": [
+          "id",
+          "purchasedAt",
+          "status",
+          "customerState",
+          "itemsCount",
+          "totalValue",
+          "probability",
+          "riskLevel"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "purchasedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "status": {
+            "type": "string"
+          },
+          "customerState": {
+            "type": "string"
+          },
+          "itemsCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalValue": {
+            "type": "number",
+            "format": "double"
+          },
+          "probability": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "float"
+          },
+          "riskLevel": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/RiskLevel"
+              }
+            ]
+          }
+        }
+      },
+      "OrderSort": {
+        "enum": [
+          "dateDesc",
+          "dateAsc"
+        ]
+      },
+      "PagedResponseOfOrderListItemDto": {
+        "type": "object",
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "total"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OrderListItemDto"
+            }
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "PaymentDto": {
+        "type": "object",
+        "required": [
+          "type",
+          "installments",
+          "value"
+        ],
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "installments": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "value": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
+      "PredictionDto": {
+        "type": "object",
+        "required": [
+          "probability",
+          "riskLevel",
+          "modelVersion",
+          "createdAt",
+          "factors"
+        ],
+        "properties": {
+          "probability": {
+            "type": "number",
+            "format": "float"
+          },
+          "riskLevel": {
+            "$ref": "#/components/schemas/RiskLevel"
+          },
+          "modelVersion": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "factors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RiskFactorDto"
+            }
           }
         }
       },
@@ -426,11 +895,9 @@
           "status": {
             "type": [
               "integer",
-              "null",
-              "string"
+              "null"
             ],
-            "format": "int32",
-            "pattern": "^-?(?:0|[1-9]\\d*)$"
+            "format": "int32"
           },
           "detail": {
             "type": [
@@ -456,6 +923,41 @@
             "type": "string"
           }
         }
+      },
+      "RiskFactorDto": {
+        "type": "object",
+        "required": [
+          "feature",
+          "label",
+          "value",
+          "impact"
+        ],
+        "properties": {
+          "feature": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "value": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "float"
+          },
+          "impact": {
+            "$ref": "#/components/schemas/FactorImpact"
+          }
+        }
+      },
+      "RiskLevel": {
+        "enum": [
+          "low",
+          "medium",
+          "high",
+          null
+        ]
       },
       "UserDto": {
         "type": "object",
@@ -502,11 +1004,9 @@
           "status": {
             "type": [
               "integer",
-              "null",
-              "string"
+              "null"
             ],
-            "format": "int32",
-            "pattern": "^-?(?:0|[1-9]\\d*)$"
+            "format": "int32"
           },
           "detail": {
             "type": [
@@ -536,6 +1036,9 @@
   "tags": [
     {
       "name": "Auth"
+    },
+    {
+      "name": "Orders"
     },
     {
       "name": "Users"
