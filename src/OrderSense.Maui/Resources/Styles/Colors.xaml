@@ -1,44 +1,105 @@
-﻿<?xml version="1.0" encoding="UTF-8" ?>
-<ResourceDictionary 
+<?xml version="1.0" encoding="UTF-8" ?>
+<ResourceDictionary
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
 
-    <!-- Note: For Android please see also Platforms\Android\Resources\values\colors.xml -->
+    <Color x:Key="BackgroundLight">#FFFFFF</Color>
+    <Color x:Key="ForegroundLight">#0A0A0A</Color>
+    <Color x:Key="CardLight">#FFFFFF</Color>
+    <Color x:Key="CardForegroundLight">#0A0A0A</Color>
+    <Color x:Key="PrimaryLight">#171717</Color>
+    <Color x:Key="PrimaryHoverLight">#2E2E2E</Color>
+    <Color x:Key="PrimaryForegroundLight">#FAFAFA</Color>
+    <Color x:Key="SecondaryLight">#F5F5F5</Color>
+    <Color x:Key="SecondaryHoverLight">#E5E5E5</Color>
+    <Color x:Key="SecondaryForegroundLight">#171717</Color>
+    <Color x:Key="MutedLight">#F5F5F5</Color>
+    <Color x:Key="MutedForegroundLight">#737373</Color>
+    <Color x:Key="AccentLight">#F5F5F5</Color>
+    <Color x:Key="AccentForegroundLight">#171717</Color>
+    <Color x:Key="DestructiveLight">#E7000B</Color>
+    <Color x:Key="DestructiveButtonLight">#E7000B</Color>
+    <Color x:Key="DestructiveHoverLight">#C10007</Color>
+    <Color x:Key="DestructiveForegroundLight">#FFFFFF</Color>
+    <Color x:Key="BorderLight">#E5E5E5</Color>
+    <Color x:Key="InputLight">#E5E5E5</Color>
+    <Color x:Key="InputBackgroundLight">#FFFFFF</Color>
+    <Color x:Key="RingLight">#A1A1A1</Color>
 
-    <Color x:Key="Primary">#512BD4</Color>
-    <Color x:Key="PrimaryDark">#ac99ea</Color>
-    <Color x:Key="PrimaryDarkText">#242424</Color>
-    <Color x:Key="Secondary">#DFD8F7</Color>
-    <Color x:Key="SecondaryDarkText">#9880e5</Color>
-    <Color x:Key="Tertiary">#2B0B98</Color>
+    <Color x:Key="FocusLight">#737373</Color>
+    <Color x:Key="SidebarLight">#FAFAFA</Color>
+    <Color x:Key="SidebarAccentLight">#F0F0F0</Color>
+    <Color x:Key="SidebarBorderLight">#E5E5E5</Color>
 
-    <Color x:Key="White">White</Color>
-    <Color x:Key="Black">Black</Color>
-    <Color x:Key="Magenta">#D600AA</Color>
-    <Color x:Key="MidnightBlue">#190649</Color>
-    <Color x:Key="OffBlack">#1f1f1f</Color>
+    <Color x:Key="BackgroundDark">#0A0A0A</Color>
+    <Color x:Key="ForegroundDark">#FAFAFA</Color>
+    <Color x:Key="CardDark">#171717</Color>
+    <Color x:Key="CardForegroundDark">#FAFAFA</Color>
+    <Color x:Key="PrimaryDark">#E5E5E5</Color>
+    <Color x:Key="PrimaryHoverDark">#D4D4D4</Color>
+    <Color x:Key="PrimaryForegroundDark">#171717</Color>
+    <Color x:Key="SecondaryDark">#262626</Color>
+    <Color x:Key="SecondaryHoverDark">#333333</Color>
+    <Color x:Key="SecondaryForegroundDark">#FAFAFA</Color>
+    <Color x:Key="MutedDark">#262626</Color>
+    <Color x:Key="MutedForegroundDark">#A1A1A1</Color>
+    <Color x:Key="AccentDark">#262626</Color>
+    <Color x:Key="AccentForegroundDark">#FAFAFA</Color>
+    <Color x:Key="DestructiveDark">#FF6467</Color>
 
-    <Color x:Key="Gray100">#E1E1E1</Color>
-    <Color x:Key="Gray200">#C8C8C8</Color>
-    <Color x:Key="Gray300">#ACACAC</Color>
-    <Color x:Key="Gray400">#919191</Color>
-    <Color x:Key="Gray500">#6E6E6E</Color>
-    <Color x:Key="Gray600">#404040</Color>
-    <Color x:Key="Gray900">#212121</Color>
-    <Color x:Key="Gray950">#141414</Color>
+    <Color x:Key="DestructiveButtonDark">#9D4042</Color>
+    <Color x:Key="DestructiveHoverDark">#B4474A</Color>
+    <Color x:Key="DestructiveForegroundDark">#FFFFFF</Color>
 
-    <SolidColorBrush x:Key="PrimaryBrush" Color="{StaticResource Primary}"/>
-    <SolidColorBrush x:Key="SecondaryBrush" Color="{StaticResource Secondary}"/>
-    <SolidColorBrush x:Key="TertiaryBrush" Color="{StaticResource Tertiary}"/>
-    <SolidColorBrush x:Key="WhiteBrush" Color="{StaticResource White}"/>
-    <SolidColorBrush x:Key="BlackBrush" Color="{StaticResource Black}"/>
+    <Color x:Key="BorderDark">#2E2E2E</Color>
+    <Color x:Key="InputDark">#333333</Color>
+    <Color x:Key="InputBackgroundDark">#151515</Color>
+    <Color x:Key="RingDark">#737373</Color>
+    <Color x:Key="FocusDark">#A1A1A1</Color>
+    <Color x:Key="SidebarDark">#171717</Color>
+    <Color x:Key="SidebarAccentDark">#262626</Color>
+    <Color x:Key="SidebarBorderDark">#2E2E2E</Color>
 
-    <SolidColorBrush x:Key="Gray100Brush" Color="{StaticResource Gray100}"/>
-    <SolidColorBrush x:Key="Gray200Brush" Color="{StaticResource Gray200}"/>
-    <SolidColorBrush x:Key="Gray300Brush" Color="{StaticResource Gray300}"/>
-    <SolidColorBrush x:Key="Gray400Brush" Color="{StaticResource Gray400}"/>
-    <SolidColorBrush x:Key="Gray500Brush" Color="{StaticResource Gray500}"/>
-    <SolidColorBrush x:Key="Gray600Brush" Color="{StaticResource Gray600}"/>
-    <SolidColorBrush x:Key="Gray900Brush" Color="{StaticResource Gray900}"/>
-    <SolidColorBrush x:Key="Gray950Brush" Color="{StaticResource Gray950}"/>
+    <Color x:Key="RiskLowTextLight">#007A55</Color>
+    <Color x:Key="RiskLowSurfaceLight">#ECFDF5</Color>
+    <Color x:Key="RiskLowBorderLight">#A4F4CF</Color>
+    <Color x:Key="RiskLowSolidLight">#009966</Color>
+
+    <Color x:Key="RiskMediumTextLight">#973C00</Color>
+    <Color x:Key="RiskMediumSurfaceLight">#FFFBEB</Color>
+    <Color x:Key="RiskMediumBorderLight">#FEE685</Color>
+    <Color x:Key="RiskMediumSolidLight">#E17100</Color>
+
+    <Color x:Key="RiskHighTextLight">#C10007</Color>
+    <Color x:Key="RiskHighSurfaceLight">#FEF2F2</Color>
+    <Color x:Key="RiskHighBorderLight">#FFC9C9</Color>
+    <Color x:Key="RiskHighSolidLight">#E7000B</Color>
+
+    <Color x:Key="RiskLowTextDark">#00D492</Color>
+    <Color x:Key="RiskLowSurfaceDark">#002C22</Color>
+    <Color x:Key="RiskLowBorderDark">#004F3B</Color>
+    <Color x:Key="RiskLowSolidDark">#00BC7D</Color>
+
+    <Color x:Key="RiskMediumTextDark">#FFB900</Color>
+    <Color x:Key="RiskMediumSurfaceDark">#461901</Color>
+    <Color x:Key="RiskMediumBorderDark">#7B3306</Color>
+    <Color x:Key="RiskMediumSolidDark">#FE9A00</Color>
+
+    <Color x:Key="RiskHighTextDark">#FF6467</Color>
+    <Color x:Key="RiskHighSurfaceDark">#460809</Color>
+    <Color x:Key="RiskHighBorderDark">#82181A</Color>
+    <Color x:Key="RiskHighSolidDark">#FB2C36</Color>
+
+    <Color x:Key="Chart1Light">#F54A00</Color>
+    <Color x:Key="Chart2Light">#009689</Color>
+    <Color x:Key="Chart3Light">#104E64</Color>
+    <Color x:Key="Chart4Light">#FFB900</Color>
+    <Color x:Key="Chart5Light">#FE9A00</Color>
+
+    <Color x:Key="Chart1Dark">#1447E6</Color>
+    <Color x:Key="Chart2Dark">#00BC7D</Color>
+    <Color x:Key="Chart3Dark">#FE9A00</Color>
+    <Color x:Key="Chart4Dark">#AD46FF</Color>
+    <Color x:Key="Chart5Dark">#FF2056</Color>
+
 </ResourceDictionary>
