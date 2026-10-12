@@ -1,0 +1,12 @@
+﻿**/bin/
+**/obj/
+.git
+.github
+.vs
+.idea
+.vscode
+tests/
+ml/
+data/
+**/*.csv
+src/OrderSense.Maui/
