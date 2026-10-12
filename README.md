@@ -81,14 +81,15 @@ Invoke-RestMethod "http://localhost:5128/api/orders?pageSize=3" -Headers @{ Auth
 | Debug | локальне API з кроку 3 | адміністратор із user-secrets |
 | Release | `https://ordersense-api.onrender.com` | продакшн-адміністратор |
 
-**Windows.** Збираємо і запускаємо (для Debug бекенд з кроку 3 має працювати):
+**Windows.** Збираємо й одразу запускаємо Release-збірку, вона працює з API на Render:
 
 ```
-dotnet build src/OrderSense.Maui/OrderSense.Maui.csproj -f net10.0-windows10.0.19041.0
-.\src\OrderSense.Maui\bin\Debug\net10.0-windows10.0.19041.0\win-x64\OrderSense.Maui.exe
+dotnet build src/OrderSense.Maui/OrderSense.Maui.csproj -f net10.0-windows10.0.19041.0 -c Release && ./src/OrderSense.Maui/bin/Release/net10.0-windows10.0.19041.0/win-x64/OrderSense.Maui.exe
 ```
 
-Для Release додайте `-c Release` і запускайте файл із `bin\Release\...`.
+Для Debug приберіть `-c Release`, а в шляху до `.exe` замініть `Release` на `Debug`. Бекенд з кроку 3 при цьому має працювати.
+
+`&&` працює в Git Bash і PowerShell 7. У Windows PowerShell 5.1 виконайте дві частини команди по черзі.
 
 Зверніть увагу: `dotnet build -t:Run` без попередньої збірки падає з кодом 9009, бо `.exe` ще немає.
 
