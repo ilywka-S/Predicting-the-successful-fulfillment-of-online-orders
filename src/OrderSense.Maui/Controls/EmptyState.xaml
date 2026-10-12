@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:controls="clr-namespace:OrderSense.Maui.Controls"
+             x:Class="OrderSense.Maui.Controls.EmptyState"
+             x:Name="Root"
+             x:DataType="controls:EmptyState">
+
+    <VerticalStackLayout Padding="24,40"
+                         Spacing="16"
+                         HorizontalOptions="Center"
+                         MaximumWidthRequest="420">
+
+        <Border x:Name="IconTile">
+            <Label x:Name="IconView" Text="{Binding Icon, Source={x:Reference Root}}" />
+        </Border>
+
+        <VerticalStackLayout Spacing="6">
+            <Label Style="{StaticResource TextH3}"
+                   HorizontalTextAlignment="Center"
+                   Text="{Binding Title, Source={x:Reference Root}}" />
+            <Label x:Name="DescriptionView"
+                   Style="{StaticResource TextMuted}"
+                   HorizontalTextAlignment="Center"
+                   Text="{Binding Description, Source={x:Reference Root}}" />
+        </VerticalStackLayout>
+
+        <Button x:Name="ActionButton"
+                Style="{StaticResource ButtonOutline}"
+                HorizontalOptions="Center"
+                Text="{Binding ActionText, Source={x:Reference Root}}"
+                Command="{Binding ActionCommand, Source={x:Reference Root}}" />
+
+    </VerticalStackLayout>
+
+</ContentView>

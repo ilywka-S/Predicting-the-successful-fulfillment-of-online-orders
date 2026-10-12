@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:controls="clr-namespace:OrderSense.Maui.Controls"
+             xmlns:viewmodels="clr-namespace:OrderSense.Client.Core.ViewModels;assembly=OrderSense.Client.Core"
+             x:Class="OrderSense.Maui.Views.LoginPage"
+             x:DataType="viewmodels:LoginViewModel"
+             Title="Вхід у систему"
+             Shell.NavBarIsVisible="False"
+             Shell.TabBarIsVisible="False"
+             Shell.FlyoutBehavior="Disabled">
+
+    <Grid Style="{OnIdiom Phone={StaticResource Backdrop}, Default={StaticResource BackdropMuted}}">
+        <ScrollView>
+            <VerticalStackLayout Padding="{OnIdiom Phone='24,56,24,24', Default='24,48'}"
+                                 Spacing="24"
+                                 VerticalOptions="Center"
+                                 HorizontalOptions="{OnIdiom Phone=Fill, Default=Center}"
+                                 WidthRequest="{OnIdiom Phone=-1, Default=448}">
+
+                <HorizontalStackLayout Spacing="10" HorizontalOptions="Center">
+                    <Border Style="{StaticResource BrandMark}">
+                        <Label Style="{StaticResource BrandMarkIcon}" Text="{x:Static controls:Icons.Package}" />
+                    </Border>
+                    <Label Style="{StaticResource TextH2}" Text="OrderSense" VerticalOptions="Center" />
+                </HorizontalStackLayout>
+
+                <Border Style="{OnIdiom Phone={StaticResource FormSurfacePlain}, Default={StaticResource Card}}">
+                    <VerticalStackLayout Spacing="20">
+
+                        <VerticalStackLayout Spacing="6">
+                            <Label Style="{StaticResource TextH1}"
+                                   FontSize="{StaticResource TextXl}"
+                                   HorizontalTextAlignment="Center"
+                                   Text="Вхід до системи" />
+                            <Label Style="{StaticResource TextMuted}"
+                                   HorizontalTextAlignment="Center"
+                                   Text="Введіть робочий email і пароль, які видав адміністратор." />
+                        </VerticalStackLayout>
+
+                        <Border Style="{StaticResource AlertDestructive}" IsVisible="{Binding HasError}">
+                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                                <Label Style="{StaticResource IconError}"
+                                       VerticalOptions="Start"
+                                       Text="{x:Static controls:Icons.CircleAlert}" />
+                                <Label Grid.Column="1"
+                                       Style="{StaticResource TextError}"
+                                       Text="{Binding ErrorMessage}" />
+                            </Grid>
+                        </Border>
+
+                        <controls:TextField Label="Email"
+                                            Icon="{x:Static controls:Icons.Mail}"
+                                            Placeholder="name@company.com"
+                                            Keyboard="Email"
+                                            ReturnType="Next"
+                                            Text="{Binding Email}" />
+
+                        <controls:TextField Label="Пароль"
+                                            Icon="{x:Static controls:Icons.Lock}"
+                                            IsPassword="True"
+                                            ReturnType="Go"
+                                            ReturnCommand="{Binding LoginCommand}"
+                                            Text="{Binding Password}" />
+
+                        <Grid>
+                            <Button Text="Увійти"
+                                    Command="{Binding LoginCommand}"
+                                    IsEnabled="{Binding IsNotBusy}">
+                                <Button.Triggers>
+                                    <DataTrigger TargetType="Button" Binding="{Binding IsBusy}" Value="True">
+                                        <Setter Property="Text" Value="Вхід…" />
+                                    </DataTrigger>
+                                </Button.Triggers>
+                            </Button>
+                            <ActivityIndicator Style="{StaticResource SpinnerOnPrimary}"
+                                               HorizontalOptions="Start"
+                                               Margin="16,0"
+                                               IsRunning="{Binding IsBusy}"
+                                               IsVisible="{Binding IsBusy}" />
+                        </Grid>
+
+                    </VerticalStackLayout>
+                </Border>
+
+                <Label Style="{StaticResource TextSmall}"
+                       HorizontalTextAlignment="Center"
+                       Text="Немає доступу? Зверніться до адміністратора OrderSense." />
+
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+
+</ContentPage>
