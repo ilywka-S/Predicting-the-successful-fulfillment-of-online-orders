@@ -36,13 +36,12 @@ public static class DesignSystem
 #elif IOS || MACCATALYST
             handler.PlatformView.BorderStyle = global::UIKit.UITextBorderStyle.None;
 #elif WINDOWS
-            var transparent = new global::Microsoft.UI.Xaml.Media.SolidColorBrush(global::Microsoft.UI.Colors.Transparent);
             handler.PlatformView.BorderThickness = new global::Microsoft.UI.Xaml.Thickness(0);
             handler.PlatformView.Padding = new global::Microsoft.UI.Xaml.Thickness(0, 6, 0, 6);
-            handler.PlatformView.Background = transparent;
-            handler.PlatformView.Resources["TextControlBorderThemeThicknessFocused"] = new global::Microsoft.UI.Xaml.Thickness(0);
-            handler.PlatformView.Resources["TextControlBackgroundFocused"] = transparent;
-            handler.PlatformView.Resources["TextControlBackgroundPointerOver"] = transparent;
+            handler.PlatformView.Background = TransparentBrush();
+            TrySetResource(handler.PlatformView, "TextControlBorderThemeThicknessFocused", new global::Microsoft.UI.Xaml.Thickness(0));
+            TrySetResource(handler.PlatformView, "TextControlBackgroundFocused", TransparentBrush());
+            TrySetResource(handler.PlatformView, "TextControlBackgroundPointerOver", TransparentBrush());
 #endif
         });
 
@@ -62,9 +61,24 @@ public static class DesignSystem
 #elif WINDOWS
             handler.PlatformView.BorderThickness = new global::Microsoft.UI.Xaml.Thickness(0);
             handler.PlatformView.Padding = new global::Microsoft.UI.Xaml.Thickness(0, 5, 0, 7);
-            handler.PlatformView.Background =
-                new global::Microsoft.UI.Xaml.Media.SolidColorBrush(global::Microsoft.UI.Colors.Transparent);
+            handler.PlatformView.Background = TransparentBrush();
 #endif
         });
     }
+
+#if WINDOWS
+    private static global::Microsoft.UI.Xaml.Media.SolidColorBrush TransparentBrush() =>
+        new global::Microsoft.UI.Xaml.Media.SolidColorBrush(global::Microsoft.UI.Colors.Transparent);
+
+    private static void TrySetResource(global::Microsoft.UI.Xaml.FrameworkElement element, string key, object value)
+    {
+        try
+        {
+            element.Resources[key] = value;
+        }
+        catch (global::System.Runtime.InteropServices.COMException)
+        {
+        }
+    }
+#endif
 }

@@ -1,11 +1,18 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:controls="clr-namespace:OrderSense.Maui.Controls"
              x:Class="OrderSense.Maui.Views.LoadingPage"
-             Shell.NavBarIsVisible="False">
+             Shell.NavBarIsVisible="False"
+             Shell.TabBarIsVisible="False">
 
-    <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center">
-        <!-- Простий індикатор завантаження -->
-        <ActivityIndicator IsRunning="True" Color="Purple" />
+    <VerticalStackLayout Spacing="24" VerticalOptions="Center" HorizontalOptions="Center">
+        <HorizontalStackLayout Spacing="10" HorizontalOptions="Center">
+            <Border Style="{StaticResource BrandMark}">
+                <Label Style="{StaticResource BrandMarkIcon}" Text="{x:Static controls:Icons.Package}" />
+            </Border>
+            <Label Style="{StaticResource TextH2}" Text="OrderSense" VerticalOptions="Center" />
+        </HorizontalStackLayout>
+        <ActivityIndicator IsRunning="True" WidthRequest="24" HeightRequest="24" />
     </VerticalStackLayout>
 </ContentPage>
