@@ -2,8 +2,7 @@
   "runtime": "Net100",
   "documentGenerator": {
     "fromDocument": {
-      "url": "https://localhost:7250/openapi/v1.json",
-      "output": "openapi/OrderSense.Api.json"
+      "url": "../OrderSense.Api/openapi/OrderSense.Api.json"
     }
   },
   "codeGenerators": {
@@ -13,6 +12,7 @@
       "generateClientInterfaces": true,
       "injectHttpClient": true,
       "disposeHttpClient": true,
+      "useBaseUrl": false,
       "exceptionClass": "ApiException",
       "generateResponseClasses": true,
       "responseClass": "SwaggerResponse",
