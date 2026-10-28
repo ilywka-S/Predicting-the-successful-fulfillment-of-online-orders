@@ -55,16 +55,17 @@ jobs:
           ${{ runner.os }}-nuget-
           
     - name: Restore Solution
-      run: dotnet restore OrderSense.sln 
-      
+      run: dotnet restore OrderSense.sln -p:EnableWindowsTargeting=true
+
     - name: Build Solution
-      run: dotnet build OrderSense.sln --no-restore
-      
+      run: dotnet build OrderSense.sln --no-restore -p:EnableWindowsTargeting=true
+
     - name: Run Tests with Coverage
       run: >
         dotnet test OrderSense.sln 
         --no-build 
         --verbosity normal 
+        -p:EnableWindowsTargeting=true
         --collect:"XPlat Code Coverage" 
         -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.ExcludeByFile="**/Migrations/*.cs,**/*.g.cs,**/OrderSense.Api.json,**/Client.cs"
 
