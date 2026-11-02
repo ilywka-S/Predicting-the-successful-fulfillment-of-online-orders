@@ -43,7 +43,8 @@ jobs:
         -c Release 
         -f net10.0-windows10.0.19041.0 
         -p:GenerateAppxPackageOnBuild=true 
-        -p:AppxPackageSigningEnabled=false
+        -p:AppxPackageSigningEnabled=false 
+        -p:WindowsPackageType=MSIX
 
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
@@ -55,4 +56,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: OrderSense-Windows-MSIX
-        path: src/OrderSense.Maui/bin/Release/net10.0-windows10.0.19041.0/win10-x64/AppPackages/**/*.msix
+        path: src/OrderSense.Maui/AppPackages/**/*.msix
