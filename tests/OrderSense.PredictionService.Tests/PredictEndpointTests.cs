@@ -89,4 +89,50 @@ public sealed class PredictEndpointTests : IClassFixture<WebApplicationFactory<P
         Assert.Contains("FreightShare", body);
         Assert.Contains("PurchaseDayOfWeek", body);
     }
+        private static OrderFeatures Risky()
+    {
+        var f = Valid();
+        f.PromisedDays = 8;
+        f.DistanceKm = 2400;
+        f.CustomerState = "AM";
+        f.SellerState = "SP";
+        return f;
+    }
+
+    [Fact]
+    public async Task Explain_returns_top_factors_sorted_by_impact()
+    {
+        var response = await _client.PostAsJsonAsync("/explain", Risky(), Json);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var result = await response.Content.ReadFromJsonAsync<OrderExplanation>(Json);
+        Assert.NotNull(result);
+        Assert.Equal("v1", result.ModelVersion);
+        Assert.InRange(result.Factors.Count, 1, 5);
+
+        var impacts = result.Factors.Select(f => Math.Abs(f.Contribution)).ToList();
+        Assert.Equal(impacts.OrderByDescending(x => x), impacts);
+    }
+
+    [Fact]
+    public async Task Explain_short_promise_raises_risk()
+    {
+        var response = await _client.PostAsJsonAsync("/explain", Risky(), Json);
+        var result = await response.Content.ReadFromJsonAsync<OrderExplanation>(Json);
+
+        Assert.NotNull(result);
+        var factor = Assert.Single(result.Factors, f => f.Feature == nameof(OrderFeatures.PromisedDays));
+        Assert.True(factor.Contribution > 0);
+    }
+
+    [Fact]
+    public async Task Explain_invalid_input_returns_400()
+    {
+        var features = Valid();
+        features.ItemsCount = 0;
+
+        var response = await _client.PostAsJsonAsync("/explain", features, Json);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
 }
