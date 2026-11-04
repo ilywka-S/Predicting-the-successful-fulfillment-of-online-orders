@@ -485,3 +485,4 @@ $RECYCLE.BIN/
 
 coveragereport/
 *.keystore
+*.private.env.json
