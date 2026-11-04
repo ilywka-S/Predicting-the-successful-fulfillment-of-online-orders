@@ -12,4 +12,9 @@ public sealed class OrderPrediction
         get; 
         set; 
     } = ""; // "low" / "medium" / "high"
+    public string ModelVersion 
+    { 
+        get; 
+        set; 
+    } = "";
 }
