@@ -130,4 +130,12 @@ public class OrdersController(AppDbContext db) : ControllerBase
 
         return new OrderDetailsDto(order.Id, order.Status, order.PurchasedAt, order.ApprovedAt, order.EstimatedDeliveryAt, order.DeliveredCustomerAt, order.Customer, order.Items, order.Payments, prediction);
     }
+    
+    [HttpPost("{id}/what-if", Name = "WhatIf")]
+    [ProducesResponseType<WhatIfResultDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status503ServiceUnavailable)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status501NotImplemented)]
+    public ActionResult<WhatIfResultDto> WhatIf(string id, WhatIfRequest request) => Problem(statusCode: StatusCodes.Status501NotImplemented, title: "What-if is not implemented yet");
 }
