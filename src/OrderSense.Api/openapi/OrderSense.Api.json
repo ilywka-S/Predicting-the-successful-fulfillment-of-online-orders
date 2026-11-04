@@ -661,6 +661,56 @@
         }
       }
     },
+    "/api/model": {
+      "get": {
+        "tags": [
+          "Model"
+        ],
+        "operationId": "GetModel",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelInfoDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelInfoDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelInfoDto"
+                }
+              }
+            }
+          },
+          "501": {
+            "description": "Not Implemented",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/orders": {
       "get": {
         "tags": [
@@ -1335,6 +1385,38 @@
           }
         }
       },
+      "ModelInfoDto": {
+        "required": [
+          "version",
+          "trainedAt",
+          "rocAuc",
+          "prAuc"
+        ],
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "string"
+          },
+          "trainedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "rocAuc": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "float"
+          },
+          "prAuc": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "float"
+          }
+        }
+      },
       "OrderDetailsDto": {
         "required": [
           "id",
@@ -1866,6 +1948,9 @@
     },
     {
       "name": "BatchJobs"
+    },
+    {
+      "name": "Model"
     },
     {
       "name": "Orders"
