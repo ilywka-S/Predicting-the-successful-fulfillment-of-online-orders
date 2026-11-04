@@ -11,8 +11,6 @@
       "ml\\OrderSense.ML.Training\\OrderSense.ML.Training.csproj",
       "tests\\OrderSense.Api.Tests\\OrderSense.Api.Tests.csproj",
       "tests\\OrderSense.Client.Core.Tests\\OrderSense.Client.Core.Tests.csproj",
-      "tests\\OrderSense.Api.Tests\\OrderSense.Api.Tests.csproj",
-      "tests\\OrderSense.Client.Core.Tests\\OrderSense.Client.Core.Tests.csproj",
       "tests\\OrderSense.PredictionService.Tests\\OrderSense.PredictionService.Tests.csproj"
     ]
   }
