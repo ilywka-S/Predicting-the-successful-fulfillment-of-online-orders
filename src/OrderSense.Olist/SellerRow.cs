@@ -24,4 +24,10 @@ public sealed class SellerRow
         get; 
         set; 
     } = "";
+    [Name("seller_city")] 
+    public string SellerCity 
+    { 
+        get; 
+        set; 
+    } = "";
 }

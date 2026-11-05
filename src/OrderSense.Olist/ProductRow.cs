@@ -41,4 +41,10 @@ public sealed class ProductRow
         get; 
         set; 
     }
+    [Name("product_photos_qty")] 
+    public int? ProductPhotosQty 
+    { 
+        get; 
+        set; 
+    }
 }

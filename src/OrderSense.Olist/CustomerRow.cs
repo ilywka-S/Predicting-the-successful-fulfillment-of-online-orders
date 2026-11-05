@@ -24,4 +24,16 @@ public sealed class CustomerRow
         get; 
         set; 
     } = "";
+    [Name("customer_unique_id")] 
+    public string CustomerUniqueId 
+    { 
+        get; 
+        set; 
+    } = "";
+    [Name("customer_city")] 
+    public string CustomerCity 
+    { 
+        get; 
+        set; 
+    } = "";
 }

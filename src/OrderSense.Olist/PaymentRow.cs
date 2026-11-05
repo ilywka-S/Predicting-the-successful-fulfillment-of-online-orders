@@ -31,4 +31,10 @@ public sealed class PaymentRow
         get; 
         set; 
     }
+    [Name("payment_sequential")] 
+    public int PaymentSequential 
+    { 
+        get; 
+        set; 
+    }
 }
