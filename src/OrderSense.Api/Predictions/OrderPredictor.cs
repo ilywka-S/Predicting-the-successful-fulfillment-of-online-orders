@@ -1,11 +1,13 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
 using OrderSense.Api.Data;
 using OrderSense.Api.Data.Entities;
 using OrderSense.Api.Dtos;
+using OrderSense.Api.Hubs;
 
 namespace OrderSense.Api.Predictions;
 
-public class OrderPredictor(AppDbContext db, OrderFeatureLoader featureLoader, PredictionClient client, TimeProvider timeProvider)
+public class OrderPredictor(AppDbContext db, OrderFeatureLoader featureLoader, PredictionClient client, IHubContext<OrdersHub, IOrdersClient> hub, TimeProvider timeProvider)
 {
     public async Task<PredictionDto?> PredictAsync(string orderId, CancellationToken ct)
     {
@@ -42,7 +44,10 @@ public class OrderPredictor(AppDbContext db, OrderFeatureLoader featureLoader, P
         db.Predictions.Add(prediction);
         await db.SaveChangesAsync(ct);
 
-        return new PredictionDto(prediction.Probability, prediction.RiskLevel, model.Version, prediction.CreatedAt, []);
+        var dto = new PredictionDto(prediction.Probability, prediction.RiskLevel, model.Version, prediction.CreatedAt, []);
+        await hub.Clients.All.PredictionUpdated(orderId, dto);
+
+        return dto;
     }
 
     private async Task<ModelVersion> GetModelVersionAsync(string version, CancellationToken ct)
