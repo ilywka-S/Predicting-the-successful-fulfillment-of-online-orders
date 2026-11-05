@@ -63,6 +63,7 @@ builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddScoped<TokenService>();
 
 builder.Services.AddHttpClient<PredictionClient>(client => client.BaseAddress = new Uri("https+http://prediction"));
+builder.Services.AddScoped<OrderFeatureLoader>();
 
 builder.Services.AddAuthorization();
 
