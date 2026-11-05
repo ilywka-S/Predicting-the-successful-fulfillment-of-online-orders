@@ -18,8 +18,8 @@ public sealed class OlistImporter(AppDbContext db, string folder)
         await ImportAsync("orders", db.Orders, BuildOrdersAsync);
         await ImportAsync("order_items", db.OrderItems, BuildOrderItemsAsync);
         await ImportAsync("order_payments", db.OrderPayments, BuildOrderPaymentsAsync);
+        await PrintSummaryAsync();
     }
-
     //одна таблиця = одна транзакція; непорожню таблицю пропускаємо.
     private async Task ImportAsync<T>(string table, DbSet<T> set, Func<Task<(List<T> Rows, int Read, Rejects Rejects)>> build) where T : class
     {
@@ -289,5 +289,22 @@ public sealed class OlistImporter(AppDbContext db, string folder)
             });
         }
         return (rows, source.Count, rejects);
+    }
+    private async Task PrintSummaryAsync()
+    {
+        Console.WriteLine();
+        Console.WriteLine("Рядків у базі:");
+        Console.WriteLine($"  geo_zip: {await db.GeoZips.CountAsync()}");
+        Console.WriteLine($"  customers: {await db.Customers.CountAsync()}");
+        Console.WriteLine($"  sellers: {await db.Sellers.CountAsync()}");
+        Console.WriteLine($"  products: {await db.Products.CountAsync()}");
+        Console.WriteLine($"  orders: {await db.Orders.CountAsync()}");
+        Console.WriteLine($"  order_items: {await db.OrderItems.CountAsync()}");
+        Console.WriteLine($"  order_payments: {await db.OrderPayments.CountAsync()}");
+        var sizes = await db.Database
+            .SqlQueryRaw<string>("select pg_size_pretty(pg_database_size(current_database())) as \"Value\"")
+            .ToListAsync();
+
+        Console.WriteLine($"Розмір бази: {sizes[0]}");
     }
 }
