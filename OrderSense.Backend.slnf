@@ -13,6 +13,7 @@
       "tests\\OrderSense.Client.Core.Tests\\OrderSense.Client.Core.Tests.csproj",
       "tests\\OrderSense.PredictionService.Tests\\OrderSense.PredictionService.Tests.csproj",
       "src\\OrderSense.Olist\\OrderSense.Olist.csproj",
+      "tools\\OrderSense.OlistImport\\OrderSense.OlistImport.csproj",
     ]
   }
 }
