@@ -1,0 +1,308 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:api="clr-namespace:OrderSense.Client.Core;assembly=OrderSense.Client.Core"
+             xmlns:vm="clr-namespace:OrderSense.Client.Core.ViewModels;assembly=OrderSense.Client.Core"
+             xmlns:controls="clr-namespace:OrderSense.Maui.Controls"
+             x:Class="OrderSense.Maui.Views.OrdersPage"
+             x:DataType="vm:OrdersViewModel"
+             Title="Замовлення">
+
+    <ContentPage.Resources>
+
+        <DataTemplate x:Key="OrderCardTemplate" x:DataType="api:OrderListItemDto">
+            <Grid Padding="16,0,16,12">
+                <Border Style="{StaticResource Card}">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding OpenOrderCommand, Source={RelativeSource AncestorType={x:Type vm:OrdersViewModel}}, x:DataType=vm:OrdersViewModel}"
+                                              CommandParameter="{Binding .}" />
+                    </Border.GestureRecognizers>
+
+                    <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,Auto" RowSpacing="8" ColumnSpacing="12">
+
+                        <Label Style="{StaticResource TextSemiBold}"
+                               FontSize="{StaticResource TextBase}"
+                               VerticalOptions="Center"
+                               Text="{Binding Id, Converter={StaticResource ShortId}}" />
+                        <controls:RiskBadge Grid.Column="1" Compact="True" Level="{Binding RiskLevel}" />
+
+                        <Label Grid.Row="1" Grid.ColumnSpan="2" Style="{StaticResource TextMuted}">
+                            <Label.FormattedText>
+                                <FormattedString>
+                                    <Span Text="{Binding PurchasedAt, StringFormat='{0:dd.MM.yyyy HH:mm}'}" />
+                                    <Span Text=" · " />
+                                    <Span Text="{Binding CustomerState}" />
+                                    <Span Text=" · " />
+                                    <Span Text="{Binding Status, Converter={StaticResource OrderStatus}}" />
+                                </FormattedString>
+                            </Label.FormattedText>
+                        </Label>
+
+                        <Label Grid.Row="2"
+                               Style="{StaticResource TextMedium}"
+                               FontSize="{StaticResource TextBase}"
+                               Text="{Binding TotalValue, Converter={StaticResource Money}}" />
+                        <Label Grid.Row="2" Grid.Column="1"
+                               Style="{StaticResource TextMuted}"
+                               VerticalOptions="Center"
+                               IsVisible="{Binding Probability, Converter={StaticResource NotNull}}"
+                               Text="{Binding Probability, Converter={StaticResource Percent}, StringFormat='успіх {0}'}" />
+                    </Grid>
+                </Border>
+            </Grid>
+        </DataTemplate>
+
+        <DataTemplate x:Key="OrderRowTemplate" x:DataType="api:OrderListItemDto">
+            <VerticalStackLayout>
+                <Grid Style="{StaticResource TableRow}"
+                      ColumnDefinitions="1.2*,1.4*,1.4*,0.6*,0.7*,1.1*,0.8*,1.5*,Auto">
+                    <Grid.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding OpenOrderCommand, Source={RelativeSource AncestorType={x:Type vm:OrdersViewModel}}, x:DataType=vm:OrdersViewModel}"
+                                              CommandParameter="{Binding .}" />
+                    </Grid.GestureRecognizers>
+
+                    <Label Style="{StaticResource TextMedium}" VerticalOptions="Center"
+                           Text="{Binding Id, Converter={StaticResource ShortId}}" />
+                    <Label Grid.Column="1" VerticalOptions="Center"
+                           Text="{Binding PurchasedAt, StringFormat='{0:dd.MM.yyyy HH:mm}'}" />
+                    <Border Grid.Column="2" Style="{StaticResource BadgeOutline}">
+                        <Label Style="{StaticResource BadgeOutlineText}"
+                               Text="{Binding Status, Converter={StaticResource OrderStatus}}" />
+                    </Border>
+                    <Label Grid.Column="3" VerticalOptions="Center" Text="{Binding CustomerState}" />
+                    <Label Grid.Column="4" VerticalOptions="Center" HorizontalTextAlignment="End"
+                           Text="{Binding ItemsCount}" />
+                    <Label Grid.Column="5" VerticalOptions="Center" HorizontalTextAlignment="End"
+                           Text="{Binding TotalValue, Converter={StaticResource Money}}" />
+                    <Label Grid.Column="6" VerticalOptions="Center" HorizontalTextAlignment="End"
+                           Text="{Binding Probability, Converter={StaticResource Percent}}" />
+                    <controls:RiskBadge Grid.Column="7" Level="{Binding RiskLevel}" />
+                    <Label Grid.Column="8" Style="{StaticResource IconMuted}" Text="{x:Static controls:Icons.ChevronRight}" />
+                </Grid>
+                <BoxView Style="{StaticResource Separator}" />
+            </VerticalStackLayout>
+        </DataTemplate>
+
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto,*">
+
+        <VerticalStackLayout IsVisible="{OnIdiom Phone=True, Default=False}"
+                             Padding="16,12,16,0"
+                             Spacing="12">
+
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                <controls:TextField Icon="{x:Static controls:Icons.Search}"
+                                    Placeholder="Пошук за номером"
+                                    ReturnType="Search"
+                                    ReturnCommand="{Binding SearchCommand}"
+                                    Text="{Binding SearchText}" />
+                <Button Grid.Column="1"
+                        Style="{StaticResource ButtonIconOutline}"
+                        VerticalOptions="Start"
+                        Text="{x:Static controls:Icons.SlidersHorizontal}"
+                        SemanticProperties.Description="Фільтри"
+                        Command="{Binding ToggleFilterPanelCommand}" />
+            </Grid>
+
+            <controls:SegmentedControl Stretch="True" SelectedValue="{Binding RiskFilter}">
+                <controls:SegmentItem Text="Усі" Value="all" />
+                <controls:SegmentItem Text="Високий" Value="high" />
+                <controls:SegmentItem Text="Середній" Value="medium" />
+                <controls:SegmentItem Text="Низький" Value="low" />
+            </controls:SegmentedControl>
+
+            <Border Style="{StaticResource Card}" IsVisible="{Binding IsFilterPanelOpen}">
+                <VerticalStackLayout Spacing="12">
+                    <controls:SelectField Label="Статус"
+                                          ItemsSource="{Binding StatusOptions}"
+                                          SelectedItem="{Binding SelectedStatus}" />
+                    <controls:SelectField Label="Штат клієнта"
+                                          ItemsSource="{Binding StateOptions}"
+                                          SelectedItem="{Binding SelectedState}" />
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                        <controls:DateField Label="Від" Placeholder="дд.мм.рррр" Date="{Binding DateFrom}" />
+                        <controls:DateField Grid.Column="1" Label="До" Placeholder="дд.мм.рррр" Date="{Binding DateTo}" />
+                    </Grid>
+                    <Button Style="{StaticResource ButtonGhost}"
+                            Text="Скинути фільтри"
+                            IsVisible="{Binding HasActiveFilters}"
+                            Command="{Binding ResetFiltersCommand}" />
+                </VerticalStackLayout>
+            </Border>
+
+            <Grid ColumnDefinitions="*,Auto">
+                <Label Style="{StaticResource TextMuted}"
+                       VerticalOptions="Center"
+                       Text="{Binding TotalCount, Converter={StaticResource Count}, ConverterParameter='замовлення|замовлення|замовлень', StringFormat='Знайдено {0}'}" />
+                <Button Grid.Column="1"
+                        Style="{StaticResource ButtonGhost}"
+                        Padding="8,0"
+                        Text="Спершу новіші"
+                        Command="{Binding ToggleSortCommand}">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button" Binding="{Binding IsNewestFirst}" Value="False">
+                            <Setter Property="Text" Value="Спершу старіші" />
+                        </DataTrigger>
+                    </Button.Triggers>
+                </Button>
+            </Grid>
+        </VerticalStackLayout>
+
+        <VerticalStackLayout IsVisible="{OnIdiom Phone=False, Default=True}"
+                             Padding="32,24,32,16"
+                             Spacing="16">
+
+            <Grid ColumnDefinitions="*,170,120,150,150,Auto,Auto"
+                  ColumnSpacing="12">
+                <controls:TextField Icon="{x:Static controls:Icons.Search}"
+                                    Placeholder="Пошук за номером замовлення"
+                                    ReturnType="Search"
+                                    ReturnCommand="{Binding SearchCommand}"
+                                    Text="{Binding SearchText}" />
+                <controls:SelectField Grid.Column="1"
+                                      ItemsSource="{Binding StatusOptions}"
+                                      SelectedItem="{Binding SelectedStatus}" />
+                <controls:SelectField Grid.Column="2"
+                                      ItemsSource="{Binding StateOptions}"
+                                      SelectedItem="{Binding SelectedState}" />
+                <controls:DateField Grid.Column="3" Placeholder="Від" Date="{Binding DateFrom}" />
+                <controls:DateField Grid.Column="4" Placeholder="До" Date="{Binding DateTo}" />
+                <Button Grid.Column="5"
+                        Style="{StaticResource ButtonGhost}"
+                        VerticalOptions="Start"
+                        Text="Скинути"
+                        IsVisible="{Binding HasActiveFilters}"
+                        Command="{Binding ResetFiltersCommand}" />
+                <Button Grid.Column="6"
+                        Style="{StaticResource ButtonIconOutline}"
+                        VerticalOptions="Start"
+                        Text="{x:Static controls:Icons.RefreshCw}"
+                        SemanticProperties.Description="Оновити"
+                        ToolTipProperties.Text="Оновити"
+                        Command="{Binding RefreshCommand}" />
+            </Grid>
+
+            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                <controls:SegmentedControl SelectedValue="{Binding RiskFilter}">
+                    <controls:SegmentItem Text="Усі" Value="all" />
+                    <controls:SegmentItem Text="Високий ризик" Value="high" Icon="{x:Static controls:Icons.OctagonAlert}" />
+                    <controls:SegmentItem Text="Середній" Value="medium" Icon="{x:Static controls:Icons.TriangleAlert}" />
+                    <controls:SegmentItem Text="Низький" Value="low" Icon="{x:Static controls:Icons.CircleCheck}" />
+                </controls:SegmentedControl>
+                <Label Grid.Column="1"
+                       Style="{StaticResource TextMuted}"
+                       VerticalOptions="Center"
+                       HorizontalTextAlignment="End"
+                       Text="{Binding TotalCount, Converter={StaticResource Count}, ConverterParameter='замовлення|замовлення|замовлень', StringFormat='Знайдено {0}'}" />
+                <Button Grid.Column="2"
+                        Style="{StaticResource ButtonGhost}"
+                        Padding="10,0"
+                        Text="Спершу новіші"
+                        Command="{Binding ToggleSortCommand}">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button" Binding="{Binding IsNewestFirst}" Value="False">
+                            <Setter Property="Text" Value="Спершу старіші" />
+                        </DataTrigger>
+                    </Button.Triggers>
+                </Button>
+            </Grid>
+        </VerticalStackLayout>
+
+        <Border Grid.Row="1"
+                Style="{OnIdiom Phone={StaticResource FormSurfacePlain}, Default={StaticResource CardFlush}}"
+                Margin="{OnIdiom Phone='0,12,0,0', Default='32,0,32,24'}">
+            <Grid RowDefinitions="Auto,Auto,*">
+
+                <Grid Style="{StaticResource TableHeader}"
+                      IsVisible="{OnIdiom Phone=False, Default=True}"
+                      ColumnDefinitions="1.2*,1.4*,1.4*,0.6*,0.7*,1.1*,0.8*,1.5*,Auto">
+                    <Label Style="{StaticResource TextTableHeader}" Text="Замовлення" />
+                    <Label Grid.Column="1" Style="{StaticResource TextTableHeader}" Text="Дата покупки" />
+                    <Label Grid.Column="2" Style="{StaticResource TextTableHeader}" Text="Статус" />
+                    <Label Grid.Column="3" Style="{StaticResource TextTableHeader}" Text="Штат" />
+                    <Label Grid.Column="4" Style="{StaticResource TextTableHeader}" HorizontalTextAlignment="End" Text="Товарів" />
+                    <Label Grid.Column="5" Style="{StaticResource TextTableHeader}" HorizontalTextAlignment="End" Text="Сума" />
+                    <Label Grid.Column="6" Style="{StaticResource TextTableHeader}" HorizontalTextAlignment="End" Text="Успіх" />
+                    <Label Grid.Column="7" Style="{StaticResource TextTableHeader}" Text="Ризик" />
+                    <Label Grid.Column="8" Style="{StaticResource IconMuted}" Text="{x:Static controls:Icons.ChevronRight}" Opacity="0" />
+                </Grid>
+                <BoxView Grid.Row="1" Style="{StaticResource Separator}" IsVisible="{OnIdiom Phone=False, Default=True}" />
+
+                <VerticalStackLayout Grid.Row="2"
+                                     IsVisible="{Binding IsLoading}"
+                                     Padding="16"
+                                     Spacing="{OnIdiom Phone=12, Default=20}">
+                    <controls:Skeleton HeightRequest="{OnIdiom Phone=104, Default=20}" />
+                    <controls:Skeleton HeightRequest="{OnIdiom Phone=104, Default=20}" />
+                    <controls:Skeleton HeightRequest="{OnIdiom Phone=104, Default=20}" />
+                    <controls:Skeleton HeightRequest="{OnIdiom Phone=104, Default=20}" />
+                    <controls:Skeleton HeightRequest="{OnIdiom Phone=104, Default=20}" />
+                    <controls:Skeleton HeightRequest="{OnIdiom Phone=104, Default=20}" />
+                </VerticalStackLayout>
+
+                <controls:EmptyState Grid.Row="2"
+                                     IsVisible="{Binding HasError}"
+                                     IsError="True"
+                                     Icon="{x:Static controls:Icons.WifiOff}"
+                                     Title="Не вдалося завантажити замовлення"
+                                     Description="{Binding ErrorMessage}"
+                                     ActionText="Спробувати знову"
+                                     ActionCommand="{Binding RetryCommand}" />
+
+                <RefreshView Grid.Row="2"
+                             IsVisible="{Binding IsListVisible}"
+                             IsRefreshing="{Binding IsRefreshing}"
+                             Command="{Binding RefreshCommand}">
+                    <CollectionView ItemsSource="{Binding Orders}"
+                                    ItemTemplate="{OnIdiom Phone={StaticResource OrderCardTemplate}, Default={StaticResource OrderRowTemplate}}"
+                                    SelectionMode="None"
+                                    RemainingItemsThreshold="5"
+                                    RemainingItemsThresholdReachedCommand="{Binding LoadMoreCommand}">
+                        <CollectionView.EmptyView>
+                            <Grid>
+                                <controls:EmptyState Icon="{x:Static controls:Icons.Inbox}"
+                                                     Title="Нічого не знайдено"
+                                                     Description="Змініть пошук або фільтри."
+                                                     ActionText="Скинути фільтри"
+                                                     ActionCommand="{Binding ResetFiltersCommand}"
+                                                     IsVisible="{Binding HasActiveFilters}" />
+                                <controls:EmptyState Icon="{x:Static controls:Icons.Inbox}"
+                                                     Title="Замовлень поки немає"
+                                                     IsVisible="{Binding HasActiveFilters, Converter={StaticResource Not}}" />
+                            </Grid>
+                        </CollectionView.EmptyView>
+                        <CollectionView.Footer>
+                            <Grid Padding="16" MinimumHeightRequest="64">
+                                <ActivityIndicator IsRunning="{Binding IsLoadingMore}"
+                                                   IsVisible="{Binding IsLoadingMore}"
+                                                   HorizontalOptions="Center"
+                                                   WidthRequest="20"
+                                                   HeightRequest="20" />
+                                <Button Style="{StaticResource ButtonOutline}"
+                                        HorizontalOptions="Center"
+                                        Text="Показати ще"
+                                        IsVisible="{Binding CanLoadMore}"
+                                        Command="{Binding LoadMoreCommand}" />
+                                <VerticalStackLayout IsVisible="{Binding HasLoadMoreError}"
+                                                     HorizontalOptions="Center"
+                                                     Spacing="8">
+                                    <Label Style="{StaticResource TextError}"
+                                           HorizontalTextAlignment="Center"
+                                           Text="Не вдалося завантажити наступні замовлення" />
+                                    <Button Style="{StaticResource ButtonOutline}"
+                                            HorizontalOptions="Center"
+                                            Text="Спробувати ще раз"
+                                            Command="{Binding LoadMoreCommand}" />
+                                </VerticalStackLayout>
+                            </Grid>
+                        </CollectionView.Footer>
+                    </CollectionView>
+                </RefreshView>
+
+            </Grid>
+        </Border>
+
+    </Grid>
+
+</ContentPage>

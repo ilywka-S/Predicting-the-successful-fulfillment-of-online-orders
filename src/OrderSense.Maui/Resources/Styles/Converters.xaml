@@ -23,6 +23,8 @@
 
     <controls:RoleConverter x:Key="Role" />
 
+    <controls:CountConverter x:Key="Count" />
+
     <toolkit:InvertedBoolConverter x:Key="Not" />
     <toolkit:IsStringNotNullOrEmptyConverter x:Key="HasText" />
     <toolkit:IsNotNullConverter x:Key="NotNull" />
