@@ -11,6 +11,7 @@ using OrderSense.Api.Auth;
 using OrderSense.Api.Data;
 using OrderSense.Api.Data.Entities;
 using OrderSense.Api.Demo;
+using OrderSense.Api.Predictions;
 
 var isOpenApiGeneration = Assembly.GetEntryAssembly()?.GetName().Name == "GetDocument.Insider";
 
@@ -60,6 +61,10 @@ builder.Services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationSc
 
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddScoped<TokenService>();
+
+builder.Services.AddHttpClient<PredictionClient>(client => client.BaseAddress = new Uri("https+http://prediction"));
+builder.Services.AddScoped<OrderFeatureLoader>();
+builder.Services.AddScoped<OrderPredictor>();
 
 builder.Services.AddAuthorization();
 

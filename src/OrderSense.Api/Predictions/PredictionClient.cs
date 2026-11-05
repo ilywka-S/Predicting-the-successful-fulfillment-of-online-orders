@@ -1,0 +1,31 @@
+﻿using System.Text.Json;
+using System.Text.Json.Serialization;
+using OrderSense.Contracts;
+using Polly;
+
+namespace OrderSense.Api.Predictions;
+
+public class PredictionClient(HttpClient http)
+{
+    private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web)
+    {
+        NumberHandling = JsonNumberHandling.AllowNamedFloatingPointLiterals,
+    };
+
+    public async Task<OrderPrediction> PredictAsync(OrderFeatures features, CancellationToken ct)
+    {
+        try
+        {
+            using var response = await http.PostAsJsonAsync("/predict", features, Json, ct);
+            response.EnsureSuccessStatusCode();
+
+            return await response.Content.ReadFromJsonAsync<OrderPrediction>(Json, ct) ?? throw new PredictionServiceUnavailableException("Prediction service returned an empty response");
+        }
+        catch (Exception e) when (e is HttpRequestException or JsonException or ExecutionRejectedException || e is TaskCanceledException && !ct.IsCancellationRequested)
+        {
+            throw new PredictionServiceUnavailableException("Prediction service is unavailable", e);
+        }
+    }
+}
+
+public class PredictionServiceUnavailableException(string message, Exception? innerException = null) : Exception(message, innerException);
