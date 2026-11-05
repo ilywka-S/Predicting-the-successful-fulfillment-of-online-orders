@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using OrderSense.Api.Data;
 using OrderSense.Api.Data.Entities;
 using OrderSense.Api.Dtos;
+using OrderSense.Api.Predictions;
 
 namespace OrderSense.Api.Controllers;
 
@@ -130,6 +131,35 @@ public class OrdersController(AppDbContext db) : ControllerBase
 
         return new OrderDetailsDto(order.Id, order.Status, order.PurchasedAt, order.ApprovedAt, order.EstimatedDeliveryAt, order.DeliveredCustomerAt, order.Customer, order.Items, order.Payments, prediction);
     }
+    
+    [HttpPost("{id}/predict", Name = "PredictOrder")]
+    [ProducesResponseType<PredictionDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status422UnprocessableEntity)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status503ServiceUnavailable)]
+    public async Task<ActionResult<PredictionDto>> Predict(string id, [FromServices] OrderPredictor predictor, CancellationToken ct)
+    {
+        try
+        {
+            var prediction = await predictor.PredictAsync(id, ct);
+
+            if (prediction is null)
+            {
+                return Problem(statusCode: StatusCodes.Status404NotFound, title: $"Order '{id}' not found");
+            }
+
+            return prediction;
+        }
+        catch (OrderNotPredictableException e)
+        {
+            return Problem(statusCode: StatusCodes.Status422UnprocessableEntity, title: e.Message);
+        }
+        catch (PredictionServiceUnavailableException)
+        {
+            return Problem(statusCode: StatusCodes.Status503ServiceUnavailable, title: "Prediction service is unavailable");
+        }
+    }
+
     
     [HttpPost("{id}/what-if", Name = "WhatIf")]
     [ProducesResponseType<WhatIfResultDto>(StatusCodes.Status200OK)]
