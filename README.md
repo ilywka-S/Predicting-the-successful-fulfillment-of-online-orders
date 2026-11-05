@@ -136,6 +136,27 @@ dotnet run
 
 Модель v1 поки слабка: на тестових даних ROC-AUC 0,60, PR-AUC 0,064 проти 0,040 у базової моделі. Сигнал є, але калібрування, підбір ознак і AutoML ще попереду (до 10.11).
 
+### Імпорт Olist у базу
+
+Імпорт читає CSV з `data/olist/` і записує їх у таблиці PostgreSQL. Схему веде API, тому імпорт використовує його `AppDbContext`.
+
+1. Покладіть 9 CSV з Kaggle (Brazilian E-Commerce Public Dataset by Olist) у `data/olist/`.
+2. Задайте рядок підключення до порожньої бази змінною середовища (у git його не кладемо):
+
+```
+$env:ConnectionStrings__ordersense = "Host=...;Database=...;Username=...;Password=...;SSL Mode=Require"
+```
+
+3. Запустіть імпорт:
+
+```
+dotnet run --project tools/OrderSense.OlistImport -- data/olist
+```
+
+Таблиці імпортуються в порядку `geo_zip`, `customers`, `sellers`, `products`, `orders`, `order_items`, `order_payments`; кожна окремою транзакцією, пачками по 5000 рядків. Непорожню таблицю пропущено, тож повторний запуск нічого не дублює. У кінці виводяться кількості рядків і розмір бази. Рядки з посиланнями на неіснуючі записи відкидаються, причини в лозі.
+
+База має бути порожньою: демо-дані блокують таблиці як «вже імпортовано». Вимкнути їх: `dotnet user-secrets set "Parameters:demo-orders" "0" --project src/OrderSense.AppHost`.
+
 ## API
 
 | Метод | Шлях | Хто має доступ |
