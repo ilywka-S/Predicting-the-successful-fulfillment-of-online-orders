@@ -25,4 +25,12 @@
     <ProjectReference Include="..\..\src\OrderSense.Api\OrderSense.Api.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\tools\OrderSense.OlistImport\OrderSense.OlistImport.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Import\Data\*.csv" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>
