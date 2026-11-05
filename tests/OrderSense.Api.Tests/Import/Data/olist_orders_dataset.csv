@@ -1,0 +1,5 @@
+﻿order_id,customer_id,order_status,order_purchase_timestamp,order_approved_at,order_delivered_carrier_date,order_delivered_customer_date,order_estimated_delivery_date
+o1,c1,delivered,2018-01-10 10:00:00,2018-01-10 10:30:00,2018-01-12 09:00:00,2018-01-20 12:00:00,2018-01-25 00:00:00
+o2,c2,shipped,2018-02-01 08:00:00,2018-02-01 08:20:00,2018-02-03 09:00:00,,2018-02-20 00:00:00
+o3,c3,canceled,2018-03-05 15:00:00,,,,2018-03-25 00:00:00
+o4,c_unknown,delivered,2018-03-06 15:00:00,2018-03-06 15:10:00,2018-03-07 09:00:00,2018-03-10 12:00:00,2018-03-20 00:00:00
