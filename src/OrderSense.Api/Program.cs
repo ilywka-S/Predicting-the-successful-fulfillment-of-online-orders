@@ -11,6 +11,7 @@ using OrderSense.Api.Auth;
 using OrderSense.Api.Data;
 using OrderSense.Api.Data.Entities;
 using OrderSense.Api.Demo;
+using OrderSense.Api.Hubs;
 using OrderSense.Api.Predictions;
 
 var isOpenApiGeneration = Assembly.GetEntryAssembly()?.GetName().Name == "GetDocument.Insider";
@@ -83,6 +84,8 @@ builder.Services.ConfigureHttpJsonOptions(o =>
 });
 builder.Services.AddOpenApi();
 
+builder.Services.AddSignalR().AddJsonProtocol(o => o.PayloadSerializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase)));
+
 var app = builder.Build();
 
 if (!isOpenApiGeneration)
@@ -113,5 +116,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.MapHub<OrdersHub>("/hubs/orders");
 
 app.Run();
