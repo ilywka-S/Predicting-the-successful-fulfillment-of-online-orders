@@ -5,15 +5,12 @@ using OrderSense.ML.Training;
 using OrderSense.Contracts;
 using Microsoft.ML;
 using Microsoft.ML.Transforms;
+using OrderSense.Olist;
 
 var csvConfig = new CsvConfiguration(CultureInfo.InvariantCulture);
 
-List<T> ReadCsv<T>(string fileName)
-{
-    using var reader = new StreamReader($"../../data/olist/{fileName}");
-    using var csv = new CsvReader(reader, csvConfig);
-    return csv.GetRecords<T>().ToList();
-}
+List<T> ReadCsv<T>(string fileName) =>
+    OlistCsv.Read<T>("../../data/olist", fileName);
 
 Console.WriteLine("Читаю файли...");
 

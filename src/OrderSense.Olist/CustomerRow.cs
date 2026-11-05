@@ -1,6 +1,6 @@
-using CsvHelper.Configuration.Attributes;
+﻿using CsvHelper.Configuration.Attributes;
 
-namespace OrderSense.ML.Training;
+namespace OrderSense.Olist;
 
 public sealed class CustomerRow
 {

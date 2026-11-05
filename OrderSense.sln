@@ -33,6 +33,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OrderSense.Maui.Tests", "te
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OrderSense.PredictionService.Tests", "tests\OrderSense.PredictionService.Tests\OrderSense.PredictionService.Tests.csproj", "{1F127B8B-EAB6-4D94-93DB-7F68A3190199}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OrderSense.Olist", "src\OrderSense.Olist\OrderSense.Olist.csproj", "{AFA41778-D05D-4B22-A298-4F846BD5CF7C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -187,6 +189,18 @@ Global
 		{1F127B8B-EAB6-4D94-93DB-7F68A3190199}.Release|x64.Build.0 = Release|Any CPU
 		{1F127B8B-EAB6-4D94-93DB-7F68A3190199}.Release|x86.ActiveCfg = Release|Any CPU
 		{1F127B8B-EAB6-4D94-93DB-7F68A3190199}.Release|x86.Build.0 = Release|Any CPU
+		{AFA41778-D05D-4B22-A298-4F846BD5CF7C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AFA41778-D05D-4B22-A298-4F846BD5CF7C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AFA41778-D05D-4B22-A298-4F846BD5CF7C}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{AFA41778-D05D-4B22-A298-4F846BD5CF7C}.Debug|x64.Build.0 = Debug|Any CPU
+		{AFA41778-D05D-4B22-A298-4F846BD5CF7C}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{AFA41778-D05D-4B22-A298-4F846BD5CF7C}.Debug|x86.Build.0 = Debug|Any CPU
+		{AFA41778-D05D-4B22-A298-4F846BD5CF7C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AFA41778-D05D-4B22-A298-4F846BD5CF7C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AFA41778-D05D-4B22-A298-4F846BD5CF7C}.Release|x64.ActiveCfg = Release|Any CPU
+		{AFA41778-D05D-4B22-A298-4F846BD5CF7C}.Release|x64.Build.0 = Release|Any CPU
+		{AFA41778-D05D-4B22-A298-4F846BD5CF7C}.Release|x86.ActiveCfg = Release|Any CPU
+		{AFA41778-D05D-4B22-A298-4F846BD5CF7C}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -204,5 +218,6 @@ Global
 		{C36D50BB-789A-45B2-A597-4BBC5048595E} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 		{8057AE3C-750E-4004-8392-5BD8B62B5C0F} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 		{1F127B8B-EAB6-4D94-93DB-7F68A3190199} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
+		{AFA41778-D05D-4B22-A298-4F846BD5CF7C} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 	EndGlobalSection
 EndGlobal
