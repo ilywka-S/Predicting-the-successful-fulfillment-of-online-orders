@@ -5,6 +5,7 @@ using OrderSense.Maui.ViewModels;
 using OrderSense.Maui.Views;
 using OrderSense.Client.Core.ViewModels;
 using OrderSense.Client.Core.Interfaces;
+using OrderSense.Client.Core.Services;
 namespace OrderSense.Maui;
 
 public static class MauiProgram
@@ -33,6 +34,8 @@ public static class MauiProgram
             builder.Services.AddSingleton<ITokenStorage, SecureTokenStorage>();
 
             builder.Services.AddSingleton<IAuthNavigation, MauiAuthNavigation>();
+            builder.Services.AddSingleton<ISignalRService, SignalRService>();
+            builder.Services.AddTransient<DashboardViewModel>();
 
             string baseAddress = "https://ordersense-api.onrender.com"; 
 
