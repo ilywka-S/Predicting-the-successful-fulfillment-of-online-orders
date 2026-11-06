@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using OrderSense.Api.Data;
 using OrderSense.Api.Data.Entities;
 using OrderSense.Olist;
@@ -43,7 +43,6 @@ public sealed class OlistImporter(AppDbContext db, string folder)
             Console.WriteLine($"    відкинуто {count}: {reason}");
         }
     }
-    private static string Zip(string? z) => (z ?? "").Trim().PadLeft(5, '0');
     private static string? Clean(string? s) => string.IsNullOrWhiteSpace(s) ? null : s.Trim();
     private static int? ToInt(float? v) => v is null ? null : (int)Math.Round(v.Value);
     private Task<(List<GeoZip>, int, Rejects)> BuildGeoZipsAsync()
@@ -51,7 +50,7 @@ public sealed class OlistImporter(AppDbContext db, string folder)
         var source = OlistCsv.Read<GeolocationRow>(folder, "olist_geolocation_dataset.csv");
         Console.WriteLine($"geo_zip: у файлі {source.Count} точок, усереднюю по префіксу");
         var rows = source
-            .GroupBy(g => Zip(g.ZipCodePrefix))
+            .GroupBy(g => ZipCode.Normalize(g.ZipCodePrefix))
             .Select(g => new GeoZip
             {
                 ZipPrefix = g.Key,
@@ -69,7 +68,7 @@ public sealed class OlistImporter(AppDbContext db, string folder)
         var rows = new List<Customer>();
         foreach (var r in source)
         {
-            var zip = Zip(r.CustomerZipCodePrefix);
+            var zip = ZipCode.Normalize(r.CustomerZipCodePrefix);
             var state = r.CustomerState?.Trim();
             if (zip.Length > 5) 
             { 
@@ -105,7 +104,7 @@ public sealed class OlistImporter(AppDbContext db, string folder)
         var rows = new List<Seller>();
         foreach (var r in source)
         {
-            var zip = Zip(r.SellerZipCodePrefix);
+            var zip = ZipCode.Normalize(r.SellerZipCodePrefix);
             var state = r.SellerState?.Trim();
             if (zip.Length > 5) 
             { 

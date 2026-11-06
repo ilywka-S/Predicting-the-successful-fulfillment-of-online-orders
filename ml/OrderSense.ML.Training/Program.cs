@@ -27,7 +27,7 @@ Console.WriteLine($"orders: {orders.Count}, items: {items.Count}, products: {pro
 
 //середнє по координатинатах по кожному zip-префіксу
 var zipToCoords = geolocation
-    .GroupBy(g => g.ZipCodePrefix)
+    .GroupBy(g => ZipCode.Normalize(g.ZipCodePrefix))
     .ToDictionary(
         g => g.Key,
         g => (Lat: g.Average(x => x.Lat), Lng: g.Average(x => x.Lng)));
@@ -162,8 +162,8 @@ OrderCard? BuildCard(OrderRow order)
     //відстань продавець - клієнт
     if (customer != null && sellersById.TryGetValue(mainSellerId, out var sellerForDistance))
     {
-        if (zipToCoords.TryGetValue(customer.CustomerZipCodePrefix, out var custCoords) &&
-            zipToCoords.TryGetValue(sellerForDistance.SellerZipCodePrefix, out var sellCoords))
+        if (zipToCoords.TryGetValue(ZipCode.Normalize(customer.CustomerZipCodePrefix), out var custCoords) &&
+            zipToCoords.TryGetValue(ZipCode.Normalize(sellerForDistance.SellerZipCodePrefix), out var sellCoords))
         {
             card.DistanceKm = HaversineKm(custCoords.Lat, custCoords.Lng, sellCoords.Lat, sellCoords.Lng);
         }
@@ -207,13 +207,13 @@ TrainingRow? BuildTrainingRow(OrderRow order)
     sellersById.TryGetValue(mainSellerId, out var seller);
 
     (double Lat, double Lng)? customerCoords = null;
-    if (customer != null && zipToCoords.TryGetValue(customer.CustomerZipCodePrefix, out var cc))
+    if (customer != null && zipToCoords.TryGetValue(ZipCode.Normalize(customer.CustomerZipCodePrefix), out var cc))
     {
         customerCoords = cc;
     }
 
     (double Lat, double Lng)? sellerCoords = null;
-    if (seller != null && zipToCoords.TryGetValue(seller.SellerZipCodePrefix, out var sc))
+    if (seller != null && zipToCoords.TryGetValue(ZipCode.Normalize(seller.SellerZipCodePrefix), out var sc))
     {
         sellerCoords = sc;
     }
