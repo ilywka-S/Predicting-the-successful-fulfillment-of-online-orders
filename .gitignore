@@ -486,3 +486,5 @@ $RECYCLE.BIN/
 coveragereport/
 *.keystore
 *.private.env.json
+
+!tests/OrderSense.Api.Tests/Import/Data/*.csv

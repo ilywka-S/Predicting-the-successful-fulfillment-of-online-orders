@@ -1,6 +1,6 @@
-using CsvHelper.Configuration.Attributes;
+﻿using CsvHelper.Configuration.Attributes;
 
-namespace OrderSense.ML.Training;
+namespace OrderSense.Olist;
 
 public sealed class SellerRow
 {
@@ -20,6 +20,12 @@ public sealed class SellerRow
 
     [Name("seller_state")]
     public string SellerState 
+    { 
+        get; 
+        set; 
+    } = "";
+    [Name("seller_city")] 
+    public string SellerCity 
     { 
         get; 
         set; 

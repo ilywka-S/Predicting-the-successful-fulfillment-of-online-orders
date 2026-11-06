@@ -1,6 +1,6 @@
-using CsvHelper.Configuration.Attributes;
+﻿using CsvHelper.Configuration.Attributes;
 
-namespace OrderSense.ML.Training;
+namespace OrderSense.Olist;
 
 public sealed class ProductRow
 {
@@ -37,6 +37,12 @@ public sealed class ProductRow
 
     [Name("product_width_cm")]
     public float? ProductWidthCm 
+    { 
+        get; 
+        set; 
+    }
+    [Name("product_photos_qty")] 
+    public int? ProductPhotosQty 
     { 
         get; 
         set; 
