@@ -43,22 +43,45 @@ if (!isOpenApiGeneration)
     jwtOptions.ValidateOnStart();
 }
 
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer();
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    var jwtOptions = builder.Configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>()!;
+    var secretKey = jwtOptions.Key.Trim();
 
-builder.Services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
-    .Configure<IOptions<JwtOptions>>((options, jwt) =>
+    options.MapInboundClaims = false;
+    options.TokenValidationParameters = new TokenValidationParameters
     {
-        options.MapInboundClaims = false;
-        options.TokenValidationParameters = new TokenValidationParameters
+        ValidateIssuer = true,
+        ValidIssuer = jwtOptions.Issuer,
+        ValidateAudience = true,
+        ValidAudience = jwtOptions.Audience,
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
+        NameClaimType = "name",
+        RoleClaimType = "role",
+        ClockSkew = TimeSpan.FromMinutes(1)
+    };
+
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
         {
-            ValidIssuer = jwt.Value.Issuer,
-            ValidAudience = jwt.Value.Audience,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwt.Value.Key)),
-            NameClaimType = "name",
-            RoleClaimType = "role"
-        };
-    });
+            var accessToken = context.Request.Query["access_token"];
+            var path = context.HttpContext.Request.Path;
+
+            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs/orders"))
+            {
+                context.Token = accessToken;
+            }
+            return Task.CompletedTask;
+        }
+    };
+});
 
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddScoped<TokenService>();
