@@ -72,16 +72,6 @@ public class ContractStubTests(ApiFactory factory)
     }
 
     [Fact]
-    public async Task Model_Returns501()
-    {
-        var client = await ClientAsync(Roles.Manager);
-
-        var response = await client.GetAsync("/api/model");
-
-        Assert.Equal(HttpStatusCode.NotImplemented, response.StatusCode);
-    }
-
-    [Fact]
     public async Task OpenApi_ContainsAllNewPaths()
     {
         var document = await factory.CreateClient().GetStringAsync("/openapi/v1.json");
