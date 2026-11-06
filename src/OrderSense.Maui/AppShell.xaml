@@ -6,6 +6,8 @@
     xmlns:views="clr-namespace:OrderSense.Maui.Views"
     Shell.FlyoutBehavior="Disabled">
 
+    
+                  
     <ShellContent 
         ContentTemplate="{DataTemplate views:LoadingPage}" 
         Route="LoadingPage"/>
@@ -13,8 +15,15 @@
     <ShellContent 
         Route="LoginPage" 
         ContentTemplate="{DataTemplate views:LoginPage}" />
+        
 
     <TabBar>
+        <Tab>
+        <ShellContent Title="Dashboard"
+                  Icon="icon_dashboard.png"
+                  ContentTemplate="{DataTemplate views:DashboardPage}"
+                  Route="DashboardPage" />
+        </Tab>
         <Tab Title="Головна" Icon="dotnet_bot.png">
             <ShellContent Route="MainPage" ContentTemplate="{DataTemplate views:MainPage}" />
         </Tab>
