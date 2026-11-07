@@ -18,14 +18,20 @@
         
 
     <TabBar>
-        <Tab>
-        <ShellContent Title="Dashboard"
-                  Icon="icon_dashboard.png"
+        <Tab Title="Дашборд">
+        <ShellContent Title="Dashboard"                  
                   ContentTemplate="{DataTemplate views:DashboardPage}"
                   Route="DashboardPage" />
         </Tab>
         <Tab Title="Головна" Icon="dotnet_bot.png">
             <ShellContent Route="MainPage" ContentTemplate="{DataTemplate views:MainPage}" />
+        </Tab>
+
+        <Tab Title="Пакетний прогноз">
+            <ShellContent 
+                Title="Пакетний прогноз"
+                Route="BatchPredictionPage"
+                ContentTemplate="{DataTemplate views:BatchPredictionPage}" />
         </Tab>
     </TabBar>
 

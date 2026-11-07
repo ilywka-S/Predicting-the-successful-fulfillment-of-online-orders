@@ -6,6 +6,7 @@ using OrderSense.Maui.Views;
 using OrderSense.Client.Core.ViewModels;
 using OrderSense.Client.Core.Interfaces;
 using OrderSense.Client.Core.Services;
+using CommunityToolkit.Maui.Storage;
 
 namespace OrderSense.Maui;
 
@@ -40,12 +41,15 @@ public static class MauiProgram
         builder.Services.AddTransient<LoadingViewModel>();
         builder.Services.AddTransient<LoadingPage>();
         builder.Services.AddTransient<AppShell>();
+        builder.Services.AddTransient<BatchPredictionViewModel>();
+        builder.Services.AddTransient<BatchPredictionPage>();
 
         // Services & Handlers
         builder.Services.AddTransient<JwtAuthHandler>();
         builder.Services.AddSingleton<ITokenStorage, SecureTokenStorage>();
         builder.Services.AddSingleton<IAuthNavigation, MauiAuthNavigation>();
         builder.Services.AddTransient<DashboardViewModel>();
+        builder.Services.AddSingleton<IFileSaver>(FileSaver.Default);
 
         // SignalR Service
         builder.Services.AddSingleton<ISignalRService>(sp => 
