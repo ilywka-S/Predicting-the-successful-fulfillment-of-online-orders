@@ -16,6 +16,9 @@ public partial class AppShellViewModel : ObservableObject
     [ObservableProperty]
     private bool isAdminVisible;
 
+    [ObservableProperty]
+    private bool isBatchPredictionVisible;
+
     public AppShellViewModel(ITokenStorage tokenStorage)
     {
         _tokenStorage = tokenStorage;
@@ -25,9 +28,14 @@ public partial class AppShellViewModel : ObservableObject
     {
         var role = await _tokenStorage.GetRoleAsync();
         
-        // Звіряємо з константами, які ти показав
         IsManagerVisible = role == "manager"; 
         IsAnalystVisible = role == "analyst";
         IsAdminVisible = role == "admin";
+    }
+
+    public async Task CheckRoleAsync()
+    {
+        var role = await _tokenStorage.GetRoleAsync();
+        IsBatchPredictionVisible = role is "analyst" or "admin";
     }
 }

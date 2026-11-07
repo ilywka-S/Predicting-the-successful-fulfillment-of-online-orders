@@ -27,10 +27,8 @@
             <ShellContent Route="MainPage" ContentTemplate="{DataTemplate views:MainPage}" />
         </Tab>
 
-        <Tab Title="Пакетний прогноз">
+        <Tab Title="Пакетний прогноз" IsVisible="{Binding IsBatchPredictionVisible}">
             <ShellContent 
-                Title="Пакетний прогноз"
-                Route="BatchPredictionPage"
                 ContentTemplate="{DataTemplate views:BatchPredictionPage}" />
         </Tab>
     </TabBar>
