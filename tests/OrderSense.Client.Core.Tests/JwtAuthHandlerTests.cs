@@ -5,7 +5,7 @@ using Moq.Protected;
 using OrderSense.Client.Core;
 using OrderSense.Client.Core.Interfaces;
 
-namespace OrderSense.Maui.Tests;
+namespace OrderSense.Core.Tests;
 
 public class JwtAuthHandlerTests
 {
