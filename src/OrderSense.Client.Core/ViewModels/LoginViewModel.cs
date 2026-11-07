@@ -60,7 +60,6 @@ public partial class LoginViewModel : ObservableObject
             var userRole = userProfile.Role;
             
             await _tokenStorage.SetRoleAsync(userRole);
-
             await _navigation.NavigateToMainAsync();
         }
         catch (ApiException ex)

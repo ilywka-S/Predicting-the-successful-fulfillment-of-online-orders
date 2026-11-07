@@ -1,6 +1,6 @@
-using CsvHelper.Configuration.Attributes;
+﻿using CsvHelper.Configuration.Attributes;
 
-namespace OrderSense.ML.Training;
+namespace OrderSense.Olist;
 
 public sealed class PaymentRow
 {
@@ -27,6 +27,12 @@ public sealed class PaymentRow
 
     [Name("payment_value")]
     public decimal PaymentValue 
+    { 
+        get; 
+        set; 
+    }
+    [Name("payment_sequential")] 
+    public int PaymentSequential 
     { 
         get; 
         set; 

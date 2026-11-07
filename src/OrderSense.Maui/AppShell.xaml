@@ -24,6 +24,12 @@
             </Tab.Icon>
             <ShellContent Route="OrdersPage" ContentTemplate="{DataTemplate views:OrdersPage}" />
         </Tab>
+        <Tab>
+            <ShellContent Title="Dashboard"
+                          Icon="icon_dashboard.png"
+                          ContentTemplate="{DataTemplate views:DashboardPage}"
+                          Route="DashboardPage" />
+        </Tab>
         <Tab Title="Головна" Icon="dotnet_bot.png">
             <ShellContent Route="MainPage" ContentTemplate="{DataTemplate views:MainPage}" />
         </Tab>

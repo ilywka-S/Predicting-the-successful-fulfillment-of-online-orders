@@ -2,10 +2,10 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\OrderSense.Contracts\OrderSense.Contracts.csproj" />
+    <ProjectReference Include="..\..\src\OrderSense.Olist\OrderSense.Olist.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="CsvHelper" Version="33.1.0" />
     <PackageReference Include="Microsoft.ML" Version="5.0.0" />
     <PackageReference Include="Microsoft.ML.FastTree" Version="5.0.0" />
   </ItemGroup>
