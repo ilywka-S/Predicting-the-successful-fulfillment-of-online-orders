@@ -31,7 +31,7 @@ public class BatchPredictionViewModelTests
     }
 
     [Fact]
-    public async Task UploadAndStartJobAsyncWhenNoFileSelectedSetsErrorMessage()
+    public async Task UploadAndStartJobAsync_WhenNoFileSelected_SetsErrorMessage()
     {
         // Act
         await _viewModel.UploadAndStartJobAsync();
@@ -44,7 +44,7 @@ public class BatchPredictionViewModelTests
     }
 
     [Fact]
-    public async Task DownloadResultsAsyncWhenJobIdIsEmptyDoesNothing()
+    public async Task DownloadResultsAsync_WhenJobIdIsEmpty_DoesNothing()
     {
         // Act
         await _viewModel.DownloadResultsAsync();
@@ -55,7 +55,7 @@ public class BatchPredictionViewModelTests
     }
 
     [Fact]
-    public async Task DownloadResultsAsyncWhenApiSucceedsCallsFileSaver()
+    public async Task DownloadResultsAsync_WhenApiSucceeds_CallsFileSaver()
     {
         // Arrange
         var jobId = Guid.NewGuid();
@@ -87,7 +87,7 @@ public class BatchPredictionViewModelTests
     }
 
     [Fact]
-    public void ConstructorSubscribesToSignalRProgressEvent()
+    public void Constructor_SubscribesToSignalRProgressEvent()
     {
         // Assert
         Assert.NotNull(_viewModel);
