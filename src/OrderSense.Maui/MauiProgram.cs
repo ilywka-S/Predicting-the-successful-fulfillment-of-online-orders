@@ -6,6 +6,7 @@ using OrderSense.Maui.Views;
 using OrderSense.Client.Core.ViewModels;
 using OrderSense.Client.Core.Interfaces;
 using OrderSense.Client.Core.Services;
+using OrderSense.Maui.Services;
 using CommunityToolkit.Maui.Storage;
 
 namespace OrderSense.Maui;
@@ -50,6 +51,8 @@ public static class MauiProgram
         builder.Services.AddSingleton<IAuthNavigation, MauiAuthNavigation>();
         builder.Services.AddTransient<DashboardViewModel>();
         builder.Services.AddSingleton<IFileSaver>(FileSaver.Default);
+        builder.Services.AddSingleton<IFileService, MauiFileService>();
+
 
         // SignalR Service
         builder.Services.AddSingleton<ISignalRService>(sp => 
