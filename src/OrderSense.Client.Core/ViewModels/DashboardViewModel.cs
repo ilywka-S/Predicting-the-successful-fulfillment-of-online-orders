@@ -54,9 +54,16 @@ public partial class DashboardViewModel : ObservableObject
         });
     }
 
-    private void HandleBatchProgress(int progress)
+    private void HandleBatchProgress(BatchJobProgress data)
     {
-        PostToUI(() => BatchJobProgress = progress);
+        PostToUI(() => 
+        {
+            var progressValue = data.TotalRows > 0 
+                ? (data.ProcessedRows * 100) / data.TotalRows 
+                : 0;
+
+            BatchJobProgress = progressValue; 
+        });
     }
 
     private void PostToUI(Action action)
