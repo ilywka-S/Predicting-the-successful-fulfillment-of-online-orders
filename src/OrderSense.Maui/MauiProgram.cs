@@ -42,16 +42,17 @@ public static class MauiProgram
         builder.Services.AddTransient<AppShell>();
 
         // Services & Handlers
-        builder.Services.AddTransient<JwtAuthHandler>();
         builder.Services.AddSingleton<ITokenStorage, SecureTokenStorage>();
+        builder.Services.AddSingleton<IAuthTokenManager, AuthTokenManager>();
+        builder.Services.AddTransient<JwtAuthHandler>();
         builder.Services.AddSingleton<IAuthNavigation, MauiAuthNavigation>();
         builder.Services.AddTransient<DashboardViewModel>();
 
         // SignalR Service
         builder.Services.AddSingleton<ISignalRService>(sp => 
         {
-            var tokenStorage = sp.GetRequiredService<ITokenStorage>();
-            return new SignalRService(tokenStorage, baseAddress);
+            var tokenManager = sp.GetRequiredService<IAuthTokenManager>();
+            return new SignalRService(tokenManager, baseAddress); 
         });
 
         // HTTP Clients
