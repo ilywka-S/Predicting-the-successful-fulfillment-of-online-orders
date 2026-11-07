@@ -11,6 +11,12 @@ public partial class DateField : ContentView
     public static readonly BindableProperty DateProperty = BindableProperty.Create(
         nameof(Date), typeof(DateTime?), typeof(DateField), defaultBindingMode: BindingMode.TwoWay, propertyChanged: OnChromeChanged);
 
+    public static readonly BindableProperty MinimumDateProperty = BindableProperty.Create(
+        nameof(MinimumDate), typeof(DateTime?), typeof(DateField), propertyChanged: OnLimitsChanged);
+
+    public static readonly BindableProperty MaximumDateProperty = BindableProperty.Create(
+        nameof(MaximumDate), typeof(DateTime?), typeof(DateField), propertyChanged: OnLimitsChanged);
+
     public DateField()
     {
         InitializeComponent();
@@ -35,9 +41,45 @@ public partial class DateField : ContentView
         set => SetValue(DateProperty, value);
     }
 
+    public DateTime? MinimumDate
+    {
+        get => (DateTime?)GetValue(MinimumDateProperty);
+        set => SetValue(MinimumDateProperty, value);
+    }
+
+    public DateTime? MaximumDate
+    {
+        get => (DateTime?)GetValue(MaximumDateProperty);
+        set => SetValue(MaximumDateProperty, value);
+    }
+
     private static void OnChromeChanged(BindableObject bindable, object oldValue, object newValue) =>
         ((DateField)bindable).UpdateChrome();
 
+    private static void OnLimitsChanged(BindableObject bindable, object oldValue, object newValue) =>
+        ((DateField)bindable).UpdateLimits();
+
+    private void UpdateLimits()
+    {
+        if (MinimumDate is { } minimum)
+        {
+            Input.MinimumDate = minimum.Date;
+        }
+        else
+        {
+            Input.ClearValue(DatePicker.MinimumDateProperty);
+        }
+
+        if (MaximumDate is { } maximum)
+        {
+            Input.MaximumDate = maximum.Date;
+        }
+        else
+        {
+            Input.ClearValue(DatePicker.MaximumDateProperty);
+        }
+    }
+   
     private void OnInputFocusChanged(object? sender, FocusEventArgs e) =>
         VisualStateManager.GoToState(InputBorder, e.IsFocused ? "Focused" : "Normal");
 

@@ -121,8 +121,8 @@
                                           ItemsSource="{Binding StateOptions}"
                                           SelectedItem="{Binding SelectedState}" />
                     <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
-                        <controls:DateField Label="Від" Placeholder="дд.мм.рррр" Date="{Binding DateFrom}" />
-                        <controls:DateField Grid.Column="1" Label="До" Placeholder="дд.мм.рррр" Date="{Binding DateTo}" />
+                        <controls:DateField Label="Від" Placeholder="дд.мм.рррр" Date="{Binding DateFrom}" MaximumDate="{Binding DateTo}" />
+                        <controls:DateField Grid.Column="1" Label="До" Placeholder="дд.мм.рррр" Date="{Binding DateTo}" MinimumDate="{Binding DateFrom}" />
                     </Grid>
                     <Button Style="{StaticResource ButtonGhost}"
                             Text="Скинути фільтри"
@@ -166,8 +166,8 @@
                 <controls:SelectField Grid.Column="2"
                                       ItemsSource="{Binding StateOptions}"
                                       SelectedItem="{Binding SelectedState}" />
-                <controls:DateField Grid.Column="3" Placeholder="Від" Date="{Binding DateFrom}" />
-                <controls:DateField Grid.Column="4" Placeholder="До" Date="{Binding DateTo}" />
+                <controls:DateField Grid.Column="3" Placeholder="Від" Date="{Binding DateFrom}" MaximumDate="{Binding DateTo}" />
+                <controls:DateField Grid.Column="4" Placeholder="До" Date="{Binding DateTo}" MinimumDate="{Binding DateFrom}" />
                 <Button Grid.Column="5"
                         Style="{StaticResource ButtonGhost}"
                         VerticalOptions="Start"
