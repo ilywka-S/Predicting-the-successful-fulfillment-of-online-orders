@@ -54,8 +54,16 @@ public class DashboardViewModelTests
     [Fact]
     public void OnBatchJobProgress_UpdatesProgressProperty()
     {
-        // Arrange & Act
-        _signalRServiceMock.Raise(x => x.OnBatchJobProgress += null, 75);
+        // Arrange
+        var incomingProgress = new BatchJobProgress(
+            JobId: Guid.NewGuid(),
+            ProcessedRows: 75,
+            TotalRows: 100,
+            Status: "running" 
+        );
+
+        // Act
+        _signalRServiceMock.Raise(x => x.OnBatchJobProgress += null, incomingProgress);
 
         // Assert
         Assert.Equal(75, _viewModel.BatchJobProgress);
