@@ -20,6 +20,7 @@ var modelPath = Path.Combine(AppContext.BaseDirectory, builder.Configuration["Mo
 
 builder.Services.AddSingleton(new ModelInfo(modelVersion));
 builder.Services.AddSingleton<ExplainService>();
+builder.Services.AddSingleton<ModelInfoService>();
 builder.Services.AddPredictionEnginePool<OrderFeatures, ModelOutput>()
     .FromFile(modelName: modelVersion, filePath: modelPath, watchForChanges: false);
 
@@ -63,6 +64,8 @@ app.MapPost("/explain", (OrderFeatures features, ExplainService explain, ModelIn
         Factors = explain.Explain(features)
     });
 });
+
+app.MapGet("/model", ModelEndpoints.Get);
 
 app.Run();
 

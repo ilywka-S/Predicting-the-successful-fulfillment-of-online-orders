@@ -135,4 +135,21 @@ public sealed class PredictEndpointTests : IClassFixture<WebApplicationFactory<P
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
+    [Fact]
+    public async Task Model_returns_version_metrics_thresholds_and_importances()
+    {
+        HttpResponseMessage response = await _client.GetAsync("/model");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        ModelDetails? info = await response.Content.ReadFromJsonAsync<ModelDetails>(Json);
+
+        Assert.NotNull(info);
+        Assert.Equal("v1", info.Version);
+        Assert.InRange(info.RocAuc, 0f, 1f);
+        Assert.True(info.PrAuc > info.BaselinePrAuc);
+        Assert.Equal(12, info.FeatureImportances.Count);
+        Assert.Equal(0.12, info.RiskMediumFrom, 3);
+        Assert.Equal(0.20, info.RiskHighFrom, 3);
+    }
 }
