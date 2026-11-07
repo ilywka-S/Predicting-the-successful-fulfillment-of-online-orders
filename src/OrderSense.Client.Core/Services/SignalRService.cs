@@ -13,7 +13,7 @@ public class SignalRService : ISignalRService
 
     public event Action<OrderFeatures>? OnOrderCreated;
     public event Action<OrderPrediction>? OnPredictionUpdated;
-    public event Action<int>? OnBatchJobProgress;
+    public event Action<BatchJobProgress>? OnBatchJobProgress;
 
     public SignalRService(ITokenStorage tokenStorage, string baseUrl = "https://localhost:7250")
     {
@@ -45,7 +45,7 @@ public class SignalRService : ISignalRService
     {
         _hubConnection.On<OrderFeatures>("OrderCreated", data => OnOrderCreated?.Invoke(data));
         _hubConnection.On<OrderPrediction>("PredictionUpdated", data => OnPredictionUpdated?.Invoke(data));
-        _hubConnection.On<int>("BatchJobProgress", progress => OnBatchJobProgress?.Invoke(progress));
+        _hubConnection.On<BatchJobProgress>("BatchJobProgress", data => OnBatchJobProgress?.Invoke(data));
     }
 
     public async Task StartConnectionAsync()
