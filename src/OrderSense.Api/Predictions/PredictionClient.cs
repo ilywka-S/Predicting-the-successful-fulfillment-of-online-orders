@@ -2,6 +2,7 @@
 using System.Text.Json.Serialization;
 using OrderSense.Contracts;
 using Polly;
+using System.Net;
 
 namespace OrderSense.Api.Predictions;
 
@@ -20,6 +21,28 @@ public class PredictionClient(HttpClient http)
             response.EnsureSuccessStatusCode();
 
             return await response.Content.ReadFromJsonAsync<OrderPrediction>(Json, ct) ?? throw new PredictionServiceUnavailableException("Prediction service returned an empty response");
+        }
+        catch (Exception e) when (e is HttpRequestException or JsonException or ExecutionRejectedException || e is TaskCanceledException && !ct.IsCancellationRequested)
+        {
+            throw new PredictionServiceUnavailableException("Prediction service is unavailable", e);
+        }
+    }
+    public async Task<ModelDetails?> GetModelAsync(CancellationToken ct)
+    {
+        try
+        {
+            using HttpResponseMessage response = await http.GetAsync("/model", ct);
+            if (response.StatusCode == HttpStatusCode.NotFound)
+            {
+                return null;
+            }
+            response.EnsureSuccessStatusCode();
+            ModelDetails? details = await response.Content.ReadFromJsonAsync<ModelDetails>(Json, ct);
+            if (details == null)
+            {
+                throw new PredictionServiceUnavailableException("Prediction service returned an empty response");
+            }
+            return details;
         }
         catch (Exception e) when (e is HttpRequestException or JsonException or ExecutionRejectedException || e is TaskCanceledException && !ct.IsCancellationRequested)
         {

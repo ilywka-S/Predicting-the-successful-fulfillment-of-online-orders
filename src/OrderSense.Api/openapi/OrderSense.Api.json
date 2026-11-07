@@ -1036,8 +1036,28 @@
               }
             }
           },
-          "501": {
-            "description": "Not Implemented",
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
             "content": {
               "text/plain": {
                 "schema": {
@@ -1817,6 +1837,22 @@
           "decreases"
         ]
       },
+      "FeatureImportanceDto": {
+        "required": [
+          "feature",
+          "importance"
+        ],
+        "type": "object",
+        "properties": {
+          "feature": {
+            "type": "string"
+          },
+          "importance": {
+            "type": "number",
+            "format": "float"
+          }
+        }
+      },
       "FileContentResult": {
         "type": "object",
         "properties": {
@@ -1882,7 +1918,16 @@
           "version",
           "trainedAt",
           "rocAuc",
-          "prAuc"
+          "prAuc",
+          "f1",
+          "baselinePrAuc",
+          "trainRows",
+          "testRows",
+          "trainPeriod",
+          "testPeriod",
+          "riskMediumFrom",
+          "riskHighFrom",
+          "featureImportances"
         ],
         "type": "object",
         "properties": {
@@ -1906,6 +1951,42 @@
               "number"
             ],
             "format": "float"
+          },
+          "f1": {
+            "type": "number",
+            "format": "float"
+          },
+          "baselinePrAuc": {
+            "type": "number",
+            "format": "float"
+          },
+          "trainRows": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "testRows": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "trainPeriod": {
+            "type": "string"
+          },
+          "testPeriod": {
+            "type": "string"
+          },
+          "riskMediumFrom": {
+            "type": "number",
+            "format": "float"
+          },
+          "riskHighFrom": {
+            "type": "number",
+            "format": "float"
+          },
+          "featureImportances": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FeatureImportanceDto"
+            }
           }
         }
       },
