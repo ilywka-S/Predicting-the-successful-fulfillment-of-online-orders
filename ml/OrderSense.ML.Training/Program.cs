@@ -353,3 +353,5 @@ var baseMetrics = mlContext.BinaryClassification.Evaluate(baselineData, labelCol
 
 Console.WriteLine($"\nБазова модель: ROC-AUC {baseMetrics.AreaUnderRocCurve:F4}, PR-AUC {baseMetrics.AreaUnderPrecisionRecallCurve:F4}");
 Console.WriteLine($"Модель v1:     ROC-AUC {metrics.AreaUnderRocCurve:F4}, PR-AUC {metrics.AreaUnderPrecisionRecallCurve:F4}");
+
+ModelInfoWriter.Write(mlContext, model, trainRows, testRows, metrics, baseMetrics, modelDir, modelVersion);
