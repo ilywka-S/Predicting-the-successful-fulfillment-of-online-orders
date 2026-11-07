@@ -35,6 +35,14 @@
                        InputTransparent="True"
                        Text="{Binding Placeholder, Source={x:Reference Root}}" />
 
+                <Grid x:Name="OpenArea"
+                      Grid.ColumnSpan="2"
+                      BackgroundColor="Transparent">
+                    <Grid.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnFieldTapped" />
+                    </Grid.GestureRecognizers>
+                </Grid>
+
                 <Grid x:Name="ClearButton"
                       Grid.Column="2"
                       WidthRequest="28"

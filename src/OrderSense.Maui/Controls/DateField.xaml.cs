@@ -41,6 +41,12 @@ public partial class DateField : ContentView
     private void OnInputFocusChanged(object? sender, FocusEventArgs e) =>
         VisualStateManager.GoToState(InputBorder, e.IsFocused ? "Focused" : "Normal");
 
+    private void OnFieldTapped(object? sender, TappedEventArgs e)
+    {
+        Input.IsOpen = false;
+        Input.IsOpen = true;
+    }
+
     private void OnClearTapped(object? sender, TappedEventArgs e) => Date = null;
 
     private void UpdateChrome()
@@ -49,6 +55,7 @@ public partial class DateField : ContentView
         PlaceholderView.IsVisible = Date is null;
         ClearButton.IsVisible = Date is not null;
         SemanticProperties.SetDescription(Input, Label ?? Placeholder);
+        SemanticProperties.SetDescription(OpenArea, Label ?? Placeholder);
         SemanticProperties.SetDescription(ClearButton, "Очистити дату");
     }
 }
