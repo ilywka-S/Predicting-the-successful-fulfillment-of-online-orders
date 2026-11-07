@@ -8,7 +8,7 @@ public class MauiAuthNavigation : IAuthNavigation
     {
         await MainThread.InvokeOnMainThreadAsync(async () =>
         {
-            await Shell.Current.GoToAsync("//MainPage"); 
+            await Shell.Current.GoToAsync("//OrdersPage"); 
         });
     }
 

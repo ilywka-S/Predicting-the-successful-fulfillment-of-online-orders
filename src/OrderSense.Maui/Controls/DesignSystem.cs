@@ -3,7 +3,7 @@ using OrderSense.Maui.Controls;
 
 namespace OrderSense.Maui;
 
-public static class DesignSystem
+public static partial class DesignSystem
 {
     public static MauiAppBuilder UseDesignSystem(this MauiAppBuilder builder)
     {
@@ -17,6 +17,7 @@ public static class DesignSystem
         });
 
         RemoveNativeInputChrome();
+        RemoveDatePickerChrome();
         return builder;
     }
 
