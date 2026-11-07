@@ -48,11 +48,7 @@ public static class MauiProgram
         builder.Services.AddTransient<DashboardViewModel>();
 
         // SignalR Service
-        builder.Services.AddSingleton<ISignalRService>(sp => 
-        {
-            var tokenStorage = sp.GetRequiredService<ITokenStorage>();
-            return new SignalRService(tokenStorage, baseAddress);
-        });
+        builder.Services.AddSingleton<ISignalRService, SignalRService>();
 
         // HTTP Clients
         builder.Services.AddHttpClient("AuthClient", client => 
