@@ -594,26 +594,6 @@
           "required": true
         },
         "responses": {
-          "501": {
-            "description": "Not Implemented",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
           "202": {
             "description": "Accepted",
             "content": {
@@ -653,15 +633,7 @@
                 }
               }
             }
-          }
-        }
-      },
-      "get": {
-        "tags": [
-          "BatchJobs"
-        ],
-        "operationId": "GetBatchJobs",
-        "responses": {
+          },
           "501": {
             "description": "Not Implemented",
             "content": {
@@ -681,7 +653,15 @@
                 }
               }
             }
-          },
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "BatchJobs"
+        ],
+        "operationId": "GetBatchJobs",
+        "responses": {
           "200": {
             "description": "OK",
             "content": {
@@ -732,26 +712,6 @@
           }
         ],
         "responses": {
-          "501": {
-            "description": "Not Implemented",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
           "200": {
             "description": "OK",
             "content": {
@@ -835,26 +795,6 @@
           }
         ],
         "responses": {
-          "501": {
-            "description": "Not Implemented",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
           "200": {
             "description": "OK",
             "content": {
@@ -916,26 +856,6 @@
           }
         ],
         "responses": {
-          "501": {
-            "description": "Not Implemented",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
           "200": {
             "description": "OK",
             "content": {
@@ -965,19 +885,9 @@
                 }
               }
             }
-          }
-        }
-      }
-    },
-    "/api/batch-jobs/template": {
-      "get": {
-        "tags": [
-          "BatchJobs"
-        ],
-        "operationId": "GetBatchJobTemplate",
-        "responses": {
-          "501": {
-            "description": "Not Implemented",
+          },
+          "409": {
+            "description": "Conflict",
             "content": {
               "text/plain": {
                 "schema": {
@@ -995,13 +905,43 @@
                 }
               }
             }
-          },
+          }
+        }
+      }
+    },
+    "/api/batch-jobs/template": {
+      "get": {
+        "tags": [
+          "BatchJobs"
+        ],
+        "operationId": "GetBatchJobTemplate",
+        "responses": {
           "200": {
             "description": "OK",
             "content": {
               "text/csv": {
                 "schema": {
                   "$ref": "#/components/schemas/Stream"
+                }
+              }
+            }
+          },
+          "501": {
+            "description": "Not Implemented",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }

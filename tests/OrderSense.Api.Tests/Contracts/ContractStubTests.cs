@@ -9,8 +9,6 @@ namespace OrderSense.Api.Tests.Contracts;
 [Collection(ApiCollection.Name)]
 public class ContractStubTests(ApiFactory factory)
 {
-    private const string JobUrl = "/api/batch-jobs/00000000-0000-0000-0000-000000000001";
-
     [Fact]
     public async Task BatchJobs_AsManager_Returns403()
     {
@@ -22,11 +20,8 @@ public class ContractStubTests(ApiFactory factory)
     }
 
     [Theory]
-    [InlineData("/api/batch-jobs")]
     [InlineData("/api/batch-jobs/template")]
-    [InlineData(JobUrl)]
-    [InlineData(JobUrl + "/results")]
-    [InlineData(JobUrl + "/export")]
+    [InlineData("/api/batch-jobs/00000000-0000-0000-0000-000000000001/export")]
     public async Task BatchJobs_AsAnalyst_Return501(string url)
     {
         var client = await ClientAsync(Roles.Analyst);
