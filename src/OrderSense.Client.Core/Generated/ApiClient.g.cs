@@ -137,21 +137,21 @@ namespace OrderSense.Client.Core
 
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task<FileContentResult> ExportBatchJobAsync(System.Guid id);
+        System.Threading.Tasks.Task<FileResponse> ExportBatchJobAsync(System.Guid id);
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task<FileContentResult> ExportBatchJobAsync(System.Guid id, System.Threading.CancellationToken cancellationToken);
+        System.Threading.Tasks.Task<FileResponse> ExportBatchJobAsync(System.Guid id, System.Threading.CancellationToken cancellationToken);
 
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task<FileContentResult> GetBatchJobTemplateAsync();
+        System.Threading.Tasks.Task<FileResponse> GetBatchJobTemplateAsync();
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        System.Threading.Tasks.Task<FileContentResult> GetBatchJobTemplateAsync(System.Threading.CancellationToken cancellationToken);
+        System.Threading.Tasks.Task<FileResponse> GetBatchJobTemplateAsync(System.Threading.CancellationToken cancellationToken);
 
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
@@ -1433,7 +1433,7 @@ namespace OrderSense.Client.Core
 
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual System.Threading.Tasks.Task<FileContentResult> ExportBatchJobAsync(System.Guid id)
+        public virtual System.Threading.Tasks.Task<FileResponse> ExportBatchJobAsync(System.Guid id)
         {
             return ExportBatchJobAsync(id, System.Threading.CancellationToken.None);
         }
@@ -1441,7 +1441,7 @@ namespace OrderSense.Client.Core
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task<FileContentResult> ExportBatchJobAsync(System.Guid id, System.Threading.CancellationToken cancellationToken)
+        public virtual async System.Threading.Tasks.Task<FileResponse> ExportBatchJobAsync(System.Guid id, System.Threading.CancellationToken cancellationToken)
         {
             if (id == null)
                 throw new System.ArgumentNullException("id");
@@ -1485,14 +1485,12 @@ namespace OrderSense.Client.Core
                         ProcessResponse(client_, response_);
 
                         var status_ = (int)response_.StatusCode;
-                        if (status_ == 200)
+                        if (status_ == 200 || status_ == 206)
                         {
-                            var objectResponse_ = await ReadObjectResponseAsync<FileContentResult>(response_, headers_, cancellationToken).ConfigureAwait(false);
-                            if (objectResponse_.Object == null)
-                            {
-                                throw new ApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
-                            }
-                            return objectResponse_.Object;
+                            var responseStream_ = response_.Content == null ? System.IO.Stream.Null : await ReadAsStreamAsync(response_.Content, cancellationToken).ConfigureAwait(false);
+                            var fileResponse_ = new FileResponse(status_, headers_, responseStream_, null, response_);
+                            disposeClient_ = false; disposeResponse_ = false; // response and client are disposed by FileResponse
+                            return fileResponse_;
                         }
                         else
                         if (status_ == 404)
@@ -1536,7 +1534,7 @@ namespace OrderSense.Client.Core
 
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual System.Threading.Tasks.Task<FileContentResult> GetBatchJobTemplateAsync()
+        public virtual System.Threading.Tasks.Task<FileResponse> GetBatchJobTemplateAsync()
         {
             return GetBatchJobTemplateAsync(System.Threading.CancellationToken.None);
         }
@@ -1544,7 +1542,7 @@ namespace OrderSense.Client.Core
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
         /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task<FileContentResult> GetBatchJobTemplateAsync(System.Threading.CancellationToken cancellationToken)
+        public virtual async System.Threading.Tasks.Task<FileResponse> GetBatchJobTemplateAsync(System.Threading.CancellationToken cancellationToken)
         {
             var client_ = _httpClient;
             var disposeClient_ = false;
@@ -1583,14 +1581,12 @@ namespace OrderSense.Client.Core
                         ProcessResponse(client_, response_);
 
                         var status_ = (int)response_.StatusCode;
-                        if (status_ == 200)
+                        if (status_ == 200 || status_ == 206)
                         {
-                            var objectResponse_ = await ReadObjectResponseAsync<FileContentResult>(response_, headers_, cancellationToken).ConfigureAwait(false);
-                            if (objectResponse_.Object == null)
-                            {
-                                throw new ApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
-                            }
-                            return objectResponse_.Object;
+                            var responseStream_ = response_.Content == null ? System.IO.Stream.Null : await ReadAsStreamAsync(response_.Content, cancellationToken).ConfigureAwait(false);
+                            var fileResponse_ = new FileResponse(status_, headers_, responseStream_, null, response_);
+                            disposeClient_ = false; disposeResponse_ = false; // response and client are disposed by FileResponse
+                            return fileResponse_;
                         }
                         else
                         if (status_ == 501)
@@ -2693,27 +2689,6 @@ namespace OrderSense.Client.Core
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class EntityTagHeaderValue
-    {
-
-        [System.Text.Json.Serialization.JsonPropertyName("tag")]
-        public StringSegment Tag { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("isWeak")]
-        public bool IsWeak { get; set; }
-
-        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
-
-        [System.Text.Json.Serialization.JsonExtensionData]
-        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
-        {
-            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
-            set { _additionalProperties = value; }
-        }
-
-    }
-
-    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
     public enum FactorImpact
     {
 
@@ -2735,39 +2710,6 @@ namespace OrderSense.Client.Core
 
         [System.Text.Json.Serialization.JsonPropertyName("importance")]
         public float Importance { get; set; }
-
-        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
-
-        [System.Text.Json.Serialization.JsonExtensionData]
-        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
-        {
-            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
-            set { _additionalProperties = value; }
-        }
-
-    }
-
-    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class FileContentResult
-    {
-
-        [System.Text.Json.Serialization.JsonPropertyName("fileContents")]
-        public byte[] FileContents { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("contentType")]
-        public string ContentType { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("fileDownloadName")]
-        public string FileDownloadName { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("lastModified")]
-        public System.DateTimeOffset? LastModified { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("entityTag")]
-        public EntityTagHeaderValue EntityTag { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("enableRangeProcessing")]
-        public bool EnableRangeProcessing { get; set; }
 
         private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
 
@@ -3219,36 +3161,6 @@ namespace OrderSense.Client.Core
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class StringSegment
-    {
-
-        [System.Text.Json.Serialization.JsonPropertyName("buffer")]
-        public string Buffer { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("offset")]
-        public int Offset { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("length")]
-        public int Length { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("value")]
-        public string Value { get; set; }
-
-        [System.Text.Json.Serialization.JsonPropertyName("hasValue")]
-        public bool HasValue { get; set; }
-
-        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
-
-        [System.Text.Json.Serialization.JsonExtensionData]
-        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
-        {
-            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
-            set { _additionalProperties = value; }
-        }
-
-    }
-
-    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
     public partial class UserDto
     {
 
@@ -3391,6 +3303,41 @@ namespace OrderSense.Client.Core
 
     }
 
+    [System.CodeDom.Compiler.GeneratedCode("NSwag", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class FileResponse : System.IDisposable
+    {
+        private System.IDisposable _client;
+        private System.IDisposable _response;
+
+        public int StatusCode { get; private set; }
+
+        public System.Collections.Generic.IReadOnlyDictionary<string, System.Collections.Generic.IEnumerable<string>> Headers { get; private set; }
+
+        public System.IO.Stream Stream { get; private set; }
+
+        public bool IsPartial
+        {
+            get { return StatusCode == 206; }
+        }
+
+        public FileResponse(int statusCode, System.Collections.Generic.IReadOnlyDictionary<string, System.Collections.Generic.IEnumerable<string>> headers, System.IO.Stream stream, System.IDisposable client, System.IDisposable response)
+        {
+            StatusCode = statusCode;
+            Headers = headers;
+            Stream = stream;
+            _client = client;
+            _response = response;
+        }
+
+        public void Dispose()
+        {
+            Stream.Dispose();
+            if (_response != null)
+                _response.Dispose();
+            if (_client != null)
+                _client.Dispose();
+        }
+    }
 
 
     [System.CodeDom.Compiler.GeneratedCode("NSwag", "14.7.1.0 (NJsonSchema v11.6.1.0 (Newtonsoft.Json v13.0.0.0))")]

@@ -76,21 +76,43 @@ public class JwtAuthHandler(ITokenStorage tokenStorage, IHttpClientFactory httpC
 
     private async Task<HttpResponseMessage> RetryRequestAsync(HttpRequestMessage request, string newToken, CancellationToken cancellationToken)
     {
-        var retryRequest = CloneRequest(request);
+        var retryRequest = await CloneRequestAsync(request, cancellationToken);
         retryRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", newToken);
         return await base.SendAsync(retryRequest, cancellationToken);
     }
 
-    private static HttpRequestMessage CloneRequest(HttpRequestMessage request)
+    private static async Task<HttpRequestMessage> CloneRequestAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
         var clone = new HttpRequestMessage(request.Method, request.RequestUri)
         {
-            Content = request.Content,
             Version = request.Version
         };
-        foreach (var header in request.Headers) 
+
+        if (request.Content != null)
+        {
+            await request.Content.LoadIntoBufferAsync(cancellationToken);
+            
+            var buffer = await request.Content.ReadAsByteArrayAsync(cancellationToken);
+            var byteArrayContent = new ByteArrayContent(buffer);
+
+            foreach (var header in request.Content.Headers)
+            {
+                byteArrayContent.Headers.TryAddWithoutValidation(header.Key, header.Value);
+            }
+
+            clone.Content = byteArrayContent;
+        }
+
+        foreach (var header in request.Headers)
+        {
             clone.Headers.TryAddWithoutValidation(header.Key, header.Value);
-        
+        }
+
+        foreach (var prop in request.Options)
+        {
+            clone.Options.Set(new HttpRequestOptionsKey<object?>(prop.Key), prop.Value);
+        }
+
         return clone;
     }
 }
