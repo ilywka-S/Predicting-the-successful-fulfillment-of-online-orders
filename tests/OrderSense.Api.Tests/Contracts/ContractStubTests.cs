@@ -21,7 +21,6 @@ public class ContractStubTests(ApiFactory factory)
 
     [Theory]
     [InlineData("/api/batch-jobs/template")]
-    [InlineData("/api/batch-jobs/00000000-0000-0000-0000-000000000001/export")]
     public async Task BatchJobs_AsAnalyst_Return501(string url)
     {
         var client = await ClientAsync(Roles.Analyst);

@@ -74,7 +74,31 @@ public class BatchJobsController(AppDbContext db) : ControllerBase
     [ProducesResponseType(typeof(Stream), StatusCodes.Status200OK, "text/csv")]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
-    public IActionResult Export(Guid id) => NotImplementedYet();
+    public async Task<IActionResult> Export(Guid id, CancellationToken ct)
+    {
+        var job = await VisibleJobs().SingleOrDefaultAsync(j => j.Id == id, ct);
+
+        if (job is null)
+        {
+            return JobNotFound(id);
+        }
+
+        if (job.Status is BatchJobStatus.Queued or BatchJobStatus.Running)
+        {
+            return Problem(statusCode: StatusCodes.Status409Conflict, title: "Batch job is not finished yet");
+        }
+
+        var results = await db.BatchResults
+            .AsNoTracking()
+            .Where(r => r.JobId == id)
+            .OrderBy(r => r.RowNo)
+            .ToListAsync(ct);
+
+        byte[] csv = [.. Encoding.UTF8.Preamble, .. Encoding.UTF8.GetBytes(BatchCsvWriter.Write(results))];
+        var fileName = $"{Path.GetFileNameWithoutExtension(job.FileName)}-predictions.csv";
+
+        return File(csv, "text/csv", fileName);
+    }
 
     [HttpGet("template", Name = "GetBatchJobTemplate")]
     [ProducesResponseType(typeof(Stream), StatusCodes.Status200OK, "text/csv")]
