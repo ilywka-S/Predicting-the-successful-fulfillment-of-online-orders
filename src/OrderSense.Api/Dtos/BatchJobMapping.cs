@@ -23,4 +23,6 @@ public static class BatchJobMapping
     public static IEnumerable<RiskFactor> TopFactors(BatchResult result) => result.Factors
         .OrderByDescending(f => Math.Abs(f.Contribution))
         .Take(5);
+    
+    public static BatchJobProgressDto ToProgress(BatchJob job) => new(job.Id, job.ProcessedRows, job.TotalRows, job.Status);
 }
