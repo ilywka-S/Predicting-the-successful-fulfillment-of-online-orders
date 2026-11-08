@@ -36,6 +36,41 @@ public static class Formats
         return n.ToString("#,0", Numbers) + Nbsp + word;
     }
 
+    public static string FactorValue(string? feature, float? value)
+    {
+        if (value is not { } number || float.IsNaN(number))
+        {
+            return string.Empty;
+        }
+
+        var whole = (long)Math.Round(number);
+
+        return feature switch
+        {
+            "TotalPrice" => Money((decimal)number),
+            "FreightShare" => Percent(number),
+            "TotalWeightG" => Weight(number),
+            "DistanceKm" => Kilometers(number),
+            "PromisedDays" => Count(whole, "день", "дні", "днів"),
+            "ItemsCount" => Count(whole, "товар", "товари", "товарів"),
+            "Installments" => Count(whole, "платіж", "платежі", "платежів"),
+            "PurchaseDayOfWeek" => DayOfWeek(whole),
+            _ => number.ToString("#,0.##", Numbers),
+        };
+    }
+
+    public static string DayOfWeek(long day) => day switch
+    {
+        0 => "неділя",
+        1 => "понеділок",
+        2 => "вівторок",
+        3 => "середа",
+        4 => "четвер",
+        5 => "пʼятниця",
+        6 => "субота",
+        _ => "—",
+    };
+
     public static string ShortId(string? id) =>
         string.IsNullOrEmpty(id) ? "—" : "#" + (id.Length > 8 ? id[..8] : id);
 

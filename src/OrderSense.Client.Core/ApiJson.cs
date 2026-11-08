@@ -11,17 +11,31 @@ public partial class Client
     }
 }
 
-[JsonConverter(typeof(RiskLevel2JsonConverter))]
-public partial class RiskLevel2
+public interface INullableRiskLevel
 {
-    public RiskLevel Value { get; init; }
+    RiskLevel Value { get; set; }
+}
+
+[JsonConverter(typeof(NullableRiskLevelJsonConverter<RiskLevel2>))]
+public partial class RiskLevel2 : INullableRiskLevel
+{
+    public RiskLevel Value { get; set; }
 
     public override string ToString() => Value.ToString();
 }
 
-public sealed class RiskLevel2JsonConverter : JsonConverter<RiskLevel2>
+[JsonConverter(typeof(NullableRiskLevelJsonConverter<RiskLevel3>))]
+public partial class RiskLevel3 : INullableRiskLevel
 {
-    public override RiskLevel2? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public RiskLevel Value { get; set; }
+
+    public override string ToString() => Value.ToString();
+}
+
+public sealed class NullableRiskLevelJsonConverter<T> : JsonConverter<T>
+    where T : class, INullableRiskLevel, new()
+{
+    public override T? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         if (reader.TokenType != JsonTokenType.String)
         {
@@ -29,15 +43,17 @@ public sealed class RiskLevel2JsonConverter : JsonConverter<RiskLevel2>
             return null;
         }
 
-        return reader.GetString() switch
+        RiskLevel? level = reader.GetString() switch
         {
-            "low" => new RiskLevel2 { Value = RiskLevel.Low },
-            "medium" => new RiskLevel2 { Value = RiskLevel.Medium },
-            "high" => new RiskLevel2 { Value = RiskLevel.High },
+            "low" => RiskLevel.Low,
+            "medium" => RiskLevel.Medium,
+            "high" => RiskLevel.High,
             _ => null,
         };
+
+        return level is { } value ? new T { Value = value } : null;
     }
 
-    public override void Write(Utf8JsonWriter writer, RiskLevel2 value, JsonSerializerOptions options) =>
+    public override void Write(Utf8JsonWriter writer, T value, JsonSerializerOptions options) =>
         writer.WriteStringValue(JsonNamingPolicy.CamelCase.ConvertName(value.Value.ToString()));
 }

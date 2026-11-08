@@ -1,0 +1,284 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:api="clr-namespace:OrderSense.Client.Core;assembly=OrderSense.Client.Core"
+             xmlns:vm="clr-namespace:OrderSense.Client.Core.ViewModels;assembly=OrderSense.Client.Core"
+             xmlns:controls="clr-namespace:OrderSense.Maui.Controls"
+             x:Class="OrderSense.Maui.Views.OrderDetailsPage"
+             x:DataType="vm:OrderDetailsViewModel"
+             Title="{Binding OrderId, Converter={StaticResource ShortId}, StringFormat='Замовлення {0}'}">
+
+    <ContentPage.Resources>
+
+        <DataTemplate x:Key="FactorTemplate" x:DataType="api:RiskFactorDto">
+            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12" Padding="0,6">
+                <Border Style="{StaticResource IconTileRiskUp}"
+                        IsVisible="{Binding Impact, Converter={StaticResource IsEqual}, ConverterParameter={x:Static api:FactorImpact.Increases}}">
+                    <Label Style="{StaticResource IconRiskUp}" Text="{x:Static controls:Icons.TrendingUp}" />
+                </Border>
+                <Border Style="{StaticResource IconTileRiskDown}"
+                        IsVisible="{Binding Impact, Converter={StaticResource IsEqual}, ConverterParameter={x:Static api:FactorImpact.Decreases}}">
+                    <Label Style="{StaticResource IconRiskDown}" Text="{x:Static controls:Icons.TrendingDown}" />
+                </Border>
+                <VerticalStackLayout Grid.Column="1" Spacing="2">
+                    <Label Style="{StaticResource TextMedium}" Text="{Binding Label}" />
+                    <Label Style="{StaticResource TextMuted}"
+                           IsVisible="{Binding Value, Converter={StaticResource NotNull}}"
+                           Text="{Binding ., Converter={StaticResource FactorValue}}" />
+                    <Label Style="{StaticResource TextRiskUp}"
+                           FontSize="{StaticResource TextXs}"
+                           Text="підвищує ризик"
+                           IsVisible="{Binding Impact, Converter={StaticResource IsEqual}, ConverterParameter={x:Static api:FactorImpact.Increases}}" />
+                    <Label Style="{StaticResource TextRiskDown}"
+                           FontSize="{StaticResource TextXs}"
+                           Text="знижує ризик"
+                           IsVisible="{Binding Impact, Converter={StaticResource IsEqual}, ConverterParameter={x:Static api:FactorImpact.Decreases}}" />
+                </VerticalStackLayout>
+            </Grid>
+        </DataTemplate>
+
+        <DataTemplate x:Key="HistoryTemplate" x:DataType="api:PredictionDto">
+            <VerticalStackLayout>
+                <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="12" Padding="0,10">
+                    <VerticalStackLayout Spacing="2">
+                        <Label Text="{Binding CreatedAt, StringFormat='{0:dd.MM.yyyy HH:mm}'}" />
+                        <Label Style="{StaticResource TextSmall}" Text="{Binding ModelVersion, StringFormat='модель {0}'}" />
+                    </VerticalStackLayout>
+                    <Label Grid.Column="1"
+                           Style="{StaticResource TextMedium}"
+                           VerticalOptions="Center"
+                           Text="{Binding Probability, Converter={StaticResource Percent}}" />
+                    <controls:RiskBadge Grid.Column="2" Compact="True" Level="{Binding RiskLevel}" />
+                </Grid>
+                <BoxView Style="{StaticResource Separator}" />
+            </VerticalStackLayout>
+        </DataTemplate>
+
+        <DataTemplate x:Key="ItemTemplate" x:DataType="api:OrderItemDto">
+            <VerticalStackLayout>
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12" Padding="0,10">
+                    <VerticalStackLayout Spacing="2">
+                        <Label Style="{StaticResource TextMedium}" Text="{Binding Category, Converter={StaticResource Category}}" />
+                        <Label Style="{StaticResource TextSmall}">
+                            <Label.FormattedText>
+                                <FormattedString>
+                                    <Span Text="{Binding SellerState, StringFormat='продавець з {0}'}" />
+                                    <Span Text=" · " />
+                                    <Span Text="{Binding WeightG, Converter={StaticResource Weight}}" />
+                                </FormattedString>
+                            </Label.FormattedText>
+                        </Label>
+                    </VerticalStackLayout>
+                    <VerticalStackLayout Grid.Column="1" Spacing="2">
+                        <Label HorizontalTextAlignment="End" Text="{Binding Price, Converter={StaticResource Money}}" />
+                        <Label Style="{StaticResource TextSmall}"
+                               HorizontalTextAlignment="End"
+                               Text="{Binding FreightValue, Converter={StaticResource Money}, StringFormat='+ {0} доставка'}" />
+                    </VerticalStackLayout>
+                </Grid>
+                <BoxView Style="{StaticResource Separator}" />
+            </VerticalStackLayout>
+        </DataTemplate>
+
+        <DataTemplate x:Key="PaymentTemplate" x:DataType="api:PaymentDto">
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12" Padding="0,6">
+                <VerticalStackLayout Spacing="2">
+                    <Label Text="{Binding Type, Converter={StaticResource PaymentType}}" />
+                    <Label Style="{StaticResource TextSmall}"
+                           Text="{Binding Installments, Converter={StaticResource Count}, ConverterParameter='платіж|платежі|платежів'}" />
+                </VerticalStackLayout>
+                <Label Grid.Column="1"
+                       Style="{StaticResource TextMedium}"
+                       VerticalOptions="Center"
+                       Text="{Binding Value, Converter={StaticResource Money}}" />
+            </Grid>
+        </DataTemplate>
+
+    </ContentPage.Resources>
+
+    <Grid>
+
+        <VerticalStackLayout IsVisible="{Binding IsLoading}"
+                             Padding="{OnIdiom Phone='16', Default='32,24'}"
+                             Spacing="16">
+            <controls:Skeleton HeightRequest="180" />
+            <controls:Skeleton HeightRequest="120" />
+            <controls:Skeleton HeightRequest="120" />
+        </VerticalStackLayout>
+
+        <controls:EmptyState IsVisible="{Binding HasError}"
+                             VerticalOptions="Center"
+                             IsError="True"
+                             Icon="{x:Static controls:Icons.CircleAlert}"
+                             Title="Не вдалося відкрити замовлення"
+                             Description="{Binding ErrorMessage}"
+                             ActionText="Спробувати знову"
+                             ActionCommand="{Binding RetryCommand}" />
+
+        <ScrollView IsVisible="{Binding IsContentVisible}">
+            <Grid Padding="{OnIdiom Phone='16', Default='32,24,32,32'}"
+                  MaximumWidthRequest="{StaticResource ContentMaxWidth}"
+                  ColumnDefinitions="{OnIdiom Phone='*', Default='3*,2*'}"
+                  RowDefinitions="{OnIdiom Phone='Auto,Auto', Default='Auto'}"
+                  ColumnSpacing="24"
+                  RowSpacing="16">
+
+                <VerticalStackLayout Spacing="16">
+
+                    <Border Style="{StaticResource Card}">
+                        <VerticalStackLayout Spacing="16">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <Label Style="{StaticResource TextH3}" VerticalOptions="Center" Text="Прогноз" />
+                                <controls:RiskBadge Grid.Column="1"
+                                                    IsVisible="{Binding HasPrediction}"
+                                                    Level="{Binding LatestPrediction.RiskLevel}" />
+                            </Grid>
+
+                            <VerticalStackLayout IsVisible="{Binding HasPrediction}" Spacing="12">
+                                <VerticalStackLayout Spacing="2">
+                                    <Label Style="{StaticResource TextDisplay}"
+                                           Text="{Binding LatestPrediction.Probability, Converter={StaticResource Percent}}" />
+                                    <Label Style="{StaticResource TextMuted}" Text="ймовірність успішного виконання" />
+                                </VerticalStackLayout>
+                                <controls:Meter Value="{Binding LatestPrediction.Probability}"
+                                                Level="{Binding LatestPrediction.RiskLevel}" />
+                                <Label Style="{StaticResource TextSmall}">
+                                    <Label.FormattedText>
+                                        <FormattedString>
+                                            <Span Text="{Binding LatestPrediction.ModelVersion, StringFormat='модель {0}'}" />
+                                            <Span Text=" · " />
+                                            <Span Text="{Binding LatestPrediction.CreatedAt, StringFormat='{0:dd.MM.yyyy HH:mm}'}" />
+                                        </FormattedString>
+                                    </Label.FormattedText>
+                                </Label>
+                            </VerticalStackLayout>
+
+                            <Label Style="{StaticResource TextMuted}"
+                                   IsVisible="{Binding HasPrediction, Converter={StaticResource Not}}"
+                                   Text="Прогнозу для цього замовлення ще немає." />
+
+                            <Border Style="{StaticResource AlertDestructive}" IsVisible="{Binding HasPredictError}">
+                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+                                    <Label Style="{StaticResource IconError}"
+                                           VerticalOptions="Start"
+                                           Text="{x:Static controls:Icons.ServerCrash}" />
+                                    <Label Grid.Column="1"
+                                           Style="{StaticResource TextError}"
+                                           Text="{Binding PredictErrorMessage}" />
+                                </Grid>
+                            </Border>
+
+                            <Grid HorizontalOptions="{OnIdiom Phone=Fill, Default=Start}">
+                                <Button Text="Спрогнозувати"
+                                        Padding="40,0,16,0"
+                                        Command="{Binding PredictCommand}">
+                                    <Button.Triggers>
+                                        <DataTrigger TargetType="Button" Binding="{Binding HasPrediction}" Value="True">
+                                            <Setter Property="Text" Value="Оновити прогноз" />
+                                        </DataTrigger>
+                                    </Button.Triggers>
+                                </Button>
+                                <ActivityIndicator Style="{StaticResource SpinnerOnPrimary}"
+                                                   HorizontalOptions="Start"
+                                                   Margin="14,0"
+                                                   IsRunning="{Binding IsPredicting}"
+                                                   IsVisible="{Binding IsPredicting}" />
+                                <Label Style="{StaticResource Icon}"
+                                       HorizontalOptions="Start"
+                                       Margin="16,0"
+                                       InputTransparent="True"
+                                       TextColor="{AppThemeBinding Light={StaticResource PrimaryForegroundLight}, Dark={StaticResource PrimaryForegroundDark}}"
+                                       IsVisible="{Binding IsPredicting, Converter={StaticResource Not}}"
+                                       Text="{x:Static controls:Icons.BrainCircuit}" />
+                            </Grid>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <Border Style="{StaticResource Card}" IsVisible="{Binding HasFactors}">
+                        <VerticalStackLayout Spacing="8">
+                            <Label Style="{StaticResource TextH3}" Text="Чинники ризику" />
+                            <VerticalStackLayout BindableLayout.ItemsSource="{Binding Factors}"
+                                                 BindableLayout.ItemTemplate="{StaticResource FactorTemplate}" />
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <Border Style="{StaticResource Card}" IsVisible="{Binding HasHistory}">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Style="{StaticResource TextH3}" Text="Історія прогнозів" />
+                            <VerticalStackLayout BindableLayout.ItemsSource="{Binding History}"
+                                                 BindableLayout.ItemTemplate="{StaticResource HistoryTemplate}" />
+                        </VerticalStackLayout>
+                    </Border>
+
+                </VerticalStackLayout>
+
+                <VerticalStackLayout Grid.Row="{OnIdiom Phone=1, Default=0}"
+                                     Grid.Column="{OnIdiom Phone=0, Default=1}"
+                                     Spacing="16">
+
+                    <Border Style="{StaticResource Card}">
+                        <VerticalStackLayout Spacing="4">
+                            <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,8">
+                                <Label Style="{StaticResource TextH3}" VerticalOptions="Center" Text="Замовлення" />
+                                <Border Grid.Column="1" Style="{StaticResource BadgeOutline}">
+                                    <Label Style="{StaticResource BadgeOutlineText}"
+                                           Text="{Binding Order.Status, Converter={StaticResource OrderStatus}}" />
+                                </Border>
+                            </Grid>
+                            <controls:InfoRow Icon="{x:Static controls:Icons.MapPin}"
+                                              Label="Клієнт"
+                                              Value="{Binding Order.Customer.State}" />
+                            <controls:InfoRow Icon="{x:Static controls:Icons.Calendar}"
+                                              Label="Покупка"
+                                              Value="{Binding Order.PurchasedAt, StringFormat='{0:dd.MM.yyyy HH:mm}'}" />
+                            <controls:InfoRow Icon="{x:Static controls:Icons.CircleCheck}"
+                                              Label="Підтверджено"
+                                              Value="{Binding Order.ApprovedAt, StringFormat='{0:dd.MM.yyyy HH:mm}', TargetNullValue='—'}" />
+                            <controls:InfoRow Icon="{x:Static controls:Icons.CalendarClock}"
+                                              Label="Обіцяна доставка"
+                                              Value="{Binding Order.EstimatedDeliveryAt, StringFormat='{0:dd.MM.yyyy}'}" />
+                            <controls:InfoRow Icon="{x:Static controls:Icons.Truck}"
+                                              Label="Доставлено"
+                                              Value="{Binding Order.DeliveredCustomerAt, StringFormat='{0:dd.MM.yyyy}', TargetNullValue='ще ні'}" />
+                            <Border Style="{StaticResource BadgeRiskHigh}"
+                                    HorizontalOptions="End"
+                                    IsVisible="{Binding IsDeliveredLate}">
+                                <Label Style="{StaticResource BadgeRiskHighText}" Text="Із запізненням" />
+                            </Border>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <Border Style="{StaticResource Card}">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Style="{StaticResource TextH3}" Text="Товари" />
+                            <VerticalStackLayout BindableLayout.ItemsSource="{Binding Items}"
+                                                 BindableLayout.ItemTemplate="{StaticResource ItemTemplate}" />
+                            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto" RowSpacing="6" Padding="0,8,0,0">
+                                <Label Style="{StaticResource TextMuted}" Text="Товари" />
+                                <Label Grid.Column="1" Text="{Binding ItemsTotal, Converter={StaticResource Money}}" />
+                                <Label Grid.Row="1" Style="{StaticResource TextMuted}" Text="Доставка" />
+                                <Label Grid.Row="1" Grid.Column="1" Text="{Binding FreightTotal, Converter={StaticResource Money}}" />
+                                <Label Grid.Row="2" Style="{StaticResource TextSemiBold}" Text="Разом" />
+                                <Label Grid.Row="2" Grid.Column="1"
+                                       Style="{StaticResource TextSemiBold}"
+                                       Text="{Binding OrderTotal, Converter={StaticResource Money}}" />
+                            </Grid>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <Border Style="{StaticResource Card}">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Style="{StaticResource TextH3}" Text="Оплата" />
+                            <VerticalStackLayout BindableLayout.ItemsSource="{Binding Payments}"
+                                                 BindableLayout.ItemTemplate="{StaticResource PaymentTemplate}" />
+                        </VerticalStackLayout>
+                    </Border>
+
+                </VerticalStackLayout>
+
+            </Grid>
+        </ScrollView>
+
+    </Grid>
+
+</ContentPage>
