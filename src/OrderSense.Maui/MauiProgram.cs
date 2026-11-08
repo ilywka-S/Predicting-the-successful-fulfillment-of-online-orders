@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 using CommunityToolkit.Maui;
 using OrderSense.Client.Core;
 using OrderSense.Maui.ViewModels;
@@ -39,12 +39,15 @@ public static class MauiProgram
         builder.Services.AddTransient<LoginPage>();
         builder.Services.AddTransient<LoadingViewModel>();
         builder.Services.AddTransient<LoadingPage>();
+        builder.Services.AddTransient<OrdersViewModel>();
+        builder.Services.AddTransient<OrdersPage>();
         builder.Services.AddTransient<AppShell>();
 
         // Services & Handlers
         builder.Services.AddTransient<JwtAuthHandler>();
         builder.Services.AddSingleton<ITokenStorage, SecureTokenStorage>();
         builder.Services.AddSingleton<IAuthNavigation, MauiAuthNavigation>();
+        builder.Services.AddSingleton<IOrderNavigation, MauiOrderNavigation>();
         builder.Services.AddTransient<DashboardViewModel>();
 
         // SignalR Service

@@ -3,6 +3,11 @@ namespace OrderSense.Maui;
 
 public partial class AppShell : Shell
 {
+    static AppShell()
+    {
+        Routing.RegisterRoute(MauiOrderNavigation.OrderDetailsRoute, typeof(Views.DetailsPage));
+    }
+
     public AppShell()
     {
         InitializeComponent();
