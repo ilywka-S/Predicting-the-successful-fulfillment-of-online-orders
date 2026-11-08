@@ -5,7 +5,6 @@ using OrderSense.Maui.Views;
 using OrderSense.Client.Core.ViewModels;
 using OrderSense.Client.Core.Interfaces;
 using OrderSense.Client.Core.Services;
-using OrderSense.Client.Core.Services.Mock;
 
 namespace OrderSense.Maui;
 
@@ -52,8 +51,8 @@ public static class MauiProgram
         builder.Services.AddSingleton<IAuthNavigation, MauiAuthNavigation>();
         builder.Services.AddSingleton<IOrderNavigation, MauiOrderNavigation>();
         builder.Services.AddTransient<DashboardViewModel>();
-        builder.Services.AddSingleton<IAnalyticsService, MockAnalyticsService>();
-        builder.Services.AddSingleton<IWhatIfService, MockWhatIfService>();
+        builder.Services.AddTransient<IAnalyticsService, ApiAnalyticsService>();
+        builder.Services.AddTransient<IWhatIfService, ApiWhatIfService>();
 
         // SignalR Service
         builder.Services.AddSingleton<ISignalRService>(sp => 
