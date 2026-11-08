@@ -1,0 +1,60 @@
+﻿name: Deploy
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  test:
+    name: Backend Tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      ConnectionStrings__TestPostgres: Host=localhost;Port=5432;Username=postgres;Password=postgres
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore
+        run: dotnet restore OrderSense.Backend.slnf
+
+      - name: Build
+        run: dotnet build OrderSense.Backend.slnf --no-restore
+
+      - name: Test
+        run: dotnet test OrderSense.Backend.slnf --no-build
+
+  deploy:
+    name: Deploy to Render
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy Prediction Service
+        env:
+          HOOK: ${{ secrets.RENDER_PREDICTION_DEPLOY_HOOK }}
+        run: curl -fsS -X POST "$HOOK"
+
+      - name: Deploy API
+        env:
+          HOOK: ${{ secrets.RENDER_API_DEPLOY_HOOK }}
+        run: curl -fsS -X POST "$HOOK"

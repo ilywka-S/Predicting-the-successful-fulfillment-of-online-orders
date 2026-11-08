@@ -6,7 +6,7 @@
 .idea
 .vscode
 tests/
-ml/
+ml/OrderSense.ML.Training/
 data/
 **/*.csv
 src/OrderSense.Maui/
