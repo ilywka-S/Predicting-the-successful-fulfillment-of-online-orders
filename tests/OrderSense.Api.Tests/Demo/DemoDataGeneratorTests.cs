@@ -1,5 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 using OrderSense.Api.Demo;
+using OrderSense.Api.Data.Entities;
 
 namespace OrderSense.Api.Tests.Demo;
 
@@ -98,5 +99,27 @@ public class DemoDataGeneratorTests
         var lateShare = delivered.Count(o => o.DeliveredCustomerAt!.Value.Date > o.EstimatedDeliveryAt.Date) / (double)delivered.Count;
 
         Assert.InRange(lateShare, 0.03, 0.15);
+    }
+    
+    [Fact]
+    public void CreateNewOrder_UsesGivenSellersAndProducts()
+    {
+        var product = new Product { Id = "p1", Category = "unknown_category" };
+        var seller = new Seller { Id = "s1", ZipPrefix = "01001", State = "SP" };
+        var generator = new DemoDataGenerator([seller], [product], seed: 1);
+        var now = new DateTime(2026, 11, 8, 12, 0, 0);
+
+        var order = generator.CreateNewOrder(now);
+
+        Assert.All(order.Items, i =>
+        {
+            Assert.Equal("p1", i.ProductId);
+            Assert.Equal("s1", i.SellerId);
+        });
+        Assert.Equal("approved", order.Status);
+        Assert.Equal(now, order.PurchasedAt);
+        Assert.Null(order.DeliveredCarrierAt);
+        Assert.Null(order.DeliveredCustomerAt);
+        Assert.True(generator.GeoZips.ContainsKey(order.Customer.ZipPrefix));
     }
 }

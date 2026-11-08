@@ -90,6 +90,14 @@ builder.Services.AddHttpClient<PredictionClient>(client => client.BaseAddress = 
 builder.Services.AddScoped<OrderFeatureLoader>();
 builder.Services.AddScoped<OrderPredictor>();
 
+var simulator = builder.Configuration.GetSection("Simulator").Get<SimulatorOptions>() ?? new SimulatorOptions();
+
+if (simulator.Enabled && !isOpenApiGeneration)
+{
+    builder.Services.AddSingleton(simulator);
+    builder.Services.AddHostedService<OrderSimulator>();
+}
+
 builder.Services.AddAuthorization();
 
 builder.Services.AddProblemDetails();
