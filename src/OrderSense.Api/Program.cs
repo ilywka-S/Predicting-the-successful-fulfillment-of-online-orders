@@ -4,6 +4,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -116,6 +117,9 @@ builder.Services.ConfigureHttpJsonOptions(o =>
 builder.Services.AddOpenApi();
 
 builder.Services.AddSignalR().AddJsonProtocol(o => o.PayloadSerializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase)));
+
+builder.Services.AddSingleton<IUserIdProvider, SubUserIdProvider>();
+builder.Services.AddSingleton<BatchProgressNotifier>();
 
 var app = builder.Build();
 
