@@ -1,3 +1,4 @@
+using System.Net;
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
@@ -46,15 +47,20 @@ public class AuthTokenManager : IAuthTokenManager, IDisposable
             }
 
             using var client = _httpClientFactory.CreateClient("AuthClient");
-            var response = await client.PostAsJsonAsync("/api/auth/refresh", new { refreshToken }, cancellationToken);
+            
+            var response = await client.PostAsJsonAsync("/api/auth/refresh", new { refreshToken }, CancellationToken.None);
 
             if (!response.IsSuccessStatusCode)
             {
-                await ForceLogoutAsync();
-                return null;
+                if (response.StatusCode == HttpStatusCode.Unauthorized || 
+                    response.StatusCode == HttpStatusCode.BadRequest)
+                {
+                    await ForceLogoutAsync();
+                }
+                return null; 
             }
 
-            var result = await response.Content.ReadFromJsonAsync<AuthResponse>(cancellationToken: cancellationToken);
+            var result = await response.Content.ReadFromJsonAsync<AuthResponse>(cancellationToken: CancellationToken.None);
             if (result == null || string.IsNullOrEmpty(result.AccessToken))
             {
                 await ForceLogoutAsync();
