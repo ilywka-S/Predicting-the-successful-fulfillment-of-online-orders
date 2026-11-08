@@ -108,4 +108,46 @@ public class JwtAuthHandlerTests
             return Task.FromResult(_responseFunc(request));
         }
     }
+
+    [Theory]
+    [InlineData("/api/auth/login")]
+    [InlineData("/api/auth/refresh")]
+    [InlineData("/api/auth/logout")]
+    public async Task SendAsync_ShouldBypassTokenManager_ForSpecificAuthRoutes(string path)
+    {
+        // Arrange
+        var tokenManagerMock = new Mock<IAuthTokenManager>();
+        var innerHandler = new TestHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK));
+        var handler = new JwtAuthHandler(tokenManagerMock.Object) { InnerHandler = innerHandler };
+        var client = new HttpClient(handler);
+        var request = new HttpRequestMessage(HttpMethod.Get, $"https://api.ordersense.local{path}");
+
+        // Act
+        var response = await client.SendAsync(request);
+
+        // Assert
+        tokenManagerMock.Verify(x => x.GetAccessTokenAsync(It.IsAny<bool>(), It.IsAny<CancellationToken>()), Times.Never);
+        Assert.Null(innerHandler.LastRequest?.Headers.Authorization);
+    }
+
+    [Fact]
+    public async Task SendAsync_ShouldAddBearerToken_ForApiAuthMe()
+    {
+        // Arrange
+        var tokenManagerMock = new Mock<IAuthTokenManager>();
+        tokenManagerMock.Setup(x => x.GetAccessTokenAsync(false, It.IsAny<CancellationToken>()))
+            .ReturnsAsync("mocked_me_token");
+
+        var innerHandler = new TestHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK));
+        var handler = new JwtAuthHandler(tokenManagerMock.Object) { InnerHandler = innerHandler };
+        var client = new HttpClient(handler);
+        var request = new HttpRequestMessage(HttpMethod.Get, "https://api.ordersense.local/api/auth/me");
+
+        // Act
+        var response = await client.SendAsync(request);
+
+        // Assert
+        tokenManagerMock.Verify(x => x.GetAccessTokenAsync(false, It.IsAny<CancellationToken>()), Times.Once);
+        Assert.Equal("mocked_me_token", innerHandler.LastRequest?.Headers.Authorization?.Parameter);
+    }
 }

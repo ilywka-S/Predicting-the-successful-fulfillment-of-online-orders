@@ -9,7 +9,11 @@ public class JwtAuthHandler(IAuthTokenManager tokenManager) : DelegatingHandler
 {
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
-        if (request.RequestUri?.AbsolutePath.StartsWith("/api/auth/", StringComparison.OrdinalIgnoreCase) == true)
+        var path = request.RequestUri?.AbsolutePath ?? string.Empty;
+        
+        if (path.Equals("/api/auth/login", StringComparison.OrdinalIgnoreCase) ||
+            path.Equals("/api/auth/refresh", StringComparison.OrdinalIgnoreCase) ||
+            path.Equals("/api/auth/logout", StringComparison.OrdinalIgnoreCase))
         {
             return await base.SendAsync(request, cancellationToken);
         }

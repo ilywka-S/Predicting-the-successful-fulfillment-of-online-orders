@@ -33,7 +33,6 @@ public class AuthTokenManagerTests
             _navigationMock.Object);
     }
 
-    // Допоміжний метод для генерації токена, який парсер IsTokenExpired розпізнає коректно
     private static string GenerateJwt(bool isExpired)
     {
         var exp = DateTimeOffset.UtcNow.AddMinutes(isExpired ? -10 : 10).ToUnixTimeSeconds();
@@ -98,7 +97,6 @@ public class AuthTokenManagerTests
         _storageMock.Setup(x => x.GetAccessTokenAsync()).ReturnsAsync(expiredToken);
         _storageMock.Setup(x => x.GetRefreshTokenAsync()).ReturnsAsync("valid_refresh_token");
 
-        // Імітуємо 401 Unauthorized від бекенда при спробі рефрешу
         var httpResponse = new HttpResponseMessage(HttpStatusCode.Unauthorized);
 
         _httpHandlerMock.Protected()
@@ -113,7 +111,7 @@ public class AuthTokenManagerTests
 
         // Assert
         Assert.Null(result);
-        _storageMock.Verify(x => x.ClearAsync(), Times.Once); // Використовуємо ClearAsync()
+        _storageMock.Verify(x => x.ClearAsync(), Times.Once);
         _navigationMock.Verify(x => x.NavigateToLoginAsync(), Times.Once);
     }
 
@@ -138,5 +136,34 @@ public class AuthTokenManagerTests
             
         _storageMock.Verify(x => x.ClearAsync(), Times.Once);
         _navigationMock.Verify(x => x.NavigateToLoginAsync(), Times.Once);
+    }
+
+    [Theory]
+    [InlineData(HttpStatusCode.BadGateway)]        // 502
+    [InlineData(HttpStatusCode.ServiceUnavailable)] // 503
+    [InlineData(HttpStatusCode.InternalServerError)]// 500
+    public async Task GetAccessTokenAsync_ReturnsNullButDoesNotClearTokens_WhenRefreshFailsWith5xx(HttpStatusCode statusCode)
+    {
+        // Arrange
+        var expiredToken = GenerateJwt(isExpired: true);
+        _storageMock.Setup(x => x.GetAccessTokenAsync()).ReturnsAsync(expiredToken);
+        _storageMock.Setup(x => x.GetRefreshTokenAsync()).ReturnsAsync("valid_refresh_token");
+
+        var httpResponse = new HttpResponseMessage(statusCode);
+
+        _httpHandlerMock.Protected()
+            .Setup<Task<HttpResponseMessage>>(
+                "SendAsync", 
+                ItExpr.IsAny<HttpRequestMessage>(), 
+                ItExpr.IsAny<CancellationToken>())
+            .ReturnsAsync(httpResponse);
+
+        // Act
+        var result = await _tokenManager.GetAccessTokenAsync();
+
+        // Assert
+        Assert.Null(result);
+        _storageMock.Verify(x => x.ClearAsync(), Times.Never);
+        _navigationMock.Verify(x => x.NavigateToLoginAsync(), Times.Never);
     }
 }
