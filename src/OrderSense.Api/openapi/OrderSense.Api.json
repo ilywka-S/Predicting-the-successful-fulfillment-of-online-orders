@@ -941,7 +941,7 @@
             "content": {
               "text/csv": {
                 "schema": {
-                  "$ref": "#/components/schemas/FileContentResult"
+                  "$ref": "#/components/schemas/Stream"
                 }
               }
             }
@@ -1001,7 +1001,7 @@
             "content": {
               "text/csv": {
                 "schema": {
-                  "$ref": "#/components/schemas/FileContentResult"
+                  "$ref": "#/components/schemas/Stream"
                 }
               }
             }
@@ -1820,17 +1820,6 @@
           }
         }
       },
-      "EntityTagHeaderValue": {
-        "type": "object",
-        "properties": {
-          "tag": {
-            "$ref": "#/components/schemas/StringSegment"
-          },
-          "isWeak": {
-            "type": "boolean"
-          }
-        }
-      },
       "FactorImpact": {
         "enum": [
           "increases",
@@ -1850,47 +1839,6 @@
           "importance": {
             "type": "number",
             "format": "float"
-          }
-        }
-      },
-      "FileContentResult": {
-        "type": "object",
-        "properties": {
-          "fileContents": {
-            "type": "string",
-            "format": "byte"
-          },
-          "contentType": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "fileDownloadName": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "lastModified": {
-            "type": [
-              "null",
-              "string"
-            ],
-            "format": "date-time"
-          },
-          "entityTag": {
-            "oneOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/EntityTagHeaderValue"
-              }
-            ]
-          },
-          "enableRangeProcessing": {
-            "type": "boolean"
           }
         }
       },
@@ -2361,33 +2309,9 @@
           null
         ]
       },
-      "StringSegment": {
-        "type": "object",
-        "properties": {
-          "buffer": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "offset": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "length": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "value": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "hasValue": {
-            "type": "boolean"
-          }
-        }
+      "Stream": {
+        "type": "string",
+        "format": "binary"
       },
       "UserDto": {
         "required": [
