@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using OrderSense.Client.Core.Services;
+using OrderSense.Client.Core.Interfaces;
 
 namespace OrderSense.Client.Core;
 
@@ -18,7 +19,6 @@ public class JwtAuthHandler(IAuthTokenManager tokenManager) : DelegatingHandler
 
         if (response.StatusCode == HttpStatusCode.Unauthorized)
         {
-            // Якщо сервер повернув 401, вимагаємо примусове оновлення (навіть якщо локально токен ще "живий")
             var newToken = await tokenManager.GetAccessTokenAsync(forceRefresh: true, cancellationToken);
             if (!string.IsNullOrEmpty(newToken) && newToken != token)
             {

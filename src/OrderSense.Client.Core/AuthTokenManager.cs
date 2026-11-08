@@ -2,16 +2,11 @@ using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
 using OrderSense.Client.Core.Interfaces;
-using OrderSense.Contracts; // Твій AuthResponse
+using OrderSense.Contracts;
 
 namespace OrderSense.Client.Core.Services;
 
-public interface IAuthTokenManager
-{
-    Task<string?> GetAccessTokenAsync(bool forceRefresh = false, CancellationToken cancellationToken = default);
-}
-
-public class AuthTokenManager : IAuthTokenManager
+public class AuthTokenManager : IAuthTokenManager, IDisposable
 {
     private readonly ITokenStorage _tokenStorage;
     private readonly IHttpClientFactory _httpClientFactory;
@@ -112,5 +107,11 @@ public class AuthTokenManager : IAuthTokenManager
         catch { } 
 
         return true;
+    }
+
+    public void Dispose()
+    {
+        _semaphore.Dispose();
+        GC.SuppressFinalize(this);
     }
 }
