@@ -57,3 +57,17 @@ public class RoleConverter : FormatConverter
 {
     protected override string Format(object value) => Formats.Role(value.ToString());
 }
+
+public class CountConverter : IValueConverter
+{
+    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        var forms = (parameter as string ?? string.Empty).Split('|');
+        var count = System.Convert.ToInt64(value ?? 0, CultureInfo.InvariantCulture);
+
+        return forms.Length == 3 ? Formats.Count(count, forms[0], forms[1], forms[2]) : count.ToString(CultureInfo.InvariantCulture);
+    }
+
+    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        throw new NotSupportedException();
+}

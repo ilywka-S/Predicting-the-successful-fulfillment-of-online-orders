@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:controls="clr-namespace:OrderSense.Maui.Controls"
+             x:Class="OrderSense.Maui.Controls.DateField"
+             x:Name="Root"
+             x:DataType="controls:DateField">
+
+    <VerticalStackLayout Spacing="8">
+
+        <Label x:Name="LabelView"
+               Style="{StaticResource TextLabel}"
+               Text="{Binding Label, Source={x:Reference Root}}" />
+
+        <Border x:Name="InputBorder" Style="{StaticResource InputFrame}">
+            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+
+                <Label Style="{StaticResource IconMuted}"
+                       Text="{x:Static controls:Icons.Calendar}"
+                       InputTransparent="True"
+                       IsVisible="{OnPlatform WinUI=False, Default=True}" />
+
+                <controls:BorderlessDatePicker x:Name="Input"
+                        Grid.Column="1"
+                        Format="dd.MM.yyyy"
+                        Date="{Binding Date, Source={x:Reference Root}, Mode=TwoWay}"
+                        Focused="OnInputFocusChanged"
+                        Unfocused="OnInputFocusChanged" />
+
+                <Label x:Name="PlaceholderView"
+                       Grid.Column="1"
+                       Style="{StaticResource TextMuted}"
+                       FontSize="{OnIdiom Phone=16, Default=14}"
+                       VerticalOptions="Center"
+                       InputTransparent="True"
+                       Text="{Binding Placeholder, Source={x:Reference Root}}" />
+
+                <Grid x:Name="OpenArea"
+                      Grid.ColumnSpan="2"
+                      BackgroundColor="Transparent">
+                    <Grid.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnFieldTapped" />
+                    </Grid.GestureRecognizers>
+                </Grid>
+
+                <Grid x:Name="ClearButton"
+                      Grid.Column="2"
+                      WidthRequest="28"
+                      HeightRequest="28">
+                    <Grid.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnClearTapped" />
+                    </Grid.GestureRecognizers>
+                    <Label Style="{StaticResource IconMuted}"
+                           HorizontalOptions="Center"
+                           Text="{x:Static controls:Icons.X}" />
+                </Grid>
+
+            </Grid>
+        </Border>
+
+    </VerticalStackLayout>
+
+</ContentView>
