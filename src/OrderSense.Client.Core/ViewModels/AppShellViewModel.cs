@@ -31,11 +31,8 @@ public partial class AppShellViewModel : ObservableObject
         IsManagerVisible = role == "manager"; 
         IsAnalystVisible = role == "analyst";
         IsAdminVisible = role == "admin";
+
+        IsBatchPredictionVisible = role == "admin" || role == "analyst";
     }
 
-    public async Task CheckRoleAsync()
-    {
-        var role = await _tokenStorage.GetRoleAsync();
-        IsBatchPredictionVisible = role is "analyst" or "admin";
-    }
 }

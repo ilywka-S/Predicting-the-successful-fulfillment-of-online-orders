@@ -1,4 +1,4 @@
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using CommunityToolkit.Maui;
 using OrderSense.Client.Core;
 using OrderSense.Maui.ViewModels;
@@ -43,7 +43,8 @@ public static class MauiProgram
         builder.Services.AddTransient<LoadingPage>();
         builder.Services.AddTransient<OrdersViewModel>();
         builder.Services.AddTransient<OrdersPage>();
-        builder.Services.AddTransient<AppShell>();
+        builder.Services.AddSingleton<AppShell>();
+        builder.Services.AddSingleton<AppShellViewModel>();
         builder.Services.AddTransient<BatchPredictionViewModel>();
         builder.Services.AddTransient<BatchPredictionPage>();
 
