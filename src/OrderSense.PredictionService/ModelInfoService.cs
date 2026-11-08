@@ -4,6 +4,7 @@ using OrderSense.Contracts;
 namespace OrderSense.PredictionService;
 public sealed class ModelInfoService
 {
+    private static readonly JsonSerializerOptions JsonOptions = new JsonSerializerOptions(JsonSerializerDefaults.Web);
     public ModelInfoService(IConfiguration configuration, IOptions<RiskThresholds> risk)
     {
         string modelPath = Path.Combine(AppContext.BaseDirectory, configuration["Model:Path"] ?? "models/v1/model.zip");
@@ -14,8 +15,7 @@ public sealed class ModelInfoService
             return;
         }
         string json = File.ReadAllText(infoPath);
-        JsonSerializerOptions options = new JsonSerializerOptions(JsonSerializerDefaults.Web);
-        ModelDetails? details = JsonSerializer.Deserialize<ModelDetails>(json, options);
+        ModelDetails? details = JsonSerializer.Deserialize<ModelDetails>(json, JsonOptions);
         if (details == null)
         {
             return;
