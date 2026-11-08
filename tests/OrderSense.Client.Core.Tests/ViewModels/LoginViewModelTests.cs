@@ -4,7 +4,7 @@ using FluentAssertions;
 using OrderSense.Client.Core.ViewModels;
 using OrderSense.Client.Core.Interfaces;
 
-namespace OrderSense.Client.Core.Tests;
+namespace OrderSense.Client.Core.Tests.ViewModels;
 
 public class LoginViewModelTests
 {
