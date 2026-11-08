@@ -152,4 +152,52 @@ public sealed class PredictEndpointTests : IClassFixture<WebApplicationFactory<P
         Assert.Equal(0.12, info.RiskMediumFrom, 3);
         Assert.Equal(0.20, info.RiskHighFrom, 3);
     }
+    [Fact]
+    public async Task PredictBatch_ReturnsOnePredictionPerItemInSameOrder()
+    {
+        List<OrderFeatures> batch = [Valid(), Risky()];
+        HttpResponseMessage response = await _client.PostAsJsonAsync("/predict/batch", batch, Json);
+        List<OrderPrediction>? result = await response.Content.ReadFromJsonAsync<List<OrderPrediction>>(Json);
+        HttpResponseMessage singleResponse = await _client.PostAsJsonAsync("/predict", Risky(), Json);
+        OrderPrediction? single = await singleResponse.Content.ReadFromJsonAsync<OrderPrediction>(Json);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.NotNull(result);
+        Assert.NotNull(single);
+        Assert.Equal(2, result.Count);
+        Assert.Equal("v1", result[0].ModelVersion);
+        Assert.Equal(single.Probability, result[1].Probability);
+        Assert.Equal(single.RiskLevel, result[1].RiskLevel);
+    }
+    [Fact]
+    public async Task PredictBatch_EmptyList_ReturnsEmptyList()
+    {
+        List<OrderFeatures> batch = [];
+        HttpResponseMessage response = await _client.PostAsJsonAsync("/predict/batch", batch, Json);
+        List<OrderPrediction>? result = await response.Content.ReadFromJsonAsync<List<OrderPrediction>>(Json);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.NotNull(result);
+        Assert.Empty(result);
+    }
+    [Fact]
+    public async Task PredictBatch_InvalidItem_Returns400WithItemIndex()
+    {
+        OrderFeatures invalid = Valid();
+        invalid.ItemsCount = 0;
+        List<OrderFeatures> batch = [Valid(), invalid];
+        HttpResponseMessage response = await _client.PostAsJsonAsync("/predict/batch", batch, Json);
+        string body = await response.Content.ReadAsStringAsync();
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Contains("[1].ItemsCount", body);
+    }
+    [Fact]
+    public async Task PredictBatch_TooManyItems_Returns400()
+    {
+        List<OrderFeatures> batch = new List<OrderFeatures>();
+        for (int i = 0; i < 1001; i++)
+        {
+            batch.Add(Valid());
+        }
+        HttpResponseMessage response = await _client.PostAsJsonAsync("/predict/batch", batch, Json);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
 }
