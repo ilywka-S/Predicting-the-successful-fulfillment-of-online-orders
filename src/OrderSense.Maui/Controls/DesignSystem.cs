@@ -1,5 +1,7 @@
+using LiveChartsCore.SkiaSharpView.Maui;
 using Microsoft.Maui.Handlers;
 using OrderSense.Maui.Controls;
+using SkiaSharp.Views.Maui.Controls.Hosting;
 
 namespace OrderSense.Maui;
 
@@ -15,6 +17,10 @@ public static partial class DesignSystem
             fonts.AddFont("Inter-Bold.ttf", "InterBold");
             fonts.AddFont("Lucide.ttf", "Lucide");
         });
+
+        builder
+            .UseSkiaSharp()
+            .UseLiveCharts();
 
         RemoveNativeInputChrome();
         RemoveDatePickerChrome();
