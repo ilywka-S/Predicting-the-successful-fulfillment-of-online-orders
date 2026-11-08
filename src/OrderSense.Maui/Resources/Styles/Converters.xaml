@@ -25,9 +25,12 @@
 
     <controls:CountConverter x:Key="Count" />
 
+    <controls:FactorValueConverter x:Key="FactorValue" />
+
     <toolkit:InvertedBoolConverter x:Key="Not" />
     <toolkit:IsStringNotNullOrEmptyConverter x:Key="HasText" />
     <toolkit:IsNotNullConverter x:Key="NotNull" />
     <toolkit:IsNullConverter x:Key="IsNull" />
+    <toolkit:IsEqualConverter x:Key="IsEqual" />
 
 </ResourceDictionary>

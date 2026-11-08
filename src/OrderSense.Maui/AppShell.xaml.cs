@@ -5,7 +5,7 @@ public partial class AppShell : Shell
 {
     static AppShell()
     {
-        Routing.RegisterRoute(MauiOrderNavigation.OrderDetailsRoute, typeof(Views.DetailsPage));
+        Routing.RegisterRoute(MauiOrderNavigation.OrderDetailsRoute, typeof(Views.OrderDetailsPage));
     }
 
     public AppShell()

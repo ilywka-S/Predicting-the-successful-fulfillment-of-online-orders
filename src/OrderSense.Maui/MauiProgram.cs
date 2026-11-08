@@ -1,7 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using CommunityToolkit.Maui;
 using OrderSense.Client.Core;
-using OrderSense.Maui.ViewModels;
 using OrderSense.Maui.Views;
 using OrderSense.Client.Core.ViewModels;
 using OrderSense.Client.Core.Interfaces;
@@ -30,11 +29,11 @@ public static class MauiProgram
 
         // ViewModels & Pages
         builder.Services.AddTransient<MainViewModel>();
-        builder.Services.AddTransient<DetailsViewModel>();
+        builder.Services.AddTransient<OrderDetailsViewModel>();
 
         builder.Services.AddTransient<MainPage>();
         builder.Services.AddTransient<DashboardPage>();
-        builder.Services.AddTransient<DetailsPage>();
+        builder.Services.AddTransient<OrderDetailsPage>();
         builder.Services.AddTransient<LoginViewModel>();
         builder.Services.AddTransient<LoginPage>();
         builder.Services.AddTransient<LoadingViewModel>();
