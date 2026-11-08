@@ -63,6 +63,45 @@ public class ApiJsonTests
         order.LatestPrediction.Factors.Single().Impact.Should().Be(FactorImpact.Increases);
     }
 
+    [Fact]
+    public async Task PredictOrder_PostsAndReadsPrediction()
+    {
+        var handler = new JsonHandler("""
+            {
+              "probability": 0.67, "riskLevel": "medium", "modelVersion": "v1", "createdAt": "2026-11-08T10:00:00+00:00",
+              "factors": [ { "feature": "freight_ratio", "label": "Частка доставки", "value": 0.31, "impact": "decreases" } ]
+            }
+            """);
+        var client = new Client(new HttpClient(handler) { BaseAddress = new Uri("https://api.example.test") });
+
+        var prediction = await client.PredictOrderAsync("a1");
+
+        handler.LastRequestUri!.AbsolutePath.Should().Be("/api/orders/a1/predict");
+        handler.LastMethod.Should().Be(HttpMethod.Post);
+        prediction.RiskLevel.Should().Be(RiskLevel.Medium);
+        prediction.Factors.Single().Impact.Should().Be(FactorImpact.Decreases);
+    }
+
+    [Fact]
+    public async Task GetBatchJobResults_ReadsRiskLevelAndMissingPrediction()
+    {
+        var client = CreateClient("""
+            {
+              "items": [
+                { "rowNo": 1, "probability": 0.5, "riskLevel": "medium", "factors": [] },
+                { "rowNo": 2, "probability": null, "riskLevel": null, "factors": [] }
+              ],
+              "page": 1, "pageSize": 20, "total": 2
+            }
+            """);
+
+        var response = await client.GetBatchJobResultsAsync(Guid.NewGuid(), 1, 20);
+
+        var items = response.Items.ToList();
+        items[0].RiskLevel.Value.Should().Be(RiskLevel.Medium);
+        items[1].RiskLevel.Should().BeNull();
+    }
+
     private static Client CreateClient(string json) =>
         new(new HttpClient(new JsonHandler(json)) { BaseAddress = new Uri("https://api.example.test") });
 
@@ -70,9 +109,12 @@ public class ApiJsonTests
     {
         public Uri? LastRequestUri { get; private set; }
 
+        public HttpMethod? LastMethod { get; private set; }
+
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             LastRequestUri = request.RequestUri;
+            LastMethod = request.Method;
 
             return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
             {

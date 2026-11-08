@@ -71,3 +71,12 @@ public class CountConverter : IValueConverter
     public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
         throw new NotSupportedException();
 }
+
+public class FactorValueConverter : IValueConverter
+{
+    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        value is OrderSense.Client.Core.RiskFactorDto factor ? Formats.FactorValue(factor.Feature, factor.Value) : string.Empty;
+
+    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        throw new NotSupportedException();
+}

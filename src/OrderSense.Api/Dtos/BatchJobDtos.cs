@@ -17,3 +17,9 @@ public record BatchResultDto(
     float? Probability,
     RiskLevel? RiskLevel,
     IReadOnlyList<RiskFactorDto> Factors);
+
+public record BatchJobProgressDto(
+    Guid JobId, 
+    int ProcessedRows, 
+    int TotalRows, 
+    BatchJobStatus Status);

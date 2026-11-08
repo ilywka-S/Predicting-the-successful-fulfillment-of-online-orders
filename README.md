@@ -177,7 +177,9 @@ dotnet run --project tools/OrderSense.OlistImport -- data/olist
 ## Продакшн
 
 - API: `https://ordersense-api.onrender.com`, перевірка: `/alive`.
-- Render (безкоштовний план, Франкфурт) збирає Docker-образ з `src/OrderSense.Api/Dockerfile`. Поки що деплой запускаємо вручну, автодеплой після злиття — у планах.
+- Prediction Service: `https://ordersense-prediction.onrender.com`, перевірка: `/alive`. API знаходить його через змінну `services__prediction__https__0`
+- Render (безкоштовний план, Франкфурт) збирає Docker-образи з `src/OrderSense.Api/Dockerfile` і `src/OrderSense.PredictionService/Dockerfile`
+- Автодеплой: після злиття в `main` воркфлоу `Deploy` проганяє тести і викликає Deploy Hook обох сервісів. URL хуків лежать лише в секретах GitHub `RENDER_API_DEPLOY_HOOK` і `RENDER_PREDICTION_DEPLOY_HOOK`, Auto-Deploy у самому Render вимкнено. Статус видно у вкладці Actions, там само можна запустити деплой вручну через Run workflow
 - База: окремий проєкт Neon `ordersense-prod`, PostgreSQL 18, Франкфурт. Рядок підключення, ключ JWT і пароль адміна задані лише в змінних середовища Render.
 - Безкоштовний Render засинає після 15 хвилин без запитів, і тоді перший запит іде до хвилини. Щоб цього не було вдень, cron-job.org смикає `/alive` кожні 10 хвилин з 07:00 до 23:59 за Києвом.
 - Демо-дані в продакшні не створюються, тож до імпорту Olist список замовлень там порожній.

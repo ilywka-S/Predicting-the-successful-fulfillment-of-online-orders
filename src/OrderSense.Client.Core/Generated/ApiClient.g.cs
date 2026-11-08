@@ -1289,6 +1289,7 @@ namespace OrderSense.Client.Core
                             throw new ApiException<ProblemDetails>("Not Found", status_, objectResponse_.Text, headers_, objectResponse_.Object, null);
                         }
                         else
+<<<<<<< HEAD
                         if (status_ == 501)
                         {
                             var objectResponse_ = await ReadObjectResponseAsync<ProblemDetails>(response_, headers_, cancellationToken).ConfigureAwait(false);
@@ -1299,6 +1300,8 @@ namespace OrderSense.Client.Core
                             throw new ApiException<ProblemDetails>("Not Implemented", status_, objectResponse_.Text, headers_, objectResponse_.Object, null);
                         }
                         else
+=======
+>>>>>>> 45909a5ee87191afbc3b133a2f5d7c6e52c1fe45
                         {
                             var responseData_ = response_.Content == null ? null : await ReadAsStringAsync(response_.Content, cancellationToken).ConfigureAwait(false);
                             throw new ApiException("The HTTP status code of the response was not expected (" + status_ + ").", status_, responseData_, headers_, null);
@@ -1402,6 +1405,7 @@ namespace OrderSense.Client.Core
                             throw new ApiException<ProblemDetails>("Not Found", status_, objectResponse_.Text, headers_, objectResponse_.Object, null);
                         }
                         else
+<<<<<<< HEAD
                         if (status_ == 501)
                         {
                             var objectResponse_ = await ReadObjectResponseAsync<ProblemDetails>(response_, headers_, cancellationToken).ConfigureAwait(false);
@@ -1412,6 +1416,8 @@ namespace OrderSense.Client.Core
                             throw new ApiException<ProblemDetails>("Not Implemented", status_, objectResponse_.Text, headers_, objectResponse_.Object, null);
                         }
                         else
+=======
+>>>>>>> 45909a5ee87191afbc3b133a2f5d7c6e52c1fe45
                         {
                             var responseData_ = response_.Content == null ? null : await ReadAsStringAsync(response_.Content, cancellationToken).ConfigureAwait(false);
                             throw new ApiException("The HTTP status code of the response was not expected (" + status_ + ").", status_, responseData_, headers_, null);
@@ -1503,14 +1509,22 @@ namespace OrderSense.Client.Core
                             throw new ApiException<ProblemDetails>("Not Found", status_, objectResponse_.Text, headers_, objectResponse_.Object, null);
                         }
                         else
+<<<<<<< HEAD
                         if (status_ == 501)
+=======
+                        if (status_ == 409)
+>>>>>>> 45909a5ee87191afbc3b133a2f5d7c6e52c1fe45
                         {
                             var objectResponse_ = await ReadObjectResponseAsync<ProblemDetails>(response_, headers_, cancellationToken).ConfigureAwait(false);
                             if (objectResponse_.Object == null)
                             {
                                 throw new ApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
                             }
+<<<<<<< HEAD
                             throw new ApiException<ProblemDetails>("Not Implemented", status_, objectResponse_.Text, headers_, objectResponse_.Object, null);
+=======
+                            throw new ApiException<ProblemDetails>("Conflict", status_, objectResponse_.Text, headers_, objectResponse_.Object, null);
+>>>>>>> 45909a5ee87191afbc3b133a2f5d7c6e52c1fe45
                         }
                         else
                         {

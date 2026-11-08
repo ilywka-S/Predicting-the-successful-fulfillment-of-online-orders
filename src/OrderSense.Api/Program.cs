@@ -4,6 +4,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -90,6 +91,14 @@ builder.Services.AddHttpClient<PredictionClient>(client => client.BaseAddress = 
 builder.Services.AddScoped<OrderFeatureLoader>();
 builder.Services.AddScoped<OrderPredictor>();
 
+var simulator = builder.Configuration.GetSection("Simulator").Get<SimulatorOptions>() ?? new SimulatorOptions();
+
+if (simulator.Enabled && !isOpenApiGeneration)
+{
+    builder.Services.AddSingleton(simulator);
+    builder.Services.AddHostedService<OrderSimulator>();
+}
+
 builder.Services.AddAuthorization();
 
 builder.Services.AddProblemDetails();
@@ -108,6 +117,9 @@ builder.Services.ConfigureHttpJsonOptions(o =>
 builder.Services.AddOpenApi();
 
 builder.Services.AddSignalR().AddJsonProtocol(o => o.PayloadSerializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase)));
+
+builder.Services.AddSingleton<IUserIdProvider, SubUserIdProvider>();
+builder.Services.AddSingleton<BatchProgressNotifier>();
 
 var app = builder.Build();
 

@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using CommunityToolkit.Maui;
 using OrderSense.Client.Core;
-using OrderSense.Maui.ViewModels;
 using OrderSense.Maui.Views;
 using OrderSense.Client.Core.ViewModels;
 using OrderSense.Client.Core.Interfaces;
@@ -32,11 +31,11 @@ public static class MauiProgram
 
         // ViewModels & Pages
         builder.Services.AddTransient<MainViewModel>();
-        builder.Services.AddTransient<DetailsViewModel>();
+        builder.Services.AddTransient<OrderDetailsViewModel>();
 
         builder.Services.AddTransient<MainPage>();
         builder.Services.AddTransient<DashboardPage>();
-        builder.Services.AddTransient<DetailsPage>();
+        builder.Services.AddTransient<OrderDetailsPage>();
         builder.Services.AddTransient<LoginViewModel>();
         builder.Services.AddTransient<LoginPage>();
         builder.Services.AddTransient<LoadingViewModel>();
@@ -49,8 +48,9 @@ public static class MauiProgram
         builder.Services.AddTransient<BatchPredictionPage>();
 
         // Services & Handlers
-        builder.Services.AddTransient<JwtAuthHandler>();
         builder.Services.AddSingleton<ITokenStorage, SecureTokenStorage>();
+        builder.Services.AddSingleton<IAuthTokenManager, AuthTokenManager>();
+        builder.Services.AddTransient<JwtAuthHandler>();
         builder.Services.AddSingleton<IAuthNavigation, MauiAuthNavigation>();
         builder.Services.AddSingleton<IOrderNavigation, MauiOrderNavigation>();
         builder.Services.AddTransient<DashboardViewModel>();
@@ -61,8 +61,8 @@ public static class MauiProgram
         // SignalR Service
         builder.Services.AddSingleton<ISignalRService>(sp => 
         {
-            var tokenStorage = sp.GetRequiredService<ITokenStorage>();
-            return new SignalRService(tokenStorage, baseAddress);
+            var tokenManager = sp.GetRequiredService<IAuthTokenManager>();
+            return new SignalRService(tokenManager, baseAddress); 
         });
 
         // HTTP Clients

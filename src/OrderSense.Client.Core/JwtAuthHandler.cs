@@ -28,7 +28,7 @@ public class JwtAuthHandler(ITokenStorage tokenStorage, IHttpClientFactory httpC
         var token = await tokenStorage.GetAccessTokenAsync();
         if (!string.IsNullOrEmpty(token))
         {
-            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
         }
     }
 
