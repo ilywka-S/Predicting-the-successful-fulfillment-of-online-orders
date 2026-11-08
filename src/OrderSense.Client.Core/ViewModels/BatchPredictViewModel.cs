@@ -9,30 +9,31 @@ using OrderSense.Contracts;
 
 namespace OrderSense.Client.Core.ViewModels;
 
-public partial class BatchPredictionViewModel : ObservableObject
+public partial class BatchPredictionViewModel : ObservableObject, IDisposable
 {
     private readonly IClient _apiClient;
     private readonly ISignalRService _signalRService;
     private readonly IFileService _fileService;
+    
+    private Guid? _currentJobId;
     private CancellationTokenSource? _pollingCts;
+    
+    private FileSelectionResult? _selectedFile;
 
     [ObservableProperty]
-    private string _selectedFileName = "Файл не обрано";
+    private string _selectedFileName = "Файл не вибрано";
+
+    [ObservableProperty]
+    private string _statusMessage = "Очікування файлу...";
 
     [ObservableProperty]
     private double _progress;
 
     [ObservableProperty]
-    private bool _isProcessing;
-
-    [ObservableProperty]
     private bool _isFinished;
 
     [ObservableProperty]
-    private string _errorMessage = string.Empty;
-
-    private Stream? _selectedStream;
-    private Guid _currentJobId = Guid.Empty;
+    private bool _isProcessing;
 
     public BatchPredictionViewModel(IClient apiClient, ISignalRService signalRService, IFileService fileService)
     {
@@ -40,148 +41,164 @@ public partial class BatchPredictionViewModel : ObservableObject
         _signalRService = signalRService;
         _fileService = fileService;
     }
-    
-    public void Subscribe() => _signalRService.OnBatchJobProgress += HandleProgress;
 
-    public void Unsubscribe() 
+    public void Subscribe()
+    {
+        _signalRService.OnBatchJobProgress += HandleProgress;
+
+        if (_currentJobId.HasValue && !IsFinished)
+        {
+            StartPolling(_currentJobId.Value);
+        }
+    }
+
+    public void Unsubscribe()
     {
         _signalRService.OnBatchJobProgress -= HandleProgress;
-        _pollingCts?.Cancel();
+        StopPolling();
     }
 
     private void HandleProgress(BatchJobProgress data)
     {
-        if (data.JobId != _currentJobId) return;
+        if (_currentJobId == null || data.JobId != _currentJobId.Value) 
+            return;
 
-        if (data.TotalRows > 0)
-        {
-            Progress = (double)data.ProcessedRows / data.TotalRows;
-        }
+        Progress = data.TotalRows > 0 ? (double)data.ProcessedRows / data.TotalRows : 0;
+        StatusMessage = $"Обробка: {data.ProcessedRows} / {data.TotalRows}";
 
-        if (data.Status is "done" or "failed")
+        if (data.Status.ToString() == "Done" || data.Status.ToString() == "Failed")
         {
+            IsFinished = true;
             IsProcessing = false;
-            IsFinished = data.Status == "done";
-            _pollingCts?.Cancel();
-        }
+            StatusMessage = data.Status.ToString() == "Done" ? "Готово! Можна завантажувати." : "Помилка обробки.";
+            StopPolling();
+        } 
     }
 
-    private async Task StartPollingFallbackAsync(Guid jobId)
+    [RelayCommand]
+    public async Task SelectCsvAsync()
     {
-        _pollingCts?.Cancel();
-        _pollingCts = new CancellationTokenSource();
-        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(3));
-
         try
         {
-            while (await timer.WaitForNextTickAsync(_pollingCts.Token))
+            var result = await _fileService.PickCsvAsync();
+
+            if (result != null)
             {
-                if (IsFinished || !_isProcessing) break;
-
-                var job = await _apiClient.GetBatchJobAsync(jobId, _pollingCts.Token);
-                
-                var currentProgress = job.TotalRows > 0 ? (double)job.ProcessedRows / job.TotalRows : 0;
-                
-                if (currentProgress > Progress) Progress = currentProgress;
-
-                if (job.Status is BatchJobStatus.Done or BatchJobStatus.Failed)
-                {
-                    IsProcessing = false;
-                    IsFinished = job.Status == BatchJobStatus.Done;
-                    _pollingCts.Cancel();
-                }
+                _selectedFile = result;
+                SelectedFileName = result.FileName;
+                StatusMessage = "Файл вибрано. Натисніть 'Почати'.";
             }
         }
-        catch (OperationCanceledException) { }
-        catch (Exception ex)
+        catch
         {
-            ErrorMessage = $"Помилка синхронізації: {ex.Message}";
+            StatusMessage = "Помилка вибору файлу.";
         }
     }
 
     [RelayCommand]
-    public async Task PickFileAsync()
+    public async Task StartBatchJobAsync()
     {
-        try
+        if (_selectedFile == null)
         {
-            ErrorMessage = string.Empty;
-            
-            var (stream, fileName) = await _fileService.PickCsvFileAsync();
-            
-            if (stream != null)
-            {
-                _selectedStream?.Dispose();
-                
-                _selectedStream = stream;
-                SelectedFileName = fileName;
-                IsFinished = false;
-                Progress = 0;
-            }
-        }
-        catch (Exception ex)
-        {
-            ErrorMessage = $"Помилка вибору файлу: {ex.Message}";
-        }
-    }
-
-    [RelayCommand]
-    public async Task UploadAndStartJobAsync()
-    {
-        if (_selectedStream == null)
-        {
-            ErrorMessage = "Будь ласка, оберіть файл.";
+            StatusMessage = "Спочатку виберіть файл!";
             return;
         }
 
-        IsProcessing = true;
         IsFinished = false;
+        IsProcessing = true;
         Progress = 0;
-        ErrorMessage = string.Empty;
-
+        StatusMessage = "Відправка файлу на сервер...";
+        
         try
         {
-            if (_selectedStream.CanSeek)
-            {
-                _selectedStream.Position = 0;
-            }
-
-            var fileParameter = new FileParameter(_selectedStream, SelectedFileName, "text/csv");
+            using var stream = await _selectedFile.OpenReadAsync();
             
-            var batchJob = await _apiClient.CreateBatchJobAsync(fileParameter);
-            _currentJobId = batchJob.Id;
-
-            _ = StartPollingFallbackAsync(_currentJobId);
+            var response = await _apiClient.CreateBatchJobAsync(new FileParameter(stream, _selectedFile.FileName));
+            _currentJobId = response.Id; 
+            
+            if (_currentJobId.HasValue)
+            {
+                StatusMessage = "Файл відправлено. Очікування даних...";
+                StartPolling(_currentJobId.Value);
+            }
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            ErrorMessage = $"Помилка завантаження CSV: {ex.Message}";
             IsProcessing = false;
+            StatusMessage = "Помилка відправки файлу.";
         }
     }
 
-    [RelayCommand]
-    public async Task DownloadResultsAsync()
+    private void StartPolling(Guid jobId)
     {
-        if (_currentJobId == Guid.Empty) return;
+        StopPolling();
+        _pollingCts = new CancellationTokenSource();
+        var token = _pollingCts.Token;
+
+        Task.Run(async () =>
+        {
+            try
+            {
+                while (!token.IsCancellationRequested && !IsFinished)
+                {
+                    await Task.Delay(5000, token); 
+
+                    var jobStatus = await _apiClient.GetBatchJobAsync(jobId, token);
+                    if (jobStatus != null)
+                    {
+                        var currentProgress = jobStatus.TotalRows > 0 
+                            ? (double)jobStatus.ProcessedRows / jobStatus.TotalRows 
+                            : 0;
+
+                        Progress = currentProgress;
+                        StatusMessage = $"Обробка: {jobStatus.ProcessedRows} / {jobStatus.TotalRows}";
+
+                        if (jobStatus.Status.ToString() == "Done" || jobStatus.Status.ToString() == "Failed")
+                        {
+                            IsFinished = true;
+                            IsProcessing = false;
+                            StatusMessage = jobStatus.Status.ToString() == "Done" ? "Готово! Можна завантажувати." : "Помилка обробки.";
+                            break;
+                        }
+                    }
+                }
+            }
+            catch (TaskCanceledException) {  }
+            catch {  }
+        }, token);
+    }
+
+    private void StopPolling()
+    {
+        _pollingCts?.Cancel();
+        _pollingCts?.Dispose();
+        _pollingCts = null;
+    }
+
+    [RelayCommand]
+    public async Task DownloadResultAsync()
+    {
+        if (_currentJobId == null) return;
 
         try
         {
-            ErrorMessage = string.Empty;
+            StatusMessage = "Завантаження результату...";
             
-            var response = await _apiClient.ExportBatchJobAsync(_currentJobId);
+            var response = await _apiClient.ExportBatchJobAsync(_currentJobId.Value);
+
+            using var stream = response.Stream; 
+            await _fileService.SaveFileAsync($"batch_result_{_currentJobId}.csv", stream);
             
-            using var stream = new MemoryStream(response.FileContents);
-            
-            var isSaved = await _fileService.SaveFileAsync($"predictions_job_{_currentJobId}.csv", stream);
-            
-            if (!isSaved)
-            {
-                ErrorMessage = "Не вдалося зберегти файл або дію скасовано.";
-            }
+            StatusMessage = "Файл успішно збережено!";
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            ErrorMessage = $"Помилка експорту: {ex.Message}";
+            StatusMessage = "Помилка завантаження файлу.";
         }
+    }
+
+    public void Dispose()
+    {
+        Unsubscribe();
     }
 }

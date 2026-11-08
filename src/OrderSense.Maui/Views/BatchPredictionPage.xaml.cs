@@ -4,21 +4,23 @@ namespace OrderSense.Maui.Views;
 
 public partial class BatchPredictionPage : ContentPage
 {
+    private readonly BatchPredictionViewModel _viewModel;
+
     public BatchPredictionPage(BatchPredictionViewModel viewModel)
     {
         InitializeComponent();
-        BindingContext = viewModel;
+        BindingContext = _viewModel = viewModel;
     }
 
     protected override void OnAppearing()
     {
         base.OnAppearing();
-        if (BindingContext is BatchPredictionViewModel vm) vm.Subscribe();
+        _viewModel.Subscribe();
     }
 
     protected override void OnDisappearing()
     {
         base.OnDisappearing();
-        if (BindingContext is BatchPredictionViewModel vm) vm.Unsubscribe();
+        _viewModel.Unsubscribe();
     }
 }

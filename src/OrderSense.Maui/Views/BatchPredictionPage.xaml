@@ -2,29 +2,20 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:OrderSense.Client.Core.ViewModels;assembly=OrderSense.Client.Core"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              x:Class="OrderSense.Maui.Views.BatchPredictionPage"
              Title="Пакетний прогноз">
 
     <VerticalStackLayout Padding="20" Spacing="20" VerticalOptions="Center">
-        
-        <Button Text="Обрати CSV файл" 
-                Command="{Binding PickFileCommand}" />
-        
-        <Label Text="{Binding ErrorMessage}" 
-               TextColor="Red" 
-               HorizontalOptions="Center" />
+        <Button Text="Вибрати CSV" Command="{Binding SelectCsvCommand}" IsEnabled="{Binding IsProcessing, Converter={toolkit:InvertedBoolConverter}}" />
+        <Label Text="{Binding SelectedFileName}" />
 
-        <Button Text="Почати обробку" 
-                Command="{Binding UploadAndStartJobCommand}" />
+        <Button Text="Почати прогноз" Command="{Binding StartBatchJobCommand}" IsEnabled="{Binding IsProcessing, Converter={toolkit:InvertedBoolConverter}}" />
 
-        <VerticalStackLayout IsVisible="{Binding IsProcessing}" Spacing="5">
-            <Label Text="Обробка даних..." HorizontalOptions="Center" TextColor="Gray"/>
-            <ProgressBar Progress="{Binding Progress}" HeightRequest="10" />
-        </VerticalStackLayout>
+        <Label Text="{Binding StatusMessage}" />
+        <ProgressBar Progress="{Binding Progress}" />
 
-        <Button Text="Завантажити результат" 
-                Command="{Binding DownloadResultsCommand}" 
-                Style="{StaticResource PrimaryButton}" />
+        <Button Text="Завантажити результат" Command="{Binding DownloadResultCommand}" IsVisible="{Binding IsFinished}" />
 
     </VerticalStackLayout>
 </ContentPage>
