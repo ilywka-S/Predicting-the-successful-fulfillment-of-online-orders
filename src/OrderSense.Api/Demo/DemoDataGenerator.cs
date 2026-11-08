@@ -71,6 +71,15 @@ public sealed class DemoDataGenerator
             _products.Add(CreateProduct());
         }
     }
+    
+    public DemoDataGenerator(IEnumerable<Seller> sellers, IEnumerable<Product> products, int seed)
+    {
+        _random = new Random(seed);
+        _sellers.AddRange(sellers);
+        _products.AddRange(products);
+    }
+
+    public IReadOnlyDictionary<string, GeoZip> GeoZips => _geoZips;
 
     public DemoData Generate(int orderCount)
     {
@@ -118,7 +127,7 @@ public sealed class DemoDataGenerator
         for (var no = 1; no <= itemCount; no++)
         {
             var product = _products[_random.Next(_products.Count)];
-            var category = Categories.First(c => c.Pt == product.Category);
+            var category = Categories.FirstOrDefault(c => c.Pt == product.Category) ?? Categories[0];
             items.Add(new OrderItem
             {
                 OrderId = orderId,
@@ -157,6 +166,17 @@ public sealed class DemoDataGenerator
                 },
             ],
         };
+    }
+    
+    public Order CreateNewOrder(DateTime purchasedAt)
+    {
+        var order = CreateOrder(purchasedAt);
+        order.Status = "approved";
+        order.ApprovedAt = purchasedAt;
+        order.DeliveredCarrierAt = null;
+        order.DeliveredCustomerAt = null;
+
+        return order;
     }
 
     private Seller CreateSeller()
