@@ -7,15 +7,22 @@
              Title="Пакетний прогноз">
 
     <VerticalStackLayout Padding="20" Spacing="20" VerticalOptions="Center">
-        <Button Text="Вибрати CSV" Command="{Binding SelectCsvCommand}" IsEnabled="{Binding IsProcessing, Converter={toolkit:InvertedBoolConverter}}" />
-        <Label Text="{Binding SelectedFileName}" />
+        
+        <Button Text="Вибрати CSV" 
+        Command="{Binding SelectCsvCommand}" />
 
-        <Button Text="Почати прогноз" Command="{Binding StartBatchJobCommand}" IsEnabled="{Binding IsProcessing, Converter={toolkit:InvertedBoolConverter}}" />
+        <Label Text="{Binding SelectedFileName}" HorizontalOptions="Center" />
 
-        <Label Text="{Binding StatusMessage}" />
+        <Button Text="Почати прогноз" 
+        Command="{Binding StartBatchJobCommand}" />
+
+        <Label Text="{Binding StatusMessage}" 
+               HorizontalOptions="Center" />
+        
         <ProgressBar Progress="{Binding Progress}" />
-
-        <Button Text="Завантажити результат" Command="{Binding DownloadResultCommand}" IsVisible="{Binding IsFinished}" />
+        <Button Text="Завантажити результат" 
+                Command="{Binding DownloadResultCommand}" 
+                IsVisible="{Binding IsSuccess}" />
 
     </VerticalStackLayout>
 </ContentPage>

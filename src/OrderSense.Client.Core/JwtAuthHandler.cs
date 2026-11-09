@@ -24,20 +24,35 @@ public class JwtAuthHandler(IAuthTokenManager tokenManager) : DelegatingHandler
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
         }
 
-        var response = await base.SendAsync(request, cancellationToken);
-
-        if (response.StatusCode == HttpStatusCode.Unauthorized)
+        if (request.Content != null)
         {
-            var newToken = await tokenManager.GetAccessTokenAsync(forceRefresh: true, cancellationToken);
-            if (!string.IsNullOrEmpty(newToken) && newToken != token)
-            {
-                var retryRequest = await CloneRequestAsync(request, cancellationToken);
-                retryRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", newToken);
-                return await base.SendAsync(retryRequest, cancellationToken);
-            }
+            await request.Content.LoadIntoBufferAsync(cancellationToken);
         }
+        try
+        {
+            var response = await base.SendAsync(request, cancellationToken);
 
-        return response;
+            if (response.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                var newToken = await tokenManager.GetAccessTokenAsync(forceRefresh: true, cancellationToken);
+                if (!string.IsNullOrEmpty(newToken) && newToken != token)
+                {
+                    var retryRequest = await CloneRequestAsync(request, cancellationToken);
+                    retryRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", newToken);
+                    return await base.SendAsync(retryRequest, cancellationToken);
+                }
+            }
+
+            return response;
+        }
+        catch (HttpRequestException)
+        {
+            return new HttpResponseMessage(HttpStatusCode.RequestEntityTooLarge)
+            {
+                Content = new StringContent("Файл занадто великий або сталася помилка з'єднання.")
+            };
+        }
+        
     }
 
     private static async Task<HttpRequestMessage> CloneRequestAsync(HttpRequestMessage request, CancellationToken cancellationToken)
@@ -49,8 +64,6 @@ public class JwtAuthHandler(IAuthTokenManager tokenManager) : DelegatingHandler
 
         if (request.Content != null)
         {
-            await request.Content.LoadIntoBufferAsync(cancellationToken);
-            
             var buffer = await request.Content.ReadAsByteArrayAsync(cancellationToken);
             var byteArrayContent = new ByteArrayContent(buffer);
 

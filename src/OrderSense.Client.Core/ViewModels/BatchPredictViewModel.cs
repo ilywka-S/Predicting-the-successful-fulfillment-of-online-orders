@@ -14,6 +14,7 @@ public partial class BatchPredictionViewModel : ObservableObject, IDisposable
     private readonly IClient _apiClient;
     private readonly ISignalRService _signalRService;
     private readonly IFileService _fileService;
+    private readonly SynchronizationContext? _syncContext;
     
     private Guid? _currentJobId;
     private CancellationTokenSource? _pollingCts;
@@ -33,14 +34,22 @@ public partial class BatchPredictionViewModel : ObservableObject, IDisposable
     private bool _isFinished;
 
     [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(StartBatchJobCommand))]
+    [NotifyCanExecuteChangedFor(nameof(SelectCsvCommand))]    
     private bool _isProcessing;
+
+    [ObservableProperty]
+    private bool _isSuccess;
 
     public BatchPredictionViewModel(IClient apiClient, ISignalRService signalRService, IFileService fileService)
     {
         _apiClient = apiClient;
         _signalRService = signalRService;
         _fileService = fileService;
+        _syncContext = SynchronizationContext.Current;
     }
+
+    private bool CanInteract() => !IsProcessing;
 
     public void Subscribe()
     {
@@ -63,19 +72,104 @@ public partial class BatchPredictionViewModel : ObservableObject, IDisposable
         if (_currentJobId == null || data.JobId != _currentJobId.Value) 
             return;
 
-        Progress = data.TotalRows > 0 ? (double)data.ProcessedRows / data.TotalRows : 0;
-        StatusMessage = $"Обробка: {data.ProcessedRows} / {data.TotalRows}";
-
-        if (data.Status.ToString() == "Done" || data.Status.ToString() == "Failed")
+        PostToUI(() =>
         {
-            IsFinished = true;
-            IsProcessing = false;
-            StatusMessage = data.Status.ToString() == "Done" ? "Готово! Можна завантажувати." : "Помилка обробки.";
-            StopPolling();
-        } 
+            Progress = data.TotalRows > 0 ? (double)data.ProcessedRows / data.TotalRows : 0;
+            StatusMessage = $"Обробка: {data.ProcessedRows} / {data.TotalRows}";
+
+            var statusStr = data.Status?.ToString();
+            
+            if (string.Equals(statusStr, "done", StringComparison.OrdinalIgnoreCase) || 
+                string.Equals(statusStr, "failed", StringComparison.OrdinalIgnoreCase))
+            {
+                var isDone = string.Equals(statusStr, "done", StringComparison.OrdinalIgnoreCase);
+                IsFinished = true;
+                IsSuccess = isDone; 
+                IsProcessing = false;
+                StatusMessage = isDone ? "Готово! Можна завантажувати." : "Помилка обробки.";
+                StopPolling();
+            } 
+        });
+    }
+
+    private void StartPolling(Guid jobId)
+    {
+        StopPolling();
+        _pollingCts = new CancellationTokenSource();
+        var token = _pollingCts.Token;
+
+        Task.Run(async () =>
+        {
+            while (!token.IsCancellationRequested && !IsFinished)
+            {
+                try
+                {
+                    await Task.Delay(5000, token); 
+
+                    var jobStatus = await _apiClient.GetBatchJobAsync(jobId, token);
+                    if (jobStatus != null)
+                    {
+                        PostToUI(() =>
+                        {
+                            var currentProgress = jobStatus.TotalRows > 0 
+                                ? (double)jobStatus.ProcessedRows / jobStatus.TotalRows 
+                                : 0;
+
+                            Progress = currentProgress;
+                            StatusMessage = $"Обробка: {jobStatus.ProcessedRows} / {jobStatus.TotalRows}";
+
+                            // Строге порівняння за Enum для полінгу
+                            if (jobStatus.Status is BatchJobStatus.Done or BatchJobStatus.Failed)
+                            {
+                                var isDone = jobStatus.Status == BatchJobStatus.Done;
+                                IsFinished = true;
+                                IsSuccess = isDone;
+                                IsProcessing = false;
+                                StatusMessage = isDone ? "Готово! Можна завантажувати." : "Помилка обробки.";
+                                StopPolling();
+                            }
+                        });
+                    }
+                }
+                catch (TaskCanceledException) { break; }
+                catch (Exception)
+                {
+
+                }
+            }
+        }, token);
     }
 
     [RelayCommand]
+    public async Task DownloadResultAsync()
+    {
+        if (_currentJobId == null) return;
+
+        try
+        {
+            StatusMessage = "Завантаження результату...";
+            
+            var response = await _apiClient.ExportBatchJobAsync(_currentJobId.Value);
+            using var stream = response.Stream; 
+            
+            var isSaved = await _fileService.SaveFileAsync($"batch_result_{_currentJobId}.csv", stream);
+            
+            if (isSaved)
+            {
+                StatusMessage = "Файл успішно збережено!";
+            }
+            else
+            {
+                StatusMessage = "Збереження файлу скасовано.";
+            }
+        }
+        catch (Exception)
+        {
+            StatusMessage = "Помилка завантаження файлу.";
+        }
+    }
+
+    [RelayCommand(CanExecute = nameof(CanInteract))]
     public async Task SelectCsvAsync()
     {
         try
@@ -95,9 +189,11 @@ public partial class BatchPredictionViewModel : ObservableObject, IDisposable
         }
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanInteract))]
     public async Task StartBatchJobAsync()
     {
+        if (IsProcessing) return;
+
         if (_selectedFile == null)
         {
             StatusMessage = "Спочатку виберіть файл!";
@@ -105,6 +201,7 @@ public partial class BatchPredictionViewModel : ObservableObject, IDisposable
         }
 
         IsFinished = false;
+        IsSuccess = false;
         IsProcessing = true;
         Progress = 0;
         StatusMessage = "Відправка файлу на сервер...";
@@ -122,50 +219,33 @@ public partial class BatchPredictionViewModel : ObservableObject, IDisposable
                 StartPolling(_currentJobId.Value);
             }
         }
+        catch (ApiException ex) when (ex.StatusCode == 413 || (int)ex.StatusCode == 413)
+        {
+            IsProcessing = false;
+            StatusMessage = "Помилка: файл перевищує ліміт у 5 МБ.";
+        }
+        catch (ApiException ex)
+        {
+            IsProcessing = false;
+            StatusMessage = "Помилка сервера при відправці файлу.";
+        }
         catch (Exception)
         {
             IsProcessing = false;
-            StatusMessage = "Помилка відправки файлу.";
+            StatusMessage = "Помилка мережі або з'єднання розірвано.";
         }
     }
 
-    private void StartPolling(Guid jobId)
+    private void PostToUI(Action action)
     {
-        StopPolling();
-        _pollingCts = new CancellationTokenSource();
-        var token = _pollingCts.Token;
-
-        Task.Run(async () =>
+        if (_syncContext is not null)
         {
-            try
-            {
-                while (!token.IsCancellationRequested && !IsFinished)
-                {
-                    await Task.Delay(5000, token); 
-
-                    var jobStatus = await _apiClient.GetBatchJobAsync(jobId, token);
-                    if (jobStatus != null)
-                    {
-                        var currentProgress = jobStatus.TotalRows > 0 
-                            ? (double)jobStatus.ProcessedRows / jobStatus.TotalRows 
-                            : 0;
-
-                        Progress = currentProgress;
-                        StatusMessage = $"Обробка: {jobStatus.ProcessedRows} / {jobStatus.TotalRows}";
-
-                        if (jobStatus.Status.ToString() == "Done" || jobStatus.Status.ToString() == "Failed")
-                        {
-                            IsFinished = true;
-                            IsProcessing = false;
-                            StatusMessage = jobStatus.Status.ToString() == "Done" ? "Готово! Можна завантажувати." : "Помилка обробки.";
-                            break;
-                        }
-                    }
-                }
-            }
-            catch (TaskCanceledException) {  }
-            catch {  }
-        }, token);
+            _syncContext.Post(_ => action(), null);
+        }
+        else
+        {
+            action();
+        }
     }
 
     private void StopPolling()
@@ -173,28 +253,6 @@ public partial class BatchPredictionViewModel : ObservableObject, IDisposable
         _pollingCts?.Cancel();
         _pollingCts?.Dispose();
         _pollingCts = null;
-    }
-
-    [RelayCommand]
-    public async Task DownloadResultAsync()
-    {
-        if (_currentJobId == null) return;
-
-        try
-        {
-            StatusMessage = "Завантаження результату...";
-            
-            var response = await _apiClient.ExportBatchJobAsync(_currentJobId.Value);
-
-            using var stream = response.Stream; 
-            await _fileService.SaveFileAsync($"batch_result_{_currentJobId}.csv", stream);
-            
-            StatusMessage = "Файл успішно збережено!";
-        }
-        catch (Exception)
-        {
-            StatusMessage = "Помилка завантаження файлу.";
-        }
     }
 
     public void Dispose()
