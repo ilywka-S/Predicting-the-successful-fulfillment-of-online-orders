@@ -23,11 +23,7 @@ public class JwtAuthHandler(IAuthTokenManager tokenManager) : DelegatingHandler
         {
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
         }
-
-        if (request.Content != null)
-        {
-            await request.Content.LoadIntoBufferAsync(cancellationToken);
-        }
+        
         bool isFileContent = request.Content is MultipartFormDataContent || request.Content is StreamContent;
         
         if (request.Content != null && !isFileContent)
