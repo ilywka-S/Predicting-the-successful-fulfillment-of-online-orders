@@ -12,7 +12,6 @@ public class PredictionClient(HttpClient http)
     {
         NumberHandling = JsonNumberHandling.AllowNamedFloatingPointLiterals,
     };
-
     public async Task<OrderPrediction> PredictAsync(OrderFeatures features, CancellationToken ct)
     {
         try
@@ -21,6 +20,24 @@ public class PredictionClient(HttpClient http)
             response.EnsureSuccessStatusCode();
 
             return await response.Content.ReadFromJsonAsync<OrderPrediction>(Json, ct) ?? throw new PredictionServiceUnavailableException("Prediction service returned an empty response");
+        }
+        catch (Exception e) when (e is HttpRequestException or JsonException or ExecutionRejectedException || e is TaskCanceledException && !ct.IsCancellationRequested)
+        {
+            throw new PredictionServiceUnavailableException("Prediction service is unavailable", e);
+        }
+    }
+    public async Task<OrderExplanation> ExplainAsync(OrderFeatures features, CancellationToken ct)
+    {
+        try
+        {
+            using HttpResponseMessage response = await http.PostAsJsonAsync("/explain", features, Json, ct);
+            response.EnsureSuccessStatusCode();
+            OrderExplanation? explanation = await response.Content.ReadFromJsonAsync<OrderExplanation>(Json, ct);
+            if (explanation == null)
+            {
+                throw new PredictionServiceUnavailableException("Prediction service returned an empty response");
+            }
+            return explanation;
         }
         catch (Exception e) when (e is HttpRequestException or JsonException or ExecutionRejectedException || e is TaskCanceledException && !ct.IsCancellationRequested)
         {
