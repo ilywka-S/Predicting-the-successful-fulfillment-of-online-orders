@@ -14,6 +14,8 @@ using OrderSense.Api.Data.Entities;
 using OrderSense.Api.Demo;
 using OrderSense.Api.Hubs;
 using OrderSense.Api.Predictions;
+using Hangfire;
+using Hangfire.PostgreSql;
 
 var isOpenApiGeneration = Assembly.GetEntryAssembly()?.GetName().Name == "GetDocument.Insider";
 
@@ -121,6 +123,25 @@ builder.Services.AddSignalR().AddJsonProtocol(o => o.PayloadSerializerOptions.Co
 builder.Services.AddSingleton<IUserIdProvider, SubUserIdProvider>();
 builder.Services.AddSingleton<BatchProgressNotifier>();
 builder.Services.AddScoped<WhatIfService>();
+
+if (!isOpenApiGeneration)
+{
+    string hangfireConnection = builder.Configuration.GetConnectionString("ordersense") ?? throw new InvalidOperationException("Connection string 'ordersense' is not configured");
+
+    builder.Services.AddHangfire(config => config
+        .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+        .UseSimpleAssemblyNameTypeSerializer()
+        .UseRecommendedSerializerSettings()
+        .UsePostgreSqlStorage(
+            options => options.UseNpgsqlConnection(hangfireConnection),
+            new PostgreSqlStorageOptions
+            {
+                SchemaName = "hangfire",
+                QueuePollInterval = TimeSpan.FromSeconds(2),
+            }));
+
+    builder.Services.AddHangfireServer(options => options.WorkerCount = 2);
+}
 
 var app = builder.Build();
 
