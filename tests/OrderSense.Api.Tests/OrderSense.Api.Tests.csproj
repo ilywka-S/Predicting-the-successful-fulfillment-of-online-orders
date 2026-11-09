@@ -29,6 +29,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\tools\OrderSense.OlistImport\OrderSense.OlistImport.csproj" />
+    <ProjectReference Include="..\..\tools\OrderSense.PredictAll\OrderSense.PredictAll.csproj" />
   </ItemGroup>
 
   <ItemGroup>

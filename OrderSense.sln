@@ -39,6 +39,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tools", "tools", "{07C2787E
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OrderSense.OlistImport", "tools\OrderSense.OlistImport\OrderSense.OlistImport.csproj", "{59F2A638-C09B-4FB2-8F81-6186CEBBA4FC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OrderSense.PredictAll", "tools\OrderSense.PredictAll\OrderSense.PredictAll.csproj", "{F8B3BA18-A0F4-4897-8695-DCAF619B8FF9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -217,6 +219,18 @@ Global
 		{59F2A638-C09B-4FB2-8F81-6186CEBBA4FC}.Release|x64.Build.0 = Release|Any CPU
 		{59F2A638-C09B-4FB2-8F81-6186CEBBA4FC}.Release|x86.ActiveCfg = Release|Any CPU
 		{59F2A638-C09B-4FB2-8F81-6186CEBBA4FC}.Release|x86.Build.0 = Release|Any CPU
+		{F8B3BA18-A0F4-4897-8695-DCAF619B8FF9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F8B3BA18-A0F4-4897-8695-DCAF619B8FF9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F8B3BA18-A0F4-4897-8695-DCAF619B8FF9}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{F8B3BA18-A0F4-4897-8695-DCAF619B8FF9}.Debug|x64.Build.0 = Debug|Any CPU
+		{F8B3BA18-A0F4-4897-8695-DCAF619B8FF9}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{F8B3BA18-A0F4-4897-8695-DCAF619B8FF9}.Debug|x86.Build.0 = Debug|Any CPU
+		{F8B3BA18-A0F4-4897-8695-DCAF619B8FF9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F8B3BA18-A0F4-4897-8695-DCAF619B8FF9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F8B3BA18-A0F4-4897-8695-DCAF619B8FF9}.Release|x64.ActiveCfg = Release|Any CPU
+		{F8B3BA18-A0F4-4897-8695-DCAF619B8FF9}.Release|x64.Build.0 = Release|Any CPU
+		{F8B3BA18-A0F4-4897-8695-DCAF619B8FF9}.Release|x86.ActiveCfg = Release|Any CPU
+		{F8B3BA18-A0F4-4897-8695-DCAF619B8FF9}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -236,5 +250,6 @@ Global
 		{1F127B8B-EAB6-4D94-93DB-7F68A3190199} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 		{AFA41778-D05D-4B22-A298-4F846BD5CF7C} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{59F2A638-C09B-4FB2-8F81-6186CEBBA4FC} = {07C2787E-EAC7-C090-1BA3-A61EC2A24D84}
+		{F8B3BA18-A0F4-4897-8695-DCAF619B8FF9} = {07C2787E-EAC7-C090-1BA3-A61EC2A24D84}
 	EndGlobalSection
 EndGlobal
