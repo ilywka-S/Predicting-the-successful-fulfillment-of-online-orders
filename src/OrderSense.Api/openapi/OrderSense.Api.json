@@ -1470,8 +1470,8 @@
               }
             }
           },
-          "503": {
-            "description": "Service Unavailable",
+          "422": {
+            "description": "Unprocessable Entity",
             "content": {
               "text/plain": {
                 "schema": {
@@ -1490,8 +1490,8 @@
               }
             }
           },
-          "501": {
-            "description": "Not Implemented",
+          "503": {
+            "description": "Service Unavailable",
             "content": {
               "text/plain": {
                 "schema": {

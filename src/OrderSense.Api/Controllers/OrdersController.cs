@@ -175,13 +175,35 @@ public class OrdersController(AppDbContext db) : ControllerBase
             return Problem(statusCode: StatusCodes.Status503ServiceUnavailable, title: "Prediction service is unavailable");
         }
     }
-
-    
     [HttpPost("{id}/what-if", Name = "WhatIf")]
     [ProducesResponseType<WhatIfResultDto>(StatusCodes.Status200OK)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status422UnprocessableEntity)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status503ServiceUnavailable)]
-    [ProducesResponseType<ProblemDetails>(StatusCodes.Status501NotImplemented)]
-    public ActionResult<WhatIfResultDto> WhatIf(string id, WhatIfRequest request) => Problem(statusCode: StatusCodes.Status501NotImplemented, title: "What-if is not implemented yet");
+    public async Task<ActionResult<WhatIfResultDto>> WhatIf(string id, WhatIfRequest request, [FromServices] WhatIfService whatIf, CancellationToken ct)
+    {
+        try
+        {
+            WhatIfResultDto? result = await whatIf.RunAsync(id, request, ct);
+            if (result is null)
+            {
+                return Problem(statusCode: StatusCodes.Status404NotFound, title: $"Order '{id}' not found");
+            }
+            return result;
+        }
+        catch (WhatIfValidationException e)
+        {
+            ModelState.AddModelError(e.Field, e.Message);
+            return ValidationProblem(ModelState);
+        }
+        catch (OrderNotPredictableException e)
+        {
+            return Problem(statusCode: StatusCodes.Status422UnprocessableEntity, title: e.Message);
+        }
+        catch (PredictionServiceUnavailableException)
+        {
+            return Problem(statusCode: StatusCodes.Status503ServiceUnavailable, title: "Prediction service is unavailable");
+        }
+    }
 }
