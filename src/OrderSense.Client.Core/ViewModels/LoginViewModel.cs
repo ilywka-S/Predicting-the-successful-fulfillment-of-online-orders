@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using OrderSense.Client.Core.Interfaces;
+
 namespace OrderSense.Client.Core.ViewModels;
 
 public partial class LoginViewModel : ObservableObject
@@ -19,7 +20,6 @@ public partial class LoginViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(HasError))]
     private string _errorMessage = string.Empty;
     public bool HasError => !string.IsNullOrEmpty(ErrorMessage);
-
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsNotBusy))]
