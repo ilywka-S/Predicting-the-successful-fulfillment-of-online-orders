@@ -1204,6 +1204,75 @@
         }
       }
     },
+    "/api/orders/{id}/predictions": {
+      "get": {
+        "tags": [
+          "Orders"
+        ],
+        "operationId": "GetOrderPredictions",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PredictionHistoryItemDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PredictionHistoryItemDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PredictionHistoryItemDto"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/orders/{id}/predict": {
       "post": {
         "tags": [
@@ -2167,6 +2236,31 @@
           }
         }
       },
+      "PredictionHistoryItemDto": {
+        "required": [
+          "createdAt",
+          "modelVersion",
+          "probability",
+          "riskLevel"
+        ],
+        "type": "object",
+        "properties": {
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "modelVersion": {
+            "type": "string"
+          },
+          "probability": {
+            "type": "number",
+            "format": "float"
+          },
+          "riskLevel": {
+            "$ref": "#/components/schemas/RiskLevel"
+          }
+        }
+      },
       "ProblemDetails": {
         "type": "object",
         "properties": {
@@ -2238,6 +2332,12 @@
           },
           "impact": {
             "$ref": "#/components/schemas/FactorImpact"
+          },
+          "displayValue": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
