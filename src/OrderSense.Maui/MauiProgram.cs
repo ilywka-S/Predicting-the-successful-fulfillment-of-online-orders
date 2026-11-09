@@ -42,7 +42,7 @@ public static class MauiProgram
         builder.Services.AddTransient<LoadingPage>();
         builder.Services.AddTransient<OrdersViewModel>();
         builder.Services.AddTransient<OrdersPage>();
-        builder.Services.AddSingleton<AppShell>();
+        builder.Services.AddTransient<AppShell>();
         builder.Services.AddSingleton<AppShellViewModel>();
         builder.Services.AddTransient<BatchPredictionViewModel>();
         builder.Services.AddTransient<BatchPredictionPage>();

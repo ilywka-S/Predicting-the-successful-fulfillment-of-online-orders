@@ -54,6 +54,7 @@ public partial class BatchPredictionViewModel : ObservableObject, IDisposable
     public void Subscribe()
     {
         _signalRService.OnBatchJobProgress += HandleProgress;
+        _ = _signalRService.StartConnectionAsync();
 
         if (_currentJobId.HasValue && !IsFinished)
         {
@@ -130,9 +131,20 @@ public partial class BatchPredictionViewModel : ObservableObject, IDisposable
                         });
                     }
                 }
-                catch (TaskCanceledException) { break; }
+                catch (OperationCanceledException) when (token.IsCancellationRequested)
+                {
+                    break;
+                }
+                catch (ApiException ex) when (ex.StatusCode is 403 or 404)
+                {
+                    FailPolling(jobId, ex.StatusCode == 403
+                        ? "Немає доступу до цієї задачі."
+                        : "Задачу не знайдено.");
+                    break;
+                }
                 catch (Exception)
                 {
+                    // Таймаут або збій мережі: пробуємо ще раз на наступному кроці
                 }
             }
         }, token);
@@ -240,6 +252,20 @@ public partial class BatchPredictionViewModel : ObservableObject, IDisposable
             IsProcessing = false;
             StatusMessage = "Помилка мережі або ліміту сервера (5 МБ).";
         }
+    }
+
+    private void FailPolling(Guid jobId, string message)
+    {
+        PostToUI(() =>
+        {
+            if (_currentJobId != jobId) return;
+
+            IsFinished = true;
+            IsSuccess = false;
+            IsProcessing = false;
+            StatusMessage = message;
+            StopPolling();
+        });
     }
 
     private void PostToUI(Action action)
