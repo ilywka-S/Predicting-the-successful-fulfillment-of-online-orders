@@ -4,9 +4,15 @@ using OrderSense.Contracts;
 
 namespace OrderSense.Api.Predictions;
 
+public sealed record SellerOverride(string State, string ZipPrefix);
+public sealed record FeatureOverrides(int? PromisedDays, SellerOverride? Seller, string? PaymentType, int? Installments);
 public class OrderFeatureLoader(AppDbContext db)
 {
-    public async Task<OrderFeatures?> LoadAsync(string orderId, CancellationToken ct)
+    public Task<OrderFeatures?> LoadAsync(string orderId, CancellationToken ct)
+    {
+        return LoadAsync(orderId, null, ct);
+    }
+    public async Task<OrderFeatures?> LoadAsync(string orderId, FeatureOverrides? overrides, CancellationToken ct)
     {
         var order = await db.Orders
             .AsNoTracking()
@@ -37,35 +43,75 @@ public class OrderFeatureLoader(AppDbContext db)
                     .ToList(),
             })
             .SingleOrDefaultAsync(ct);
-
         if (order is null)
         {
             return null;
         }
-
         var mainSeller = order.Items
             .GroupBy(i => i.SellerId)
             .OrderByDescending(g => g.Sum(i => i.Price))
             .Select(g => g.First())
             .FirstOrDefault();
-
-        string[] zips = mainSeller is null ? [order.CustomerZip] : [order.CustomerZip, mainSeller.SellerZip];
-
+        string? sellerState = mainSeller?.SellerState;
+        string? sellerZip = mainSeller?.SellerZip;
+        if (overrides?.Seller is { } seller)
+        {
+            sellerState = seller.State;
+            sellerZip = seller.ZipPrefix;
+        }
+        string[] zips = sellerZip is null ? [order.CustomerZip] : [order.CustomerZip, sellerZip];
         var coords = await db.GeoZips
             .AsNoTracking()
             .Where(z => zips.Contains(z.ZipPrefix))
             .ToDictionaryAsync(z => z.ZipPrefix, z => (z.Lat, z.Lng), ct);
-
+        List<OrderPaymentInput> paymentInputs = order.Payments
+            .Select(p => new OrderPaymentInput(p.Type, p.Installments, (float)p.Value))
+            .ToList();
+        ApplyPaymentOverrides(paymentInputs, overrides);
+        DateTime estimatedDelivery = order.EstimatedDeliveryAt;
+        if (overrides?.PromisedDays is { } promisedDays)
+        {
+            estimatedDelivery = order.PurchasedAt.Date.AddDays(promisedDays);
+        }
         return OrderFeatureBuilder.Build(
             order.Items.Select(i => new OrderItemInput((float)i.Price, (float)i.FreightValue, i.Category, i.WeightG)).ToList(),
-            order.Payments.Select(p => new OrderPaymentInput(p.Type, p.Installments, (float)p.Value)).ToList(),
+            paymentInputs,
             order.CustomerState,
-            mainSeller?.SellerState ?? "",
+            sellerState ?? "",
             Coordinates(order.CustomerZip),
-            mainSeller is null ? null : Coordinates(mainSeller.SellerZip),
+            sellerZip is null ? null : Coordinates(sellerZip),
             order.PurchasedAt,
-            order.EstimatedDeliveryAt);
-
+            estimatedDelivery);
         (double Lat, double Lng)? Coordinates(string zip) => coords.TryGetValue(zip, out var c) ? c : null;
+    }
+    private static void ApplyPaymentOverrides(List<OrderPaymentInput> payments, FeatureOverrides? overrides)
+    {
+        if (overrides is null || (overrides.PaymentType is null && overrides.Installments is null))
+        {
+            return;
+        }
+        if (payments.Count == 0)
+        {
+            payments.Add(new OrderPaymentInput(overrides.PaymentType ?? "", overrides.Installments ?? 0, 0f));
+
+            return;
+        }
+        int mainIndex = 0;
+        for (int i = 1; i < payments.Count; i++)
+        {
+            if (payments[i].Value > payments[mainIndex].Value)
+            {
+                mainIndex = i;
+            }
+        }
+        OrderPaymentInput main = payments[mainIndex];
+        string type = overrides.PaymentType ?? main.PaymentType;
+        float installments = main.Installments;
+
+        if (overrides.Installments is { } value)
+        {
+            installments = value;
+        }
+        payments[mainIndex] = new OrderPaymentInput(type, installments, main.Value);
     }
 }
