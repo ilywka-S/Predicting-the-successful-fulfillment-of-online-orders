@@ -11,17 +11,66 @@ public sealed class FakePredictionService : HttpMessageHandler
         NumberHandling = JsonNumberHandling.AllowNamedFloatingPointLiterals,
     };
     private bool _failNextCall;
-    public OrderPrediction Result { get; set; } = new() { Probability = 0.9f, RiskLevel = "low", ModelVersion = "v-test" };
-    public ModelDetails? Model { get; set; } = CreateModel();
-    public OrderFeatures? LastFeatures { get; private set; }
-    public string? LastPath { get; private set; }
-    public int Calls { get; private set; }
+    public OrderPrediction Result 
+    { 
+        get; 
+        set; 
+    } = new() { Probability = 0.9f, RiskLevel = "low", ModelVersion = "v-test" };
+    public ModelDetails? Model 
+    { 
+        get; 
+        set; 
+    } = CreateModel();
+    public OrderExplanation Explanation 
+    { 
+        get; 
+        set; 
+    } = CreateExplanation();
+    public bool FailExplain 
+    { 
+        get; 
+        set; 
+    }
+    public OrderFeatures? LastFeatures 
+    { 
+        get; 
+        private set; 
+    }
+    public string? LastPath 
+    { 
+        get; 
+        private set; 
+    }
+    public int Calls 
+    { 
+        get; 
+        private set; 
+    }
+    public int ExplainCalls 
+    { 
+        get; 
+        private set; 
+    }
     public void FailNextCall() => _failNextCall = true;
     public void Reset()
     {
         _failNextCall = false;
+        FailExplain = false;
         Result = new OrderPrediction { Probability = 0.9f, RiskLevel = "low", ModelVersion = "v-test" };
         Model = CreateModel();
+        Explanation = CreateExplanation();
+    }
+    public static OrderExplanation CreateExplanation()
+    {
+        return new OrderExplanation
+        {
+            ModelVersion = "v-test",
+            Factors =
+            [
+                new FeatureContribution { Feature = "PromisedDays", Contribution = 0.20f },
+                new FeatureContribution { Feature = "ItemsCount", Contribution = -0.05f },
+            ],
+        };
     }
     public static ModelDetails CreateModel()
     {
@@ -48,15 +97,24 @@ public sealed class FakePredictionService : HttpMessageHandler
     }
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
+        string path = request.RequestUri?.AbsolutePath ?? "";
+        if (path == "/explain")
+        {
+            ExplainCalls++;
+            if (FailExplain)
+            {
+                return new HttpResponseMessage(HttpStatusCode.ServiceUnavailable);
+            }
+            return new HttpResponseMessage(HttpStatusCode.OK) { Content = JsonContent.Create(Explanation, options: Json) };
+        }
         Calls++;
-        LastPath = request.RequestUri?.AbsolutePath;
+        LastPath = path;
         if (_failNextCall)
         {
             _failNextCall = false;
-
             throw new HttpRequestException("Prediction service is down");
         }
-        if (request.Method == HttpMethod.Get && LastPath == "/model")
+        if (request.Method == HttpMethod.Get && path == "/model")
         {
             if (Model == null)
             {
