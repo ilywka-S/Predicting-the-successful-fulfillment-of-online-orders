@@ -28,30 +28,31 @@ public class JwtAuthHandler(IAuthTokenManager tokenManager) : DelegatingHandler
         {
             await request.Content.LoadIntoBufferAsync(cancellationToken);
         }
-        try
+        bool isFileContent = request.Content is MultipartFormDataContent || request.Content is StreamContent;
+        
+        if (request.Content != null && !isFileContent)
         {
-            var response = await base.SendAsync(request, cancellationToken);
+            await request.Content.LoadIntoBufferAsync(cancellationToken);
+        }
+        var response = await base.SendAsync(request, cancellationToken);
 
-            if (response.StatusCode == HttpStatusCode.Unauthorized)
+        if (response.StatusCode == HttpStatusCode.Unauthorized)
+        {
+            var newToken = await tokenManager.GetAccessTokenAsync(forceRefresh: true, cancellationToken);
+            if (!string.IsNullOrEmpty(newToken) && newToken != token)
             {
-                var newToken = await tokenManager.GetAccessTokenAsync(forceRefresh: true, cancellationToken);
-                if (!string.IsNullOrEmpty(newToken) && newToken != token)
+                if (isFileContent)
                 {
-                    var retryRequest = await CloneRequestAsync(request, cancellationToken);
-                    retryRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", newToken);
-                    return await base.SendAsync(retryRequest, cancellationToken);
+                    return response;
                 }
-            }
 
-            return response;
+                var retryRequest = await CloneRequestAsync(request, cancellationToken);
+                retryRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", newToken);
+                return await base.SendAsync(retryRequest, cancellationToken);
+            }
         }
-        catch (HttpRequestException)
-        {
-            return new HttpResponseMessage(HttpStatusCode.RequestEntityTooLarge)
-            {
-                Content = new StringContent("Файл занадто великий або сталася помилка з'єднання.")
-            };
-        }
+
+        return response;
         
     }
 

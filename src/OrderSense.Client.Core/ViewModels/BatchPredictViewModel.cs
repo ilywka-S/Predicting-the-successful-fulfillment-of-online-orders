@@ -118,7 +118,6 @@ public partial class BatchPredictionViewModel : ObservableObject, IDisposable
                             Progress = currentProgress;
                             StatusMessage = $"Обробка: {jobStatus.ProcessedRows} / {jobStatus.TotalRows}";
 
-                            // Строге порівняння за Enum для полінгу
                             if (jobStatus.Status is BatchJobStatus.Done or BatchJobStatus.Failed)
                             {
                                 var isDone = jobStatus.Status == BatchJobStatus.Done;
@@ -134,7 +133,6 @@ public partial class BatchPredictionViewModel : ObservableObject, IDisposable
                 catch (TaskCanceledException) { break; }
                 catch (Exception)
                 {
-
                 }
             }
         }, token);
@@ -200,6 +198,9 @@ public partial class BatchPredictionViewModel : ObservableObject, IDisposable
             return;
         }
 
+        _currentJobId = null;
+        StopPolling();
+
         IsFinished = false;
         IsSuccess = false;
         IsProcessing = true;
@@ -219,20 +220,25 @@ public partial class BatchPredictionViewModel : ObservableObject, IDisposable
                 StartPolling(_currentJobId.Value);
             }
         }
-        catch (ApiException ex) when (ex.StatusCode == 413 || (int)ex.StatusCode == 413)
+        catch (ApiException ex) when (ex.StatusCode == 413)
         {
             IsProcessing = false;
-            StatusMessage = "Помилка: файл перевищує ліміт у 5 МБ.";
+            StatusMessage = "Помилка: файл перевищує ліміт у 1 ГБ.";
         }
-        catch (ApiException ex)
+        catch (ApiException ex) when (ex.StatusCode == 400)
         {
             IsProcessing = false;
-            StatusMessage = "Помилка сервера при відправці файлу.";
+            StatusMessage = "Помилка валідації файлу (400 Bad Request).";
+        }
+        catch (ApiException ex) when (ex.StatusCode == 501)
+        {
+            IsProcessing = false;
+            StatusMessage = "Метод ще не реалізований на сервері (501 Not Implemented).";
         }
         catch (Exception)
         {
             IsProcessing = false;
-            StatusMessage = "Помилка мережі або з'єднання розірвано.";
+            StatusMessage = "Помилка мережі або ліміту сервера (5 МБ).";
         }
     }
 
