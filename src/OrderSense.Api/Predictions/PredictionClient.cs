@@ -66,6 +66,28 @@ public class PredictionClient(HttpClient http)
             throw new PredictionServiceUnavailableException("Prediction service is unavailable", e);
         }
     }
+    public async Task<IReadOnlyList<OrderPrediction>?> PredictBatchAsync(IReadOnlyList<OrderFeatures> features, CancellationToken ct)
+    {
+        try
+        {
+            using HttpResponseMessage response = await http.PostAsJsonAsync("/predict/batch", features, Json, ct);
+            if (response.StatusCode == HttpStatusCode.BadRequest)
+            {
+                return null;
+            }
+            response.EnsureSuccessStatusCode();
+            List<OrderPrediction>? result = await response.Content.ReadFromJsonAsync<List<OrderPrediction>>(Json, ct);
+            if (result == null || result.Count != features.Count)
+            {
+                throw new PredictionServiceUnavailableException("Prediction service returned a wrong number of predictions");
+            }
+            return result;
+        }
+        catch (Exception e) when (e is HttpRequestException or JsonException or ExecutionRejectedException || e is TaskCanceledException && !ct.IsCancellationRequested)
+        {
+            throw new PredictionServiceUnavailableException("Prediction service is unavailable", e);
+        }
+    }
 }
 
 public class PredictionServiceUnavailableException(string message, Exception? innerException = null) : Exception(message, innerException);

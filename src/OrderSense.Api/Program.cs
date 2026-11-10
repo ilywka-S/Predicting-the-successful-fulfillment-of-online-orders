@@ -123,6 +123,7 @@ builder.Services.AddSignalR().AddJsonProtocol(o => o.PayloadSerializerOptions.Co
 builder.Services.AddSingleton<IUserIdProvider, SubUserIdProvider>();
 builder.Services.AddSingleton<BatchProgressNotifier>();
 builder.Services.AddScoped<WhatIfService>();
+builder.Services.AddScoped<BatchJobProcessor>();
 
 if (!isOpenApiGeneration)
 {
