@@ -16,6 +16,11 @@ public partial class DashboardPage : ContentPage
 
         if (BindingContext is DashboardViewModel viewModel)
         {
+            if (viewModel.RiskByDay.Count == 0 && !viewModel.IsAnalyticsLoading)
+            {
+                viewModel.LoadAnalyticsCommand.Execute(null);
+            }
+
             await viewModel.InitializeAsync();
         }
     }

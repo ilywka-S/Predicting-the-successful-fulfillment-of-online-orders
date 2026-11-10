@@ -27,6 +27,12 @@
 
     <controls:FactorValueConverter x:Key="FactorValue" />
 
+    <controls:RiskSeriesConverter x:Key="RiskSeries" />
+
+    <controls:RiskLabelAxesConverter x:Key="RiskLabelAxes" />
+
+    <controls:PercentAxesConverter x:Key="PercentAxes" />
+
     <toolkit:InvertedBoolConverter x:Key="Not" />
     <toolkit:IsStringNotNullOrEmptyConverter x:Key="HasText" />
     <toolkit:IsNotNullConverter x:Key="NotNull" />

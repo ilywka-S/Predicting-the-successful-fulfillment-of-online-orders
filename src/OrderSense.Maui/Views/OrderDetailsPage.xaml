@@ -168,28 +168,39 @@
                                 </Grid>
                             </Border>
 
-                            <Grid HorizontalOptions="{OnIdiom Phone=Fill, Default=Start}">
-                                <Button Text="Спрогнозувати"
-                                        Padding="40,0,16,0"
-                                        Command="{Binding PredictCommand}">
-                                    <Button.Triggers>
-                                        <DataTrigger TargetType="Button" Binding="{Binding HasPrediction}" Value="True">
-                                            <Setter Property="Text" Value="Оновити прогноз" />
-                                        </DataTrigger>
-                                    </Button.Triggers>
-                                </Button>
-                                <ActivityIndicator Style="{StaticResource SpinnerOnPrimary}"
-                                                   HorizontalOptions="Start"
-                                                   Margin="14,0"
-                                                   IsRunning="{Binding IsPredicting}"
-                                                   IsVisible="{Binding IsPredicting}" />
-                                <Label Style="{StaticResource Icon}"
-                                       HorizontalOptions="Start"
-                                       Margin="16,0"
-                                       InputTransparent="True"
-                                       TextColor="{AppThemeBinding Light={StaticResource PrimaryForegroundLight}, Dark={StaticResource PrimaryForegroundDark}}"
-                                       IsVisible="{Binding IsPredicting, Converter={StaticResource Not}}"
-                                       Text="{x:Static controls:Icons.BrainCircuit}" />
+                            <Grid ColumnDefinitions="{OnIdiom Phone='*', Default='Auto,Auto'}"
+                                  RowDefinitions="{OnIdiom Phone='Auto,Auto', Default='Auto'}"
+                                  HorizontalOptions="{OnIdiom Phone=Fill, Default=Start}"
+                                  ColumnSpacing="8"
+                                  RowSpacing="8">
+                                <Grid>
+                                    <Button Text="Спрогнозувати"
+                                            Padding="40,0,16,0"
+                                            Command="{Binding PredictCommand}">
+                                        <Button.Triggers>
+                                            <DataTrigger TargetType="Button" Binding="{Binding HasPrediction}" Value="True">
+                                                <Setter Property="Text" Value="Оновити прогноз" />
+                                            </DataTrigger>
+                                        </Button.Triggers>
+                                    </Button>
+                                    <ActivityIndicator Style="{StaticResource SpinnerOnPrimary}"
+                                                       HorizontalOptions="Start"
+                                                       Margin="14,0"
+                                                       IsRunning="{Binding IsPredicting}"
+                                                       IsVisible="{Binding IsPredicting}" />
+                                    <Label Style="{StaticResource Icon}"
+                                           HorizontalOptions="Start"
+                                           Margin="16,0"
+                                           InputTransparent="True"
+                                           TextColor="{AppThemeBinding Light={StaticResource PrimaryForegroundLight}, Dark={StaticResource PrimaryForegroundDark}}"
+                                           IsVisible="{Binding IsPredicting, Converter={StaticResource Not}}"
+                                           Text="{x:Static controls:Icons.BrainCircuit}" />
+                                </Grid>
+                                <Button Grid.Row="{OnIdiom Phone=1, Default=0}"
+                                        Grid.Column="{OnIdiom Phone=0, Default=1}"
+                                        Style="{StaticResource ButtonOutline}"
+                                        Text="Що якщо…"
+                                        Command="{Binding OpenWhatIfCommand}" />
                             </Grid>
                         </VerticalStackLayout>
                     </Border>

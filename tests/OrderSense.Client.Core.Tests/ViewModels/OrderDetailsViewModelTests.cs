@@ -1,5 +1,6 @@
 using FluentAssertions;
 using Moq;
+using OrderSense.Client.Core.Interfaces;
 using OrderSense.Client.Core.ViewModels;
 
 namespace OrderSense.Client.Core.Tests.ViewModels;
@@ -9,11 +10,12 @@ public class OrderDetailsViewModelTests
     private const string OrderId = "e481f51cbdc54678b7cc49136f2d6af7";
 
     private readonly Mock<IClient> _apiClientMock = new();
+    private readonly Mock<IOrderNavigation> _navigationMock = new();
     private readonly OrderDetailsViewModel _viewModel;
 
     public OrderDetailsViewModelTests()
     {
-        _viewModel = new OrderDetailsViewModel(_apiClientMock.Object);
+        _viewModel = new OrderDetailsViewModel(_apiClientMock.Object, _navigationMock.Object);
     }
 
     [Fact]
@@ -204,6 +206,17 @@ public class OrderDetailsViewModelTests
 
         _viewModel.History.Should().Equal(fresh);
         _viewModel.LatestPrediction.Should().BeSameAs(fresh);
+    }
+
+    [Fact]
+    public async Task OpenWhatIf_NavigatesWithOrderId()
+    {
+        SetupOrder(Order(prediction: null));
+        await _viewModel.LoadCommand.ExecuteAsync(OrderId);
+
+        await _viewModel.OpenWhatIfCommand.ExecuteAsync(null);
+
+        _navigationMock.Verify(x => x.OpenWhatIfAsync(OrderId), Times.Once);
     }
 
     private void SetupOrder(OrderDetailsDto order) =>
