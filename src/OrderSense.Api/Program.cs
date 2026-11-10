@@ -120,6 +120,7 @@ builder.Services.AddSignalR().AddJsonProtocol(o => o.PayloadSerializerOptions.Co
 
 builder.Services.AddSingleton<IUserIdProvider, SubUserIdProvider>();
 builder.Services.AddSingleton<BatchProgressNotifier>();
+builder.Services.AddScoped<WhatIfService>();
 
 var app = builder.Build();
 

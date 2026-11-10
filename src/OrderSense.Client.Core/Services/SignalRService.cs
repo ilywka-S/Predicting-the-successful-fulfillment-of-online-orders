@@ -14,7 +14,7 @@ public class SignalRService : ISignalRService
 
     public event Action<OrderFeatures>? OnOrderCreated;
     public event Action<OrderPrediction>? OnPredictionUpdated;
-    public event Action<int>? OnBatchJobProgress;
+    public event Action<BatchJobProgress>? OnBatchJobProgress;
 
     public SignalRService(IAuthTokenManager tokenManager, string baseUrl)
     {
@@ -45,9 +45,15 @@ public class SignalRService : ISignalRService
         _hubConnection.Reconnected += async (connectionId) =>
             Debug.WriteLine($"[SignalR] Успішно перепідключено! ConnectionId: {connectionId}");
 
-        RegisterHandlers();
-    }
+            RegisterHandlers();
+        }
 
+    private void RegisterHandlers()
+    {
+        _hubConnection.On<OrderFeatures>("OrderCreated", data => OnOrderCreated?.Invoke(data));
+        _hubConnection.On<OrderPrediction>("PredictionUpdated", data => OnPredictionUpdated?.Invoke(data));
+        _hubConnection.On<BatchJobProgress>("BatchJobProgress", data => OnBatchJobProgress?.Invoke(data));
+    }
     public async Task StartConnectionAsync()
     {
         if (_hubConnection.State == HubConnectionState.Disconnected)
@@ -62,13 +68,6 @@ public class SignalRService : ISignalRService
                 Debug.WriteLine($"[SignalR ERROR] Не вдалося підключитися: {ex.Message}");
             }
         }
-    }
-
-    private void RegisterHandlers()
-    {
-        _hubConnection.On<OrderFeatures>("OrderCreated", data => OnOrderCreated?.Invoke(data));
-        _hubConnection.On<OrderPrediction>("PredictionUpdated", data => OnPredictionUpdated?.Invoke(data));
-        _hubConnection.On<int>("BatchJobProgress", progress => OnBatchJobProgress?.Invoke(progress));
     }
 
     public async Task StopConnectionAsync()

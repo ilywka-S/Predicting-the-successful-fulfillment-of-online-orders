@@ -8,7 +8,7 @@ public interface ISignalRService
 {
     event Action<OrderFeatures>? OnOrderCreated;
     event Action<OrderPrediction>? OnPredictionUpdated;
-    event Action<int>? OnBatchJobProgress;
+    public event Action<BatchJobProgress>? OnBatchJobProgress;
 
     Task StartConnectionAsync();
     Task StopConnectionAsync();

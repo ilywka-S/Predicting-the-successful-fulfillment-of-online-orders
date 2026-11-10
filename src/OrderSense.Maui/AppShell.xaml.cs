@@ -13,7 +13,7 @@ public partial class AppShell : Shell
     {
         InitializeComponent();
     }
-
+    
     public AppShell(AppShellViewModel? viewModel = null)
     {
         InitializeComponent();

@@ -17,6 +17,7 @@ public class OrderPredictionTests(ApiFactory factory)
     public async Task Predict_ExistingOrder_SavesAndReturnsPrediction()
     {
         var data = OrderTestData.Create();
+        factory.Prediction.Reset();
         var order = data.Order(MondayMorning);
         await factory.SeedAsync(order);
         factory.Prediction.Result = new OrderPrediction { Probability = 0.83f, RiskLevel = "medium", ModelVersion = $"v-{data.Prefix}" };
@@ -31,7 +32,9 @@ public class OrderPredictionTests(ApiFactory factory)
         Assert.Equal(0.83f, prediction!.Probability);
         Assert.Equal(RiskLevel.Medium, prediction.RiskLevel);
         Assert.Equal($"v-{data.Prefix}", prediction.ModelVersion);
-        Assert.Empty(prediction.Factors);
+        Assert.Equal(2, prediction.Factors.Count);
+        Assert.Equal("PromisedDays", prediction.Factors[0].Feature);
+        Assert.Equal(FactorImpact.Increases, prediction.Factors[0].Impact);
         Assert.Equal(RiskLevel.Medium, details!.LatestPrediction!.RiskLevel);
         Assert.Equal($"v-{data.Prefix}", details.LatestPrediction.ModelVersion);
     }

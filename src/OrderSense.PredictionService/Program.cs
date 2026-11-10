@@ -64,7 +64,7 @@ app.MapPost("/explain", (OrderFeatures features, ExplainService explain, ModelIn
         Factors = explain.Explain(features)
     });
 });
-
+app.MapPost("/predict/batch", BatchEndpoints.Predict);
 app.MapGet("/model", ModelEndpoints.Get);
 
 app.Run();

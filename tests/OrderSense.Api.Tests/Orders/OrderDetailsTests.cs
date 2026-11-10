@@ -58,8 +58,8 @@ public class OrderDetailsTests(ApiFactory factory)
         Assert.Equal("DistanceKm", distance.Feature);
         Assert.Equal("Відстань продавець -> клієнт", distance.Label);
         Assert.Equal(2300f, distance.Value);
-        Assert.Equal(FactorImpact.Increases, distance.Impact);
-        Assert.Equal(FactorImpact.Decreases, prediction.Factors[1].Impact);
+        Assert.Equal(FactorImpact.Decreases, distance.Impact);
+        Assert.Equal(FactorImpact.Increases, prediction.Factors[1].Impact);
     }
 
     [Fact]

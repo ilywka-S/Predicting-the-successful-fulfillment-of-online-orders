@@ -14,6 +14,7 @@
       "tests\\OrderSense.PredictionService.Tests\\OrderSense.PredictionService.Tests.csproj",
       "src\\OrderSense.Olist\\OrderSense.Olist.csproj",
       "tools\\OrderSense.OlistImport\\OrderSense.OlistImport.csproj",
+      "tools\\OrderSense.PredictAll\\OrderSense.PredictAll.csproj",
     ]
   }
 }

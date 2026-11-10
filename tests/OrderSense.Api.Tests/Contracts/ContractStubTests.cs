@@ -46,16 +46,6 @@ public class ContractStubTests(ApiFactory factory)
     }
 
     [Fact]
-    public async Task WhatIf_ValidRequest_Returns501()
-    {
-        var client = await ClientAsync(Roles.Manager);
-
-        var response = await client.PostAsJsonAsync("/api/orders/any/what-if", new WhatIfRequest(20, null, "boleto", 1));
-
-        Assert.Equal(HttpStatusCode.NotImplemented, response.StatusCode);
-    }
-
-    [Fact]
     public async Task WhatIf_InvalidRequest_Returns400()
     {
         var client = await ClientAsync(Roles.Manager);
