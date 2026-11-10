@@ -99,16 +99,12 @@ public class BatchJobsController(AppDbContext db) : ControllerBase
 
         return File(csv, "text/csv", fileName);
     }
-
     [HttpGet("template", Name = "GetBatchJobTemplate")]
     [ProducesResponseType(typeof(Stream), StatusCodes.Status200OK, "text/csv")]
-    [ProducesResponseType<ProblemDetails>(StatusCodes.Status501NotImplemented)]
     public IActionResult GetTemplate()
     {
-        byte[] csv = BatchCsvTemplate.Bytes();
-        return File(csv, "text/csv", "batch-order-template.csv");
+        return File(BatchCsv.TemplateBytes(), "text/csv", "batch-template.csv");
     }
-
     private IQueryable<BatchJob> VisibleJobs()
     {
         var jobs = db.BatchJobs.AsNoTracking();
