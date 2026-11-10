@@ -74,6 +74,7 @@ public static class MauiProgram
         builder.Services.AddHttpClient<IClient, Client.Core.Client>(client =>
         {
             client.BaseAddress = new Uri(baseAddress);
+            client.Timeout = TimeSpan.FromMinutes(30);
         })
         .AddHttpMessageHandler<JwtAuthHandler>();
 

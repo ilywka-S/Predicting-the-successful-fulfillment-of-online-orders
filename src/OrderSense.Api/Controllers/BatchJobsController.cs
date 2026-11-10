@@ -18,9 +18,13 @@ namespace OrderSense.Api.Controllers;
 [Authorize(Roles = $"{Roles.Analyst},{Roles.Admin}")]
 public class BatchJobsController(AppDbContext db) : ControllerBase
 {
+    private const int MaxCsvSize = 1024 * 1024 * 1024;
+    private const int MultipartOverhead = 1024 * 1024;
+
     [HttpPost(Name = "CreateBatchJob")]
     [Consumes("multipart/form-data")]
-    [RequestSizeLimit(5 * 1024 * 1024)]
+    [RequestSizeLimit(MaxCsvSize + MultipartOverhead)]
+    [RequestFormLimits(MultipartBodyLengthLimit = MaxCsvSize)]
     [ProducesResponseType<BatchJobDto>(StatusCodes.Status202Accepted)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status501NotImplemented)]

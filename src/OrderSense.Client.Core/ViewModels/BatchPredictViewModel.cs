@@ -250,7 +250,7 @@ public partial class BatchPredictionViewModel : ObservableObject, IDisposable
         catch (Exception)
         {
             IsProcessing = false;
-            StatusMessage = "Помилка мережі або ліміту сервера (5 МБ).";
+            StatusMessage = "Помилка мережі або ліміту сервера (1 ГБ).";
         }
     }
 
