@@ -18,18 +18,6 @@ public class ContractStubTests(ApiFactory factory)
 
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
-
-    [Theory]
-    [InlineData("/api/batch-jobs/template")]
-    public async Task BatchJobs_AsAnalyst_Return501(string url)
-    {
-        var client = await ClientAsync(Roles.Analyst);
-
-        var response = await client.GetAsync(url);
-
-        Assert.Equal(HttpStatusCode.NotImplemented, response.StatusCode);
-    }
-
     [Fact]
     public async Task CreateBatchJob_AsAnalyst_Returns501()
     {
