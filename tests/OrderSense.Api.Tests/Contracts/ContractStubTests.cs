@@ -19,21 +19,6 @@ public class ContractStubTests(ApiFactory factory)
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
     [Fact]
-    public async Task CreateBatchJob_AsAnalyst_Returns501()
-    {
-        var client = await ClientAsync(Roles.Analyst);
-        
-        using var content = new MultipartFormDataContent
-        {
-            { new ByteArrayContent("ItemsCount\n1\n"u8.ToArray()), "file", "orders.csv" },
-        };
-
-        var response = await client.PostAsync("/api/batch-jobs", content);
-
-        Assert.Equal(HttpStatusCode.NotImplemented, response.StatusCode);
-    }
-
-    [Fact]
     public async Task WhatIf_InvalidRequest_Returns400()
     {
         var client = await ClientAsync(Roles.Manager);

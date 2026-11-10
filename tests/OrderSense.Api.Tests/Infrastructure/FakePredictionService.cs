@@ -51,6 +51,11 @@ public sealed class FakePredictionService : HttpMessageHandler
         get; 
         private set; 
     }
+    public int BatchCalls 
+    { 
+        get; 
+        private set; 
+    }
     public void FailNextCall() => _failNextCall = true;
     public void Reset()
     {
@@ -122,7 +127,15 @@ public sealed class FakePredictionService : HttpMessageHandler
             }
             return new HttpResponseMessage(HttpStatusCode.OK) { Content = JsonContent.Create(Model, options: Json) };
         }
+        if (path == "/predict/batch")
+        {
+            BatchCalls++;
+            List<OrderFeatures>? batch = await request.Content!.ReadFromJsonAsync<List<OrderFeatures>>(Json, cancellationToken);
+            List<OrderPrediction> list = (batch ?? []).Select(_ => Result).ToList();
+            return new HttpResponseMessage(HttpStatusCode.OK) { Content = JsonContent.Create(list, options: Json) };
+        }
         LastFeatures = await request.Content!.ReadFromJsonAsync<OrderFeatures>(Json, cancellationToken);
+        
         return new HttpResponseMessage(HttpStatusCode.OK) { Content = JsonContent.Create(Result, options: Json) };
     }
 }

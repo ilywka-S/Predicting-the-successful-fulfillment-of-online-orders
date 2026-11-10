@@ -24,12 +24,12 @@ public static class BatchCsv
         "itemsCount", "totalPrice", "freightShare", "totalWeightG", "promisedDays", "distanceKm",
         "customerState", "sellerState", "mainCategory", "paymentType", "installments", "purchaseDayOfWeek",
     ];
+    public static string Header => string.Join(",", Columns);
     public static byte[] TemplateBytes()
     {
-        string text = string.Join(",", Columns) + "\r\n"
-            + "1,120.50,0.15,800,20,450,SP,RJ,cama_mesa_banho,credit_card,1,2\r\n"
-            + "2,310.00,0.22,,12,1800,AM,SP,informatica_acessorios,boleto,1,4\r\n";
-
+        string text = Header + "\r\n"
+        + "1,120.50,0.15,800,20,450,SP,RJ,cama_mesa_banho,credit_card,1,2\r\n"
+        + "2,310.00,0.22,,12,1800,AM,SP,informatica_acessorios,boleto,1,4\r\n";
         return [.. Encoding.UTF8.Preamble, .. Encoding.UTF8.GetBytes(text)];
     }
     public static BatchCsvParseResult Parse(Stream stream)
