@@ -86,6 +86,31 @@ public class PredictMissingTests(ApiFactory factory)
             factory.Prediction.Reset();
         }
     }
+    [Fact]
+    public async Task PredictMissing_StaleQueuedJob_IsFailedAndNewRunStarts()
+    {
+        var (client, userId) = await UserAsync(Roles.Admin);
+        var staleId = await factory.WithDbAsync(async db =>
+        {
+            var staleJob = new BatchJob
+            {
+                UserId = userId,
+                Status = BatchJobStatus.Queued,
+                FileName = PredictMissingProcessor.JobName,
+                TotalRows = 1,
+                CreatedAt = DateTimeOffset.UtcNow.AddHours(-1),
+            };
+            db.BatchJobs.Add(staleJob);
+            await db.SaveChangesAsync();
+            return staleJob.Id;
+        });
+        var response = await client.PostAsync(Url, null);
+        var created = await response.Content.ReadFromJsonAsync<BatchJobDto>(ApiJson.Options);
+        await WaitForFinishAsync(client, created!.Id);
+        var staleDto = await client.GetFromJsonAsync<BatchJobDto>($"/api/batch-jobs/{staleId}", ApiJson.Options);
+        Assert.True(response.IsSuccessStatusCode);
+        Assert.Equal(BatchJobStatus.Failed, staleDto!.Status);
+    }
     private async Task<List<string>> SeedOrdersAsync(int count)
     {
         var data = OrderTestData.Create();
