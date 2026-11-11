@@ -7,8 +7,9 @@ using OrderSense.Api.Data;
 using OrderSense.Api.Data.Entities;
 using OrderSense.Contracts;
 namespace OrderSense.Api.Predictions;
-public sealed class BatchPredictor(AppDbContext db, HttpClient http)
+public sealed class BatchPredictor(AppDbContext db, HttpClient http, TimeProvider? timeProvider = null)
 {
+    private readonly TimeProvider _clock = timeProvider ?? TimeProvider.System;
     private static readonly JsonSerializerOptions Json = new JsonSerializerOptions(JsonSerializerDefaults.Web)
     {
         NumberHandling = JsonNumberHandling.AllowNamedFloatingPointLiterals,
@@ -60,7 +61,7 @@ public sealed class BatchPredictor(AppDbContext db, HttpClient http)
                     ModelVersionId = modelVersionId,
                     Probability = prediction.Probability,
                     RiskLevel = risk,
-                    CreatedAt = DateTimeOffset.UtcNow,
+                    CreatedAt = _clock.GetUtcNow(),
                 });
                 result.Predicted++;
             }
@@ -214,7 +215,7 @@ public sealed class BatchPredictor(AppDbContext db, HttpClient http)
                 List<OrderPrediction>? predictions = await response.Content.ReadFromJsonAsync<List<OrderPrediction>>(Json, ct);
                 if (predictions == null || predictions.Count != features.Count)
                 {
-                    throw new InvalidOperationException("Prediction service returned a wrong number of predictions");
+                    throw new PredictionServiceUnavailableException("Сервіс прогнозування повернув неправильну кількість прогнозів");
                 }
                 foreach (OrderPrediction prediction in predictions)
                 {
@@ -262,7 +263,7 @@ public sealed class BatchPredictor(AppDbContext db, HttpClient http)
         ModelVersion? model = await db.ModelVersions.AsNoTracking().SingleOrDefaultAsync(m => m.Version == version, ct);
         if (model == null)
         {
-            DateTimeOffset now = DateTimeOffset.UtcNow;
+            DateTimeOffset now = _clock.GetUtcNow();
             await db.Database.ExecuteSqlAsync($"INSERT INTO model_versions (version, trained_at, is_active) VALUES ({version}, {now}, TRUE) ON CONFLICT (version) DO NOTHING", ct);
             model = await db.ModelVersions.AsNoTracking().SingleAsync(m => m.Version == version, ct);
         }
