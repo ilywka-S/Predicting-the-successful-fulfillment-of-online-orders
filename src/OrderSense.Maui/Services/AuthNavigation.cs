@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Maui.ApplicationModel;          
 using Microsoft.Maui.Controls;
 using OrderSense.Client.Core.Interfaces;
+using OrderSense.Client.Core.ViewModels;
 using OrderSense.Maui.Views;
 
 namespace OrderSense.Maui.Services;
@@ -17,27 +18,25 @@ public class AuthNavigation : IAuthNavigation
         _serviceProvider = serviceProvider;
     }
 
-    public Task NavigateToMainAsync()
+    public async Task NavigateToMainAsync()
     {
-        var dashboardPage = _serviceProvider.GetRequiredService<MainPage>();
-
-        MainThread.BeginInvokeOnMainThread(() =>
+        await MainThread.InvokeOnMainThreadAsync(async () =>
         {
-            Application.Current!.MainPage = new NavigationPage(dashboardPage);
-        });
+            if (Shell.Current is AppShell currentShell &&
+                currentShell.BindingContext is AppShellViewModel shellVm)
+            {
+                await shellVm.UpdateVisibilityAsync();
+            }
 
-        return Task.CompletedTask;
+            await Shell.Current.GoToAsync("//MainPage");
+        });
     }
 
-    public Task NavigateToLoginAsync()
+    public async Task NavigateToLoginAsync()
     {
-        var loginPage = _serviceProvider.GetRequiredService<LoginPage>();
-
-        MainThread.BeginInvokeOnMainThread(() =>
+        await MainThread.InvokeOnMainThreadAsync(async () =>
         {
-            Application.Current!.MainPage = new NavigationPage(loginPage);
+            await Shell.Current.GoToAsync("//LoginPage");
         });
-
-        return Task.CompletedTask;
     }
 }

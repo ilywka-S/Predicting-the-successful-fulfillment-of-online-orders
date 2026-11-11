@@ -290,5 +290,6 @@ public partial class BatchPredictionViewModel : ObservableObject, IDisposable
     public void Dispose()
     {
         Unsubscribe();
+        GC.SuppressFinalize(this);
     }
 }

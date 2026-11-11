@@ -9,6 +9,13 @@ namespace OrderSense.Maui.Services;
 
 public class MauiFileService : IFileService
 {
+    // Виносимо конфігурацію у static readonly, щоб позбутися ворнінгу CA1861
+    private static readonly FilePickerFileType CsvFileType = new(new Dictionary<DevicePlatform, IEnumerable<string>>
+    {
+        { DevicePlatform.WinUI, new[] { ".csv" } },
+        { DevicePlatform.Android, new[] { "text/comma-separated-values", "text/csv" } }
+    });
+
     private readonly IFileSaver _fileSaver;
 
     public MauiFileService(IFileSaver fileSaver)
@@ -24,16 +31,10 @@ public class MauiFileService : IFileService
 
     public async Task<FileSelectionResult?> PickCsvAsync()
     {
-        var customFileType = new FilePickerFileType(new Dictionary<DevicePlatform, IEnumerable<string>>
-        {
-            { DevicePlatform.WinUI, new[] { ".csv" } },
-            { DevicePlatform.Android, new[] { "text/comma-separated-values", "text/csv" } }
-        });
-
         var result = await FilePicker.Default.PickAsync(new PickOptions
         {
             PickerTitle = "Виберіть CSV файл",
-            FileTypes = customFileType
+            FileTypes = CsvFileType
         });
 
         if (result == null) return null;
