@@ -12,6 +12,7 @@ using OrderSense.Api.Dtos;
 using OrderSense.Api.Predictions;
 using System.Text.Json; 
 using Hangfire;
+using Npgsql;
 namespace OrderSense.Api.Controllers;
 
 [ApiController]
@@ -21,7 +22,7 @@ public class BatchJobsController(AppDbContext db, IBackgroundJobClient jobs, Tim
 {
     private const int MaxCsvSize = 1024 * 1024 * 1024;
     private const int MultipartOverhead = 1024 * 1024;
-    private static readonly TimeSpan StaleQueuedAfter = TimeSpan.FromMinutes(30);
+    private static readonly TimeSpan StaleAfter = TimeSpan.FromMinutes(30);
 
     private static readonly Action<ILogger, Guid, Exception?> EnqueueFailed = LoggerMessage.Define<Guid>(LogLevel.Error, new EventId(1, "PredictMissingEnqueueFailed"), "Could not enqueue predict-missing job {JobId}");
 
@@ -85,7 +86,7 @@ public class BatchJobsController(AppDbContext db, IBackgroundJobClient jobs, Tim
         var dto = BatchJobMapping.ToDto(job);
         return AcceptedAtRoute("GetBatchJob", new { id = job.Id }, dto);
     }
-    [HttpPost("predict-missing", Name = "PredictMissingOrders")]
+        [HttpPost("predict-missing", Name = "PredictMissingOrders")]
     [Authorize(Roles = Roles.Admin)]
     [ProducesResponseType<BatchJobDto>(StatusCodes.Status202Accepted)]
     [ProducesResponseType<BatchJobDto>(StatusCodes.Status200OK)]
@@ -94,37 +95,53 @@ public class BatchJobsController(AppDbContext db, IBackgroundJobClient jobs, Tim
     public async Task<IActionResult> PredictMissing(CancellationToken ct)
     {
         var now = time.GetUtcNow();
-        var staleBefore = now - StaleQueuedAfter;
+        var staleBefore = now - StaleAfter;
+
         await db.BatchJobs
             .Where(j => j.FileName == PredictMissingProcessor.JobName
-                && j.Status == BatchJobStatus.Queued
-                && j.CreatedAt < staleBefore)
+                && (j.Status == BatchJobStatus.Queued || j.Status == BatchJobStatus.Running)
+                && j.UpdatedAt < staleBefore)
             .ExecuteUpdateAsync(s => s
                 .SetProperty(j => j.Status, BatchJobStatus.Failed)
-                .SetProperty(j => j.Error, "The job was never started")
+                .SetProperty(j => j.Error, "The job stopped responding")
+                .SetProperty(j => j.UpdatedAt, now)
                 .SetProperty(j => j.FinishedAt, now), ct);
 
-        var active = await db.BatchJobs.AnyAsync(j => j.FileName == PredictMissingProcessor.JobName && (j.Status == BatchJobStatus.Queued || j.Status == BatchJobStatus.Running), ct);
+        var active = await db.BatchJobs.AnyAsync(j => j.FileName == PredictMissingProcessor.JobName
+            && (j.Status == BatchJobStatus.Queued || j.Status == BatchJobStatus.Running), ct);
+
         if (active)
         {
-            return Problem(statusCode: StatusCodes.Status409Conflict, title: "A prediction run is already in progress");
+            return AlreadyRunning();
         }
+
         var total = await db.Orders.CountAsync(o => o.Items.Any() && !o.Predictions.Any(), ct);
+
+        if (total == 0)
+        {
+            return Ok(new BatchJobDto(Guid.Empty, PredictMissingProcessor.JobName, BatchJobStatus.Done, 0, 0, null, now, now));
+        }
+
         var job = new BatchJob
         {
             UserId = CurrentUserId(),
-            Status = total == 0 ? BatchJobStatus.Done : BatchJobStatus.Queued,
+            Status = BatchJobStatus.Queued,
             FileName = PredictMissingProcessor.JobName,
             TotalRows = total,
             CreatedAt = now,
-            FinishedAt = total == 0 ? now : null,
+            UpdatedAt = now,
         };
-        db.BatchJobs.Add(job);
-        await db.SaveChangesAsync(ct);
-        if (total == 0)
+
+        try
         {
-            return Ok(BatchJobMapping.ToDto(job));
+            db.BatchJobs.Add(job);
+            await db.SaveChangesAsync(ct);
         }
+        catch (DbUpdateException e) when (e.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation })
+        {
+            return AlreadyRunning();
+        }
+
         try
         {
             jobs.Enqueue<PredictMissingProcessor>(p => p.RunAsync(job.Id, CancellationToken.None));
@@ -132,14 +149,20 @@ public class BatchJobsController(AppDbContext db, IBackgroundJobClient jobs, Tim
         catch (Exception e)
         {
             EnqueueFailed(logger, job.Id, e);
+
             await db.BatchJobs.Where(j => j.Id == job.Id).ExecuteUpdateAsync(s => s
                 .SetProperty(j => j.Status, BatchJobStatus.Failed)
                 .SetProperty(j => j.Error, "Could not queue the job")
+                .SetProperty(j => j.UpdatedAt, now)
                 .SetProperty(j => j.FinishedAt, now), CancellationToken.None);
+
             return Problem(statusCode: StatusCodes.Status503ServiceUnavailable, title: "Could not queue the prediction run");
         }
+
         return AcceptedAtRoute("GetBatchJob", new { id = job.Id }, BatchJobMapping.ToDto(job));
     }
+
+    private ObjectResult AlreadyRunning() => Problem(statusCode: StatusCodes.Status409Conflict, title: "A prediction run is already in progress");
     [HttpGet(Name = "GetBatchJobs")]
     [ProducesResponseType<IReadOnlyList<BatchJobDto>>(StatusCodes.Status200OK)]
     public async Task<IReadOnlyList<BatchJobDto>> GetAll(CancellationToken ct)

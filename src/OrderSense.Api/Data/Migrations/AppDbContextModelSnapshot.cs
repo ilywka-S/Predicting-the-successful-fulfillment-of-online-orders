@@ -311,12 +311,23 @@ namespace OrderSense.Api.Data.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("total_rows");
 
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at")
+                        .HasDefaultValueSql("now()");
+
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid")
                         .HasColumnName("user_id");
 
                     b.HasKey("Id")
                         .HasName("pk_batch_jobs");
+
+                    b.HasIndex("FileName")
+                        .IsUnique()
+                        .HasDatabaseName("ux_batch_jobs_active_predict_missing")
+                        .HasFilter("file_name = 'predict-missing' AND status IN ('Queued', 'Running')");
 
                     b.HasIndex("UserId")
                         .HasDatabaseName("ix_batch_jobs_user_id");

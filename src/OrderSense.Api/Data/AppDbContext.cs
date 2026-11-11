@@ -65,6 +65,11 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
         {
             e.HasOne<AppUser>().WithMany().HasForeignKey(j => j.UserId);
             e.Property(j => j.CreatedAt).HasDefaultValueSql("now()");
+            e.Property(j => j.UpdatedAt).HasDefaultValueSql("now()");
+            e.HasIndex(j => j.FileName)
+                .IsUnique()
+                .HasFilter("file_name = 'predict-missing' AND status IN ('Queued', 'Running')")
+                .HasDatabaseName("ux_batch_jobs_active_predict_missing");
         });
 
         builder.Entity<DeviceToken>(e =>

@@ -21,6 +21,8 @@ public class BatchJob
 
     public DateTimeOffset CreatedAt { get; set; }
 
+    public DateTimeOffset UpdatedAt { get; set; }
+
     public DateTimeOffset? FinishedAt { get; set; }
 
     public List<BatchResult> Results { get; set; } = [];

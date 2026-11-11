@@ -86,30 +86,53 @@ public class PredictMissingTests(ApiFactory factory)
             factory.Prediction.Reset();
         }
     }
-    [Fact]
-    public async Task PredictMissing_StaleQueuedJob_IsFailedAndNewRunStarts()
+    [Theory]
+    [InlineData(BatchJobStatus.Queued)]
+    [InlineData(BatchJobStatus.Running)]
+    public async Task PredictMissing_StaleJob_IsFailedAndNewRunStarts(BatchJobStatus staleStatus)
     {
+        await SeedOrdersAsync(1);
         var (client, userId) = await UserAsync(Roles.Admin);
         var staleId = await factory.WithDbAsync(async db =>
         {
             var staleJob = new BatchJob
             {
                 UserId = userId,
-                Status = BatchJobStatus.Queued,
+                Status = staleStatus,
                 FileName = PredictMissingProcessor.JobName,
                 TotalRows = 1,
                 CreatedAt = DateTimeOffset.UtcNow.AddHours(-1),
+                UpdatedAt = DateTimeOffset.UtcNow.AddHours(-1),
             };
+
             db.BatchJobs.Add(staleJob);
             await db.SaveChangesAsync();
+
             return staleJob.Id;
         });
+
         var response = await client.PostAsync(Url, null);
         var created = await response.Content.ReadFromJsonAsync<BatchJobDto>(ApiJson.Options);
         await WaitForFinishAsync(client, created!.Id);
         var staleDto = await client.GetFromJsonAsync<BatchJobDto>($"/api/batch-jobs/{staleId}", ApiJson.Options);
-        Assert.True(response.IsSuccessStatusCode);
+
+        Assert.Equal(HttpStatusCode.Accepted, response.StatusCode);
         Assert.Equal(BatchJobStatus.Failed, staleDto!.Status);
+    }
+
+    [Fact]
+    public async Task PredictMissing_ParallelRequests_StartOnlyOneRun()
+    {
+        await SeedOrdersAsync(1);
+        var (client, _) = await UserAsync(Roles.Admin);
+
+        var responses = await Task.WhenAll(Enumerable.Range(0, 4).Select(_ => client.PostAsync(Url, null)));
+
+        var accepted = Assert.Single(responses, r => r.StatusCode == HttpStatusCode.Accepted);
+        Assert.Equal(3, responses.Count(r => r.StatusCode == HttpStatusCode.Conflict));
+
+        var created = await accepted.Content.ReadFromJsonAsync<BatchJobDto>(ApiJson.Options);
+        await WaitForFinishAsync(client, created!.Id);
     }
     private async Task<List<string>> SeedOrdersAsync(int count)
     {
