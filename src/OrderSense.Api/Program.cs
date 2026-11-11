@@ -93,6 +93,17 @@ builder.Services.AddHttpClient<PredictionClient>(client => client.BaseAddress = 
 builder.Services.AddScoped<OrderFeatureLoader>();
 builder.Services.AddScoped<OrderPredictor>();
 
+#pragma warning disable EXTEXP0001
+builder.Services.AddHttpClient<BatchPredictor>(client => client.BaseAddress = new Uri("https+http://prediction"))
+    .RemoveAllResilienceHandlers()
+    .AddStandardResilienceHandler(options =>
+    {
+        options.AttemptTimeout.Timeout = TimeSpan.FromMinutes(2);
+        options.TotalRequestTimeout.Timeout = TimeSpan.FromMinutes(5);
+        options.CircuitBreaker.SamplingDuration = TimeSpan.FromMinutes(5);
+    });
+#pragma warning restore EXTEXP0001
+
 var simulator = builder.Configuration.GetSection("Simulator").Get<SimulatorOptions>() ?? new SimulatorOptions();
 
 if (simulator.Enabled && !isOpenApiGeneration)
@@ -124,7 +135,6 @@ builder.Services.AddSingleton<IUserIdProvider, SubUserIdProvider>();
 builder.Services.AddSingleton<BatchProgressNotifier>();
 builder.Services.AddScoped<WhatIfService>();
 builder.Services.AddScoped<BatchJobProcessor>();
-builder.Services.AddHttpClient<BatchPredictor>(client => client.BaseAddress = new Uri("https+http://prediction"));
 builder.Services.AddScoped<PredictMissingProcessor>();
 
 if (!isOpenApiGeneration)
