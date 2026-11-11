@@ -1,6 +1,8 @@
+using System.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using OrderSense.Api.Data;
 using OrderSense.Api.Data.Entities;
+using OrderSense.Api.Predictions;
 namespace OrderSense.PredictAll;
 public static class PredictAllProgram
 {
@@ -31,7 +33,13 @@ public static class PredictAllProgram
         http.BaseAddress = new Uri(serviceUrl);
         http.Timeout = TimeSpan.FromMinutes(2);
         BatchPredictor predictor = new BatchPredictor(db, http);
-        BatchRunResult result = await predictor.RunAsync(1000, maxOrders, CancellationToken.None);
+        Stopwatch watch = Stopwatch.StartNew();
+        BatchRunResult result = await predictor.RunAsync(1000, maxOrders, CancellationToken.None, (progress, _) =>
+        {
+            Console.WriteLine($"Партія {progress.Batches}: разом записано {progress.Predicted}, пропущено {progress.Skipped}, {watch.Elapsed:mm\\:ss}");
+
+            return Task.CompletedTask;
+        });
         Console.WriteLine();
         Console.WriteLine($"Готово: записано {result.Predicted}, пропущено {result.Skipped}, партій {result.Batches}.");
         int low = await db.Predictions.CountAsync(p => p.RiskLevel == RiskLevel.Low);

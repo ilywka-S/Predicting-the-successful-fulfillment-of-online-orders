@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -7,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using OrderSense.Api.Data;
 using OrderSense.Api.Data.Entities;
 using OrderSense.Contracts;
-namespace OrderSense.PredictAll;
+namespace OrderSense.Api.Predictions;
 public sealed class BatchPredictor(AppDbContext db, HttpClient http)
 {
     private static readonly JsonSerializerOptions Json = new JsonSerializerOptions(JsonSerializerDefaults.Web)
@@ -15,12 +14,11 @@ public sealed class BatchPredictor(AppDbContext db, HttpClient http)
         NumberHandling = JsonNumberHandling.AllowNamedFloatingPointLiterals,
     };
     private readonly Dictionary<string, int> _modelVersionIds = new Dictionary<string, int>();
-    public async Task<BatchRunResult> RunAsync(int batchSize, int maxOrders, CancellationToken ct)
+    public async Task<BatchRunResult> RunAsync(int batchSize, int maxOrders, CancellationToken ct, Func<BatchRunResult, CancellationToken, Task>? onBatchDone = null)
     {
         Dictionary<string, (double Lat, double Lng)> coordinates = await LoadCoordinatesAsync(ct);
         BatchRunResult result = new BatchRunResult();
         List<string> skippedIds = new List<string>();
-        Stopwatch watch = Stopwatch.StartNew();
         while (result.Predicted + result.Skipped < maxOrders)
         {
             int take = Math.Min(batchSize, maxOrders - result.Predicted - result.Skipped);
@@ -48,7 +46,6 @@ public sealed class BatchPredictor(AppDbContext db, HttpClient http)
             for (int i = 0; i < orders.Count; i++)
             {
                 OrderPrediction? prediction = predictions[i];
-
                 if (prediction == null || !TryReadRisk(prediction, out RiskLevel risk))
                 {
                     skippedIds.Add(orders[i].Id);
@@ -65,13 +62,15 @@ public sealed class BatchPredictor(AppDbContext db, HttpClient http)
                     RiskLevel = risk,
                     CreatedAt = DateTimeOffset.UtcNow,
                 });
-
                 result.Predicted++;
             }
             await db.SaveChangesAsync(ct);
             db.ChangeTracker.Clear();
             result.Batches++;
-            Console.WriteLine($"Партія {result.Batches}: разом записано {result.Predicted}, пропущено {result.Skipped}, {watch.Elapsed:mm\\:ss}");
+            if (onBatchDone != null)
+            {
+                await onBatchDone(result, ct);
+            }
         }
         return result;
     }
