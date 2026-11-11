@@ -8,7 +8,8 @@ using OrderSense.Api.Dtos;
 using OrderSense.Api.Tests.Infrastructure;
 using OrderSense.Api.Predictions;
 namespace OrderSense.Api.Tests.BatchJobs;
-
+using Hangfire;
+using Microsoft.Extensions.DependencyInjection;
 [Collection(ApiCollection.Name)]
 public class BatchJobsTests(ApiFactory factory)
 {
@@ -190,6 +191,72 @@ public class BatchJobsTests(ApiFactory factory)
             var job = await WaitForFinishAsync(client, created!.Id);
             Assert.Equal(BatchJobStatus.Failed, job.Status);
             Assert.NotNull(job.Error);
+        }
+        finally
+        {
+            factory.Prediction.Reset();
+        }
+    }
+    [Fact]
+    public async Task Run_UnexpectedException_MarksJobFailed()
+    {
+        var (client, userId) = await AnalystAsync();
+        var jobId = await factory.WithDbAsync(async db =>
+        {
+            var job = new BatchJob
+            {
+                UserId = userId,
+                Status = BatchJobStatus.Queued,
+                FileName = "broken.csv",
+                TotalRows = 1,
+                Results = [new BatchResult { RowNo = 1, Input = """{"ItemsCount": "abc"}""" }],
+            };
+            db.BatchJobs.Add(job);
+            await db.SaveChangesAsync();
+
+            return job.Id;
+        });
+        using (var scope = factory.Services.CreateScope())
+        {
+            scope.ServiceProvider.GetRequiredService<IBackgroundJobClient>()
+                .Enqueue<BatchJobProcessor>(p => p.RunAsync(jobId, CancellationToken.None));
+        }
+        var finished = await WaitForFinishAsync(client, jobId);
+        Assert.Equal(BatchJobStatus.Failed, finished.Status);
+        Assert.Equal("Unexpected error while processing the file", finished.Error);
+    }
+    [Fact]
+    public async Task Create_SomeRowsCannotBePredicted_JobDoneCountsOnlyPredictedRows()
+    {
+        var (client, _) = await AnalystAsync();
+        factory.Prediction.RejectBatches = true;
+        factory.Prediction.SucceedSinglesCount = 1;
+        try
+        {
+            var created = await (await client.PostAsync("/api/batch-jobs", Upload(BatchCsv.TemplateBytes()))).Content.ReadFromJsonAsync<BatchJobDto>(ApiJson.Options);
+            var job = await WaitForFinishAsync(client, created!.Id);
+            Assert.Equal(BatchJobStatus.Done, job.Status);
+            Assert.Equal(2, job.TotalRows);
+            Assert.Equal(1, job.ProcessedRows);
+            Assert.Equal("Rows without prediction: 1", job.Error);
+        }
+        finally
+        {
+            factory.Prediction.Reset();
+        }
+    }
+    [Fact]
+    public async Task Create_NoRowCanBePredicted_JobFails()
+    {
+        var (client, _) = await AnalystAsync();
+        factory.Prediction.RejectBatches = true;
+        factory.Prediction.SucceedSinglesCount = 0;
+        try
+        {
+            var created = await (await client.PostAsync("/api/batch-jobs", Upload(BatchCsv.TemplateBytes()))).Content.ReadFromJsonAsync<BatchJobDto>(ApiJson.Options);
+            var job = await WaitForFinishAsync(client, created!.Id);
+            Assert.Equal(BatchJobStatus.Failed, job.Status);
+            Assert.Equal(0, job.ProcessedRows);
         }
         finally
         {

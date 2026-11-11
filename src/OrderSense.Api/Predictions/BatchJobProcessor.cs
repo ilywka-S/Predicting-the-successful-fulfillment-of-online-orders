@@ -48,17 +48,26 @@ public class BatchJobProcessor(AppDbContext db,
                 lastRow = rows[^1].RowNo;
                 await ProcessChunkAsync(rows, ct);
                 await db.SaveChangesAsync(ct);
+                processed += rows.Count(r => r.Probability != null);
                 db.ChangeTracker.Clear();
-                processed += rows.Count;
                 await SetStatusAsync(job, BatchJobStatus.Running, processed, null, ct);
             }
-
-            await SetStatusAsync(job, BatchJobStatus.Done, job.TotalRows, null, ct);
+            int failed = job.TotalRows - processed;
+            if (processed == 0 && job.TotalRows > 0)
+            {
+                await SetStatusAsync(job, BatchJobStatus.Failed, processed, "No rows could be predicted", ct);
+            }
+            else
+            {
+                string? warning = failed > 0 ? $"Rows without prediction: {failed}" : null;
+                await SetStatusAsync(job, BatchJobStatus.Done, processed, warning, ct);
+            }
         }
-        catch (PredictionServiceUnavailableException e)
+        catch (Exception e) when (!ct.IsCancellationRequested)
         {
             JobFailed(logger, jobId, e);
-            await SetStatusAsync(job, BatchJobStatus.Failed, processed, "Prediction service is unavailable", CancellationToken.None);
+            string message = e is PredictionServiceUnavailableException ? "Prediction service is unavailable" : "Unexpected error while processing the file";
+            await SetStatusAsync(job, BatchJobStatus.Failed, processed, message, CancellationToken.None);
         }
     }
     private async Task ProcessChunkAsync(List<BatchResult> rows, CancellationToken ct)
