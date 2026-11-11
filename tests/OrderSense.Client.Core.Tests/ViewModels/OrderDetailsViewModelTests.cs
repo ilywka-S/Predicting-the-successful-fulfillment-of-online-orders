@@ -247,7 +247,61 @@ public class OrderDetailsViewModelTests
 
         _viewModel.IsContentVisible.Should().BeTrue();
         _viewModel.HasError.Should().BeFalse();
+        _viewModel.HasHistoryError.Should().BeTrue();
         _viewModel.History.Select(h => h.CreatedAt).Should().Equal(latest.CreatedAt);
+    }
+
+    [Fact]
+    public async Task Load_RequestsOrderAndHistoryAtTheSameTime()
+    {
+        var latest = Prediction(0.8f, RiskLevel.Low, hoursAgo: 1);
+        var pendingOrder = new TaskCompletionSource<OrderDetailsDto>();
+        _apiClientMock
+            .Setup(x => x.GetOrderAsync(OrderId, It.IsAny<CancellationToken>()))
+            .Returns(pendingOrder.Task);
+        SetupHistory(latest);
+
+        var loading = _viewModel.LoadCommand.ExecuteAsync(OrderId);
+
+        _apiClientMock.Verify(x => x.GetOrderPredictionsAsync(OrderId, It.IsAny<CancellationToken>()), Times.Once);
+        _viewModel.IsLoading.Should().BeTrue();
+
+        pendingOrder.SetResult(Order(latest));
+        await loading;
+
+        _viewModel.IsContentVisible.Should().BeTrue();
+        _viewModel.History.Should().ContainSingle();
+    }
+
+    [Fact]
+    public async Task Load_LongHistory_ShowsOnlyNewest()
+    {
+        var predictions = Enumerable.Range(0, 15).Select(i => Prediction(0.5f, RiskLevel.Medium, hoursAgo: i)).ToArray();
+        SetupOrder(Order(predictions[0]));
+        SetupHistory(predictions);
+
+        await _viewModel.LoadCommand.ExecuteAsync(OrderId);
+
+        _viewModel.History.Should().HaveCount(OrderDetailsViewModel.HistoryLimit);
+        _viewModel.History[0].CreatedAt.Should().Be(predictions[0].CreatedAt);
+        _viewModel.History[^1].CreatedAt.Should().Be(predictions[OrderDetailsViewModel.HistoryLimit - 1].CreatedAt);
+    }
+
+    [Fact]
+    public async Task Predict_FullHistory_StaysWithinLimit()
+    {
+        var predictions = Enumerable.Range(1, OrderDetailsViewModel.HistoryLimit).Select(i => Prediction(0.5f, RiskLevel.Medium, hoursAgo: i)).ToArray();
+        var fresh = Prediction(0.9f, RiskLevel.Low, hoursAgo: 0);
+        SetupOrder(Order(predictions[0]));
+        SetupHistory(predictions);
+        _apiClientMock.Setup(x => x.PredictOrderAsync(OrderId)).ReturnsAsync(fresh);
+        await _viewModel.LoadCommand.ExecuteAsync(OrderId);
+
+        await _viewModel.PredictCommand.ExecuteAsync(null);
+
+        _viewModel.History.Should().HaveCount(OrderDetailsViewModel.HistoryLimit);
+        _viewModel.History[0].CreatedAt.Should().Be(fresh.CreatedAt);
+        _viewModel.History.Select(h => h.CreatedAt).Should().NotContain(predictions[^1].CreatedAt);
     }
 
     [Fact]

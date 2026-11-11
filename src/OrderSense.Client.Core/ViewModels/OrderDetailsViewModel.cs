@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using OrderSense.Client.Core.Interfaces;
@@ -7,6 +8,8 @@ namespace OrderSense.Client.Core.ViewModels;
 
 public partial class OrderDetailsViewModel : ObservableObject
 {
+    public const int HistoryLimit = 10;
+
     private readonly IClient _apiClient;
     private readonly IOrderNavigation _navigation;
 
@@ -55,6 +58,10 @@ public partial class OrderDetailsViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(HasPredictError))]
     private string _predictErrorMessage = string.Empty;
 
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasHistoryError))]
+    private string _historyErrorMessage = string.Empty;
+
     public bool HasOrder => Order is not null;
 
     public bool HasPrediction => LatestPrediction is not null;
@@ -62,6 +69,8 @@ public partial class OrderDetailsViewModel : ObservableObject
     public bool HasError => !string.IsNullOrEmpty(ErrorMessage);
 
     public bool HasPredictError => !string.IsNullOrEmpty(PredictErrorMessage);
+
+    public bool HasHistoryError => !string.IsNullOrEmpty(HistoryErrorMessage);
 
     public bool IsContentVisible => HasOrder && !IsLoading && !HasError;
 
@@ -100,14 +109,18 @@ public partial class OrderDetailsViewModel : ObservableObject
         IsLoading = true;
         ErrorMessage = string.Empty;
         PredictErrorMessage = string.Empty;
+        HistoryErrorMessage = string.Empty;
 
         try
         {
-            var order = await _apiClient.GetOrderAsync(OrderId, cts.Token);
+            var orderTask = _apiClient.GetOrderAsync(OrderId, cts.Token);
+            var historyTask = LoadHistoryAsync(OrderId, cts.Token);
+            await Task.WhenAll(orderTask, historyTask);
+
             if (cts == _loadCts)
             {
-                ApplyOrder(order);
-                await LoadHistoryAsync(cts);
+                ApplyOrder(await orderTask);
+                ApplyHistory(await historyTask);
             }
         }
         catch (OperationCanceledException) when (cts.IsCancellationRequested)
@@ -189,40 +202,45 @@ public partial class OrderDetailsViewModel : ObservableObject
         NotifyPrediction();
     }
 
-    private async Task LoadHistoryAsync(CancellationTokenSource cts)
+    private async Task<IReadOnlyList<PredictionHistoryItemDto>?> LoadHistoryAsync(string orderId, CancellationToken cancellationToken)
     {
         try
         {
-            var history = await _apiClient.GetOrderPredictionsAsync(OrderId, cts.Token);
-            if (cts != _loadCts)
-            {
-                return;
-            }
-
-            var items = history.Take(10).ToList();
-
-            History.Clear();
-            foreach (var item in items)
-            {
-                History.Add(item);
-            }
-
-            if (LatestPrediction is { } latest && !History.Any(p => p.CreatedAt == latest.CreatedAt && p.ModelVersion == latest.ModelVersion))
-            {
-                History.Insert(0, new PredictionHistoryItemDto
-                {
-                    CreatedAt = latest.CreatedAt,
-                    ModelVersion = latest.ModelVersion,
-                    Probability = latest.Probability,
-                    RiskLevel = latest.RiskLevel,
-                });
-            }
-
-            NotifyPrediction();
+            var history = await _apiClient.GetOrderPredictionsAsync(orderId, cancellationToken);
+            return history?.ToList() ?? [];
         }
-        catch
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
+            return null;
         }
+        catch (Exception exception)
+        {
+            Debug.WriteLine($"[OrderDetails] Не вдалося завантажити історію прогнозів: {exception.Message}");
+            return null;
+        }
+    }
+
+    private void ApplyHistory(IReadOnlyList<PredictionHistoryItemDto>? items)
+    {
+        if (items is null)
+        {
+            HistoryErrorMessage = "Не вдалося завантажити історію прогнозів, показано лише останній.";
+            return;
+        }
+
+        History.Clear();
+        foreach (var item in items)
+        {
+            History.Add(item);
+        }
+
+        if (LatestPrediction is { } latest)
+        {
+            AddToHistory(latest);
+        }
+
+        TrimHistory();
+        NotifyPrediction();
     }
 
     private void ApplyPrediction(PredictionDto prediction)
@@ -235,19 +253,38 @@ public partial class OrderDetailsViewModel : ObservableObject
             Factors.Add(factor);
         }
 
-        if (!History.Any(p => p.CreatedAt == prediction.CreatedAt && p.ModelVersion == prediction.ModelVersion))
-        {
-            History.Insert(0, new PredictionHistoryItemDto
-            {
-                CreatedAt = prediction.CreatedAt,
-                ModelVersion = prediction.ModelVersion,
-                Probability = prediction.Probability,
-                RiskLevel = prediction.RiskLevel,
-            });
-        }
-
+        AddToHistory(prediction);
         NotifyPrediction();
     }
+
+    private void AddToHistory(PredictionDto prediction)
+    {
+        if (!History.Any(item => IsSamePrediction(item, prediction)))
+        {
+            History.Insert(0, ToHistoryItem(prediction));
+        }
+
+        TrimHistory();
+    }
+
+    private void TrimHistory()
+    {
+        while (History.Count > HistoryLimit)
+        {
+            History.RemoveAt(History.Count - 1);
+        }
+    }
+
+    private static bool IsSamePrediction(PredictionHistoryItemDto item, PredictionDto prediction) =>
+        item.CreatedAt == prediction.CreatedAt && item.ModelVersion == prediction.ModelVersion;
+
+    private static PredictionHistoryItemDto ToHistoryItem(PredictionDto prediction) => new()
+    {
+        CreatedAt = prediction.CreatedAt,
+        ModelVersion = prediction.ModelVersion,
+        Probability = prediction.Probability,
+        RiskLevel = prediction.RiskLevel,
+    };
 
     private void NotifyPrediction()
     {

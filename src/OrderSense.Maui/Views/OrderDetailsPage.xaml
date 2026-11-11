@@ -216,6 +216,9 @@
                     <Border Style="{StaticResource Card}" IsVisible="{Binding HasHistory}">
                         <VerticalStackLayout Spacing="4">
                             <Label Style="{StaticResource TextH3}" Text="Історія прогнозів" />
+                            <Label Style="{StaticResource TextSmall}"
+                                   IsVisible="{Binding HasHistoryError}"
+                                   Text="{Binding HistoryErrorMessage}" />
                             <VerticalStackLayout BindableLayout.ItemsSource="{Binding History}"
                                                  BindableLayout.ItemTemplate="{StaticResource HistoryTemplate}" />
                         </VerticalStackLayout>
