@@ -1,9 +1,8 @@
-<Project Sdk="Aspire.AppHost.Sdk/13.5.4">
+<Project Sdk="Aspire.AppHost.Sdk/13.6.5">
 
   <ItemGroup>
     <ProjectReference Include="..\OrderSense.Api\OrderSense.Api.csproj" />
     <ProjectReference Include="..\OrderSense.PredictionService\OrderSense.PredictionService.csproj" />
-    <PackageReference Include="MessagePack" Version="4.0.0-preview.2" />
   </ItemGroup>
 
   <PropertyGroup>
