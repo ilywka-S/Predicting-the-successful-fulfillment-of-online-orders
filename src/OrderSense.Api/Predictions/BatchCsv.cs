@@ -19,6 +19,8 @@ public sealed class BatchCsvParseResult
 public static class BatchCsv
 {
     public const int MaxRows = 20000;
+    private const int MaxHeaderChars = 10000;
+    private const int MaxFieldChars = 10000;
     public static readonly string[] Columns =
     [
         "itemsCount", "totalPrice", "freightShare", "totalWeightG", "promisedDays", "distanceKm",
@@ -35,31 +37,38 @@ public static class BatchCsv
     public static BatchCsvParseResult Parse(Stream stream)
     {
         BatchCsvParseResult result = new BatchCsvParseResult();
-        string text;
-        using (StreamReader reader = new StreamReader(stream, Encoding.UTF8, true, 4096, true))
+        using StreamReader reader = new StreamReader(stream, Encoding.UTF8, true, 4096, true);
+        string? headerLine = ReadHeaderLine(reader, out bool tooLong);
+        if (tooLong)
         {
-            text = reader.ReadToEnd();
+            result.FileErrors.Add("The header row is too long.");
+
+            return result;
         }
-        if (string.IsNullOrWhiteSpace(text))
+        if (headerLine is null)
         {
             result.FileErrors.Add("The file is empty.");
 
             return result;
         }
-        char delimiter = DetectDelimiter(text);
+        char delimiter = DetectDelimiter(headerLine);
         CsvConfiguration config = new CsvConfiguration(CultureInfo.InvariantCulture)
         {
             Delimiter = delimiter.ToString(),
-            PrepareHeaderForMatch = PrepareHeader,
+            HasHeaderRecord = false,
             MissingFieldFound = null,
-            HeaderValidated = null,
+            MaxFieldSize = MaxFieldChars,
         };
         try
         {
-            using StringReader stringReader = new StringReader(text);
-            using CsvReader csv = new CsvReader(stringReader, config);
+            Dictionary<string, int>? columns = ReadHeader(headerLine, config, result);
+            if (columns is null)
+            {
+                return result;
+            }
+            using CsvReader csv = new CsvReader(reader, config);
 
-            ReadRows(csv, delimiter, result);
+            ReadRows(csv, columns, delimiter, result);
         }
         catch (CsvHelperException e)
         {
@@ -68,14 +77,72 @@ public static class BatchCsv
         }
         return result;
     }
-    private static string PrepareHeader(PrepareHeaderForMatchArgs args)
+    private static string? ReadHeaderLine(StreamReader reader, out bool tooLong)
     {
-        return args.Header.Trim().ToLowerInvariant();
+        tooLong = false;
+        StringBuilder line = new StringBuilder();
+        while (true)
+        {
+            int c = reader.Read();
+            if (c < 0)
+            {
+                string last = line.ToString().TrimEnd('\r');
+
+                return string.IsNullOrWhiteSpace(last) ? null : last;
+            }
+            if (c == '\n')
+            {
+                string text = line.ToString().TrimEnd('\r');
+                if (string.IsNullOrWhiteSpace(text))
+                {
+                    line.Clear();
+
+                    continue;
+                }
+                return text;
+            }
+            line.Append((char)c);
+            if (line.Length > MaxHeaderChars)
+            {
+                tooLong = true;
+
+                return null;
+            }
+        }
     }
-    private static char DetectDelimiter(string text)
+    private static Dictionary<string, int>? ReadHeader(string headerLine, CsvConfiguration config, BatchCsvParseResult result)
     {
-        int end = text.IndexOf('\n');
-        string firstLine = end < 0 ? text : text[..end];
+        using StringReader headerReader = new StringReader(headerLine);
+        using CsvParser parser = new CsvParser(headerReader, config);
+        if (!parser.Read() || parser.Record is null)
+        {
+            result.FileErrors.Add("The file has no header row.");
+
+            return null;
+        }
+        Dictionary<string, int> columns = new Dictionary<string, int>();
+        for (int i = 0; i < parser.Record.Length; i++)
+        {
+            columns.TryAdd(parser.Record[i].Trim().ToLowerInvariant(), i);
+        }
+        List<string> missing = new List<string>();
+        foreach (string column in Columns)
+        {
+            if (!columns.ContainsKey(column.ToLowerInvariant()))
+            {
+                missing.Add(column);
+            }
+        }
+        if (missing.Count > 0)
+        {
+            result.FileErrors.Add($"Missing columns: {string.Join(", ", missing)}.");
+
+            return null;
+        }
+        return columns;
+    }
+    private static char DetectDelimiter(string firstLine)
+    {
         int commas = 0;
         int semicolons = 0;
         foreach (char c in firstLine)
@@ -91,32 +158,8 @@ public static class BatchCsv
         }
         return semicolons > commas ? ';' : ',';
     }
-    private static void ReadRows(CsvReader csv, char delimiter, BatchCsvParseResult result)
+    private static void ReadRows(CsvReader csv, Dictionary<string, int> columns, char delimiter, BatchCsvParseResult result)
     {
-        if (!csv.Read() || !csv.ReadHeader() || csv.HeaderRecord is null)
-        {
-            result.FileErrors.Add("The file has no header row.");
-
-            return;
-        }
-        HashSet<string> headers = new HashSet<string>();
-        foreach (string header in csv.HeaderRecord)
-        {
-            headers.Add(header.Trim().ToLowerInvariant());
-        }
-        List<string> missing = new List<string>();
-        foreach (string column in Columns)
-        {
-            if (!headers.Contains(column.ToLowerInvariant()))
-            {
-                missing.Add(column);
-            }
-        }
-        if (missing.Count > 0)
-        {
-            result.FileErrors.Add($"Missing columns: {string.Join(", ", missing)}.");
-            return;
-        }
         int rowNo = 0;
         while (csv.Read())
         {
@@ -127,30 +170,30 @@ public static class BatchCsv
 
                 return;
             }
-            result.Rows.Add(ParseRow(csv, delimiter, rowNo));
+            result.Rows.Add(ParseRow(csv, columns, delimiter, rowNo));
         }
         if (result.Rows.Count == 0)
         {
             result.FileErrors.Add("The file has a header but no data rows.");
         }
     }
-    private static ParsedRow ParseRow(CsvReader csv, char delimiter, int rowNo)
+    private static ParsedRow ParseRow(CsvReader csv, Dictionary<string, int> columns, char delimiter, int rowNo)
     {
         List<string> errors = new List<string>();
         OrderFeatures features = new OrderFeatures
         {
-            ItemsCount = ReadNumber(csv, "itemsCount", delimiter, errors),
-            TotalPrice = ReadNumber(csv, "totalPrice", delimiter, errors),
-            FreightShare = ReadNumber(csv, "freightShare", delimiter, errors),
-            TotalWeightG = ReadNumber(csv, "totalWeightG", delimiter, errors),
-            PromisedDays = ReadNumber(csv, "promisedDays", delimiter, errors),
-            DistanceKm = ReadNumber(csv, "distanceKm", delimiter, errors),
-            Installments = ReadNumber(csv, "installments", delimiter, errors),
-            PurchaseDayOfWeek = ReadNumber(csv, "purchaseDayOfWeek", delimiter, errors),
-            CustomerState = ReadText(csv, "customerState", errors),
-            SellerState = ReadText(csv, "sellerState", errors),
-            MainCategory = ReadText(csv, "mainCategory", errors),
-            PaymentType = ReadText(csv, "paymentType", errors),
+            ItemsCount = ReadNumber(csv, columns, "itemsCount", delimiter, errors),
+            TotalPrice = ReadNumber(csv, columns, "totalPrice", delimiter, errors),
+            FreightShare = ReadNumber(csv, columns, "freightShare", delimiter, errors),
+            TotalWeightG = ReadNumber(csv, columns, "totalWeightG", delimiter, errors),
+            PromisedDays = ReadNumber(csv, columns, "promisedDays", delimiter, errors),
+            DistanceKm = ReadNumber(csv, columns, "distanceKm", delimiter, errors),
+            Installments = ReadNumber(csv, columns, "installments", delimiter, errors),
+            PurchaseDayOfWeek = ReadNumber(csv, columns, "purchaseDayOfWeek", delimiter, errors),
+            CustomerState = ReadText(csv, columns, "customerState", errors),
+            SellerState = ReadText(csv, columns, "sellerState", errors),
+            MainCategory = ReadText(csv, columns, "mainCategory", errors),
+            PaymentType = ReadText(csv, columns, "paymentType", errors),
         };
         errors.AddRange(BatchRowRules.Validate(features));
         if (errors.Count > 0)
@@ -159,9 +202,18 @@ public static class BatchCsv
         }
         return new ParsedRow(rowNo, features, null);
     }
-    private static float ReadNumber(CsvReader csv, string column, char delimiter, List<string> errors)
+    private static string Field(CsvReader csv, Dictionary<string, int> columns, string column)
     {
-        string text = (csv.GetField(column.ToLowerInvariant()) ?? "").Trim();
+        int index = columns[column.ToLowerInvariant()];
+        if (index >= csv.Parser.Count)
+        {
+            return "";
+        }
+        return (csv.GetField(index) ?? "").Trim();
+    }
+    private static float ReadNumber(CsvReader csv, Dictionary<string, int> columns, string column, char delimiter, List<string> errors)
+    {
+        string text = Field(csv, columns, column);
         if (text.Length == 0 || text.Equals("nan", StringComparison.OrdinalIgnoreCase))
         {
             return float.NaN;
@@ -178,9 +230,9 @@ public static class BatchCsv
         }
         return value;
     }
-    private static string ReadText(CsvReader csv, string column, List<string> errors)
+    private static string ReadText(CsvReader csv, Dictionary<string, int> columns, string column, List<string> errors)
     {
-        string text = (csv.GetField(column.ToLowerInvariant()) ?? "").Trim();
+        string text = Field(csv, columns, column);
         if (text.Length > 100)
         {
             errors.Add($"{column}: the value is longer than 100 characters");

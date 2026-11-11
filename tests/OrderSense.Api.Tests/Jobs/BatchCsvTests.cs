@@ -106,6 +106,41 @@ public class BatchCsvTests
         BatchCsvParseResult result = Parse(text.ToString());
         Assert.Contains("Too many rows", result.FileErrors[0]);
     }
+        [Fact]
+    public void Parse_TooManyRows_StopsReadingTheStream()
+    {
+        StringBuilder text = new StringBuilder(Header + "\r\n");
+        for (int i = 0; i < BatchCsv.MaxRows + 10000; i++)
+        {
+            text.Append(GoodRow).Append("\r\n");
+        }
+        using CountingStream stream = new CountingStream(Encoding.UTF8.GetBytes(text.ToString()));
+
+        BatchCsvParseResult result = BatchCsv.Parse(stream);
+
+        Assert.Contains("Too many rows", result.FileErrors[0]);
+        Assert.True(stream.BytesRead < stream.Length - 100000, $"Read {stream.BytesRead} of {stream.Length} bytes");
+    }
+    private sealed class CountingStream(byte[] data) : MemoryStream(data)
+    {
+        public long BytesRead
+        {
+            get;
+            private set;
+        }
+        public override int Read(byte[] buffer, int offset, int count)
+        {
+            int read = base.Read(buffer, offset, count);
+            BytesRead += read;
+            return read;
+        }
+        public override int Read(Span<byte> buffer)
+        {
+            int read = base.Read(buffer);
+            BytesRead += read;
+            return read;
+        }
+    }
 }
 [Collection(ApiCollection.Name)]
 public class BatchTemplateTests(ApiFactory factory)
