@@ -1,18 +1,21 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using OrderSense.Client.Core.Interfaces;
 
 namespace OrderSense.Client.Core.ViewModels;
 
 public partial class OrderDetailsViewModel : ObservableObject
 {
     private readonly IClient _apiClient;
+    private readonly IOrderNavigation _navigation;
 
     private CancellationTokenSource? _loadCts;
 
-    public OrderDetailsViewModel(IClient apiClient)
+    public OrderDetailsViewModel(IClient apiClient, IOrderNavigation navigation)
     {
         _apiClient = apiClient;
+        _navigation = navigation;
     }
 
     public ObservableCollection<OrderItemDto> Items { get; } = [];
@@ -28,7 +31,7 @@ public partial class OrderDetailsViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasOrder), nameof(IsContentVisible), nameof(IsDelivered), nameof(IsDeliveredLate))]
-    [NotifyCanExecuteChangedFor(nameof(PredictCommand))]
+    [NotifyCanExecuteChangedFor(nameof(PredictCommand), nameof(OpenWhatIfCommand))]
     private OrderDetailsDto? _order;
 
     [ObservableProperty]
@@ -150,6 +153,9 @@ public partial class OrderDetailsViewModel : ObservableObject
     }
 
     private bool CanPredict() => HasOrder && !IsLoading && !IsPredicting;
+
+    [RelayCommand(CanExecute = nameof(HasOrder))]
+    private Task OpenWhatIfAsync() => _navigation.OpenWhatIfAsync(OrderId);
 
     private void ApplyOrder(OrderDetailsDto order)
     {

@@ -36,6 +36,8 @@ public static class MauiProgram
         builder.Services.AddTransient<MainPage>();
         builder.Services.AddTransient<DashboardPage>();
         builder.Services.AddTransient<OrderDetailsPage>();
+        builder.Services.AddTransient<WhatIfViewModel>();
+        builder.Services.AddTransient<WhatIfPage>();
         builder.Services.AddTransient<LoginViewModel>();
         builder.Services.AddTransient<LoginPage>();
         builder.Services.AddTransient<LoadingViewModel>();
@@ -54,6 +56,8 @@ public static class MauiProgram
         builder.Services.AddSingleton<IAuthNavigation, MauiAuthNavigation>();
         builder.Services.AddSingleton<IOrderNavigation, MauiOrderNavigation>();
         builder.Services.AddTransient<DashboardViewModel>();
+        builder.Services.AddTransient<IAnalyticsService, ApiAnalyticsService>();
+        builder.Services.AddTransient<IWhatIfService, ApiWhatIfService>();
         builder.Services.AddSingleton<IFileSaver>(FileSaver.Default);
         builder.Services.AddSingleton<IFileService, MauiFileService>();
 
@@ -74,6 +78,7 @@ public static class MauiProgram
         builder.Services.AddHttpClient<IClient, Client.Core.Client>(client =>
         {
             client.BaseAddress = new Uri(baseAddress);
+            client.Timeout = TimeSpan.FromMinutes(30);
         })
         .AddHttpMessageHandler<JwtAuthHandler>();
 

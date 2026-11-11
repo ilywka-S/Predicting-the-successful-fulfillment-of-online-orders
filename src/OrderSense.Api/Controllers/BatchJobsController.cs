@@ -19,10 +19,13 @@ namespace OrderSense.Api.Controllers;
 [Authorize(Roles = $"{Roles.Analyst},{Roles.Admin}")]
 public class BatchJobsController(AppDbContext db, IBackgroundJobClient jobs, TimeProvider time) : ControllerBase
 {
-    private const long MaxFileBytes = 5 * 1024 * 1024;
+    private const int MaxCsvSize = 1024 * 1024 * 1024;
+    private const int MultipartOverhead = 1024 * 1024;
+
     [HttpPost(Name = "CreateBatchJob")]
     [Consumes("multipart/form-data")]
-    [RequestSizeLimit(MaxFileBytes + 64 * 1024)]
+    [RequestSizeLimit(MaxCsvSize + MultipartOverhead)]
+    [RequestFormLimits(MultipartBodyLengthLimit = MaxCsvSize)]
     [ProducesResponseType<BatchJobDto>(StatusCodes.Status202Accepted)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> Create(IFormFile? file, CancellationToken ct)
@@ -33,10 +36,10 @@ public class BatchJobsController(AppDbContext db, IBackgroundJobClient jobs, Tim
             return ValidationProblem(ModelState);
         }
 
-        if (file.Length > MaxFileBytes)
+        if (file.Length > MaxCsvSize)
         {
-            ModelState.AddModelError("file", "The file is larger than 5 MB.");
-            return ValidationProblem(ModelState);
+        ModelState.AddModelError("file", $"The file is larger than {MaxCsvSize / (1024 * 1024)} MB.");
+        return ValidationProblem(ModelState);
         }
         BatchCsvParseResult parsed;
         await using (var stream = file.OpenReadStream())
