@@ -24,7 +24,7 @@ public partial class OrderDetailsViewModel : ObservableObject
 
     public ObservableCollection<RiskFactorDto> Factors { get; } = [];
 
-    public ObservableCollection<PredictionDto> History { get; } = [];
+    public ObservableCollection<PredictionHistoryItemDto> History { get; } = [];
 
     [ObservableProperty]
     private string _orderId = string.Empty;
@@ -107,6 +107,7 @@ public partial class OrderDetailsViewModel : ObservableObject
             if (cts == _loadCts)
             {
                 ApplyOrder(order);
+                await LoadHistoryAsync(cts);
             }
         }
         catch (OperationCanceledException) when (cts.IsCancellationRequested)
@@ -188,6 +189,42 @@ public partial class OrderDetailsViewModel : ObservableObject
         NotifyPrediction();
     }
 
+    private async Task LoadHistoryAsync(CancellationTokenSource cts)
+    {
+        try
+        {
+            var history = await _apiClient.GetOrderPredictionsAsync(OrderId, cts.Token);
+            if (cts != _loadCts)
+            {
+                return;
+            }
+
+            var items = history.Take(10).ToList();
+
+            History.Clear();
+            foreach (var item in items)
+            {
+                History.Add(item);
+            }
+
+            if (LatestPrediction is { } latest && !History.Any(p => p.CreatedAt == latest.CreatedAt && p.ModelVersion == latest.ModelVersion))
+            {
+                History.Insert(0, new PredictionHistoryItemDto
+                {
+                    CreatedAt = latest.CreatedAt,
+                    ModelVersion = latest.ModelVersion,
+                    Probability = latest.Probability,
+                    RiskLevel = latest.RiskLevel,
+                });
+            }
+
+            NotifyPrediction();
+        }
+        catch
+        {
+        }
+    }
+
     private void ApplyPrediction(PredictionDto prediction)
     {
         LatestPrediction = prediction;
@@ -200,7 +237,13 @@ public partial class OrderDetailsViewModel : ObservableObject
 
         if (!History.Any(p => p.CreatedAt == prediction.CreatedAt && p.ModelVersion == prediction.ModelVersion))
         {
-            History.Insert(0, prediction);
+            History.Insert(0, new PredictionHistoryItemDto
+            {
+                CreatedAt = prediction.CreatedAt,
+                ModelVersion = prediction.ModelVersion,
+                Probability = prediction.Probability,
+                RiskLevel = prediction.RiskLevel,
+            });
         }
 
         NotifyPrediction();

@@ -23,7 +23,7 @@
                 <VerticalStackLayout Grid.Column="1" Spacing="2">
                     <Label Style="{StaticResource TextMedium}" Text="{Binding Label}" />
                     <Label Style="{StaticResource TextMuted}"
-                           IsVisible="{Binding Value, Converter={StaticResource NotNull}}"
+                           IsVisible="{Binding Text, Source={RelativeSource Self}, Converter={StaticResource HasText}, x:DataType=Label}"
                            Text="{Binding ., Converter={StaticResource FactorValue}}" />
                 </VerticalStackLayout>
             </Grid>

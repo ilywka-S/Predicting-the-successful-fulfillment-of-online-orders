@@ -75,7 +75,9 @@ public class CountConverter : IValueConverter
 public class FactorValueConverter : IValueConverter
 {
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
-        value is OrderSense.Client.Core.RiskFactorDto factor ? Formats.FactorValue(factor.Feature, factor.Value) : string.Empty;
+        value is OrderSense.Client.Core.RiskFactorDto factor
+            ? string.IsNullOrWhiteSpace(factor.DisplayValue) ? Formats.FactorValue(factor.Feature, factor.Value) : factor.DisplayValue
+            : string.Empty;
 
     public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
         throw new NotSupportedException();
