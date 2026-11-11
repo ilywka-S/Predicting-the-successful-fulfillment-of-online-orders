@@ -82,7 +82,39 @@ public class BatchJobsController(AppDbContext db, IBackgroundJobClient jobs, Tim
         var dto = BatchJobMapping.ToDto(job);
         return AcceptedAtRoute("GetBatchJob", new { id = job.Id }, dto);
     }
-
+        [HttpPost("predict-missing", Name = "PredictMissingOrders")]
+    [Authorize(Roles = Roles.Admin)]
+    [ProducesResponseType<BatchJobDto>(StatusCodes.Status202Accepted)]
+    [ProducesResponseType<BatchJobDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> PredictMissing(CancellationToken ct)
+    {
+        var active = await db.BatchJobs.AnyAsync(j => j.FileName == PredictMissingProcessor.JobName && (j.Status == BatchJobStatus.Queued || j.Status == BatchJobStatus.Running), ct);
+        if (active)
+        {
+            return Problem(statusCode: StatusCodes.Status409Conflict, title: "A prediction run is already in progress");
+        }
+        var total = await db.Orders.CountAsync(o => o.Items.Any() && !o.Predictions.Any(), ct);
+        var now = time.GetUtcNow();
+        var job = new BatchJob
+        {
+            UserId = CurrentUserId(),
+            Status = total == 0 ? BatchJobStatus.Done : BatchJobStatus.Queued,
+            FileName = PredictMissingProcessor.JobName,
+            TotalRows = total,
+            CreatedAt = now,
+            FinishedAt = total == 0 ? now : null,
+        };
+        db.BatchJobs.Add(job);
+        await db.SaveChangesAsync(ct);
+        var dto = BatchJobMapping.ToDto(job);
+        if (total == 0)
+        {
+            return Ok(dto);
+        }
+        jobs.Enqueue<PredictMissingProcessor>(p => p.RunAsync(job.Id, CancellationToken.None));
+        return AcceptedAtRoute("GetBatchJob", new { id = job.Id }, dto);
+    }
     [HttpGet(Name = "GetBatchJobs")]
     [ProducesResponseType<IReadOnlyList<BatchJobDto>>(StatusCodes.Status200OK)]
     public async Task<IReadOnlyList<BatchJobDto>> GetAll(CancellationToken ct)

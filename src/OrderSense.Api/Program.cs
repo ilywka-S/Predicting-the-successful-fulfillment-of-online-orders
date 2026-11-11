@@ -124,6 +124,8 @@ builder.Services.AddSingleton<IUserIdProvider, SubUserIdProvider>();
 builder.Services.AddSingleton<BatchProgressNotifier>();
 builder.Services.AddScoped<WhatIfService>();
 builder.Services.AddScoped<BatchJobProcessor>();
+builder.Services.AddHttpClient<BatchPredictor>(client => client.BaseAddress = new Uri("https+http://prediction"));
+builder.Services.AddScoped<PredictMissingProcessor>();
 
 if (!isOpenApiGeneration)
 {
