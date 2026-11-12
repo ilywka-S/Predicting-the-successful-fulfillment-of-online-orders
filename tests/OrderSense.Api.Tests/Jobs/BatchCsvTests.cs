@@ -106,7 +106,7 @@ public class BatchCsvTests
         BatchCsvParseResult result = Parse(text.ToString());
         Assert.Contains("Too many rows", result.FileErrors[0]);
     }
-        [Fact]
+    [Fact]
     public void Parse_TooManyRows_StopsReadingTheStream()
     {
         StringBuilder text = new StringBuilder(Header + "\r\n");
@@ -120,6 +120,46 @@ public class BatchCsvTests
 
         Assert.Contains("Too many rows", result.FileErrors[0]);
         Assert.True(stream.BytesRead < stream.Length - 100000, $"Read {stream.BytesRead} of {stream.Length} bytes");
+    }
+        [Theory]
+    [InlineData("1.5,120.50,0.15,800,20,450,SP,RJ,cama_mesa_banho,credit_card,1,2", "itemsCount")]
+    [InlineData("1,120.50,0.15,800,20,450,SP,RJ,cama_mesa_banho,credit_card,1,2.5", "purchaseDayOfWeek")]
+    [InlineData("1,120.50,0.15,800,20,450,SP,RJ,cama_mesa_banho,credit_card,1.5,2", "installments")]
+    [InlineData("1,120.50,0.15,800,20.5,450,SP,RJ,cama_mesa_banho,credit_card,1,2", "promisedDays")]
+    [InlineData("1,120.50,0.15,800,20,450,,RJ,cama_mesa_banho,credit_card,1,2", "customerState")]
+    [InlineData("1,120.50,0.15,800,20,450,SPP,RJ,cama_mesa_banho,credit_card,1,2", "customerState")]
+    [InlineData("1,120.50,0.15,800,20,450,SP,R1,cama_mesa_banho,credit_card,1,2", "sellerState")]
+    [InlineData("1,120.50,0.15,800,20,450,SP,RJ,cama_mesa_banho,creditcard,1,2", "paymentType")]
+    public void Parse_InvalidValues_AreRowErrors(string row, string field)
+    {
+        BatchCsvParseResult result = Parse($"{Header}\r\n{row}\r\n");
+
+        Assert.Empty(result.FileErrors);
+        Assert.NotNull(result.Rows[0].Error);
+        Assert.Contains(field, result.Rows[0].Error);
+        Assert.Null(result.Rows[0].Features);
+    }
+
+    [Fact]
+    public void Parse_EmptySellerStateCategoryAndPayment_AreAccepted()
+    {
+        BatchCsvParseResult result = Parse($"{Header}\r\n1,120.50,0.15,800,20,450,SP,,,,1,2\r\n");
+
+        Assert.Null(result.Rows[0].Error);
+        Assert.Equal("", result.Rows[0].Features!.SellerState);
+        Assert.Equal("", result.Rows[0].Features!.MainCategory);
+        Assert.Equal("", result.Rows[0].Features!.PaymentType);
+    }
+
+    [Fact]
+    public void Parse_StateAndPaymentCase_IsNormalized()
+    {
+        BatchCsvParseResult result = Parse($"{Header}\r\n1,120.50,0.15,800,20,450,sp,rj,x,CREDIT_CARD,1,2\r\n");
+
+        Assert.Null(result.Rows[0].Error);
+        Assert.Equal("SP", result.Rows[0].Features!.CustomerState);
+        Assert.Equal("RJ", result.Rows[0].Features!.SellerState);
+        Assert.Equal("credit_card", result.Rows[0].Features!.PaymentType);
     }
     private sealed class CountingStream(byte[] data) : MemoryStream(data)
     {
