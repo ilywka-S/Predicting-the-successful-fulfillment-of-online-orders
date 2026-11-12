@@ -20,6 +20,7 @@ public class PredictMissingProcessor(
     private static readonly Action<ILogger, Guid, Exception?> JobFailed = LoggerMessage.Define<Guid>(LogLevel.Error, new EventId(1, "PredictMissingFailed"), "Predict-missing job {JobId} failed");
     private static readonly Action<ILogger, Guid, Exception?> AlreadyRunning = LoggerMessage.Define<Guid>(LogLevel.Warning, new EventId(2, "PredictMissingAlreadyRunning"), "Predict-missing job {JobId} is already being processed, skipping the duplicate run");
     private static readonly Action<ILogger, Guid, Exception?> NotifyFailed = LoggerMessage.Define<Guid>(LogLevel.Warning, new EventId(3, "PredictMissingNotifyFailed"), "Could not send progress notification for predict-missing job {JobId}");
+    private static readonly Action<ILogger, Guid, Exception?> JobClosed = LoggerMessage.Define<Guid>(LogLevel.Warning, new EventId(4, "PredictMissingJobClosed"), "Predict-missing job {JobId} was closed while running, stopping");
     [AutomaticRetry(Attempts = 0)]
     public async Task RunAsync(Guid jobId, CancellationToken ct)
     {
@@ -29,7 +30,7 @@ public class PredictMissingProcessor(
         {
             jobLock = connection.AcquireDistributedLock($"predict-missing:{jobId}", TimeSpan.Zero);
         }
-        catch (Exception e) when (!ct.IsCancellationRequested)
+        catch (DistributedLockTimeoutException e)
         {
             AlreadyRunning(logger, jobId, e);
 
@@ -67,11 +68,26 @@ public class PredictMissingProcessor(
             string? warning = result.Skipped > 0 ? $"Skipped orders: {result.Skipped}" : null;
             await SetStatusAsync(job, BatchJobStatus.Done, lastProcessed, warning, ct);
         }
+        catch (JobClosedException)
+        {
+            JobClosed(logger, jobId, null);
+        }
         catch (Exception e) when (!ct.IsCancellationRequested)
         {
             JobFailed(logger, jobId, e);
             string message = IsServiceFailure(e) ? "Prediction service is unavailable" : "Unexpected error while processing orders";
-            await SetStatusAsync(job, BatchJobStatus.Failed, lastProcessed, message, CancellationToken.None);
+            await TryFailAsync(job, lastProcessed, message);
+        }
+    }
+    private async Task TryFailAsync(BatchJob job, int processed, string message)
+    {
+        try
+        {
+            await SetStatusAsync(job, BatchJobStatus.Failed, processed, message, CancellationToken.None);
+        }
+        catch (JobClosedException)
+        {
+            JobClosed(logger, job.Id, null);
         }
     }
     private static bool IsServiceFailure(Exception e)
@@ -82,12 +98,18 @@ public class PredictMissingProcessor(
     {
         DateTimeOffset now = timeProvider.GetUtcNow();
         DateTimeOffset? finished = status is BatchJobStatus.Done or BatchJobStatus.Failed ? now : null;
-        await db.BatchJobs.Where(j => j.Id == job.Id).ExecuteUpdateAsync(s => s
-            .SetProperty(j => j.Status, status)
-            .SetProperty(j => j.ProcessedRows, processed)
-            .SetProperty(j => j.Error, error)
-            .SetProperty(j => j.UpdatedAt, now)
-            .SetProperty(j => j.FinishedAt, finished), ct);
+        int updated = await db.BatchJobs
+            .Where(j => j.Id == job.Id && (j.Status == BatchJobStatus.Queued || j.Status == BatchJobStatus.Running))
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(j => j.Status, status)
+                .SetProperty(j => j.ProcessedRows, processed)
+                .SetProperty(j => j.Error, error)
+                .SetProperty(j => j.UpdatedAt, now)
+                .SetProperty(j => j.FinishedAt, finished), ct);
+        if (updated == 0)
+        {
+            throw new JobClosedException();
+        }
         try
         {
             await notifier.NotifyAsync(job.UserId, new BatchJobProgressDto(job.Id, processed, job.TotalRows, status));
@@ -97,4 +119,7 @@ public class PredictMissingProcessor(
             NotifyFailed(logger, job.Id, e);
         }
     }
+}
+internal sealed class JobClosedException : Exception
+{
 }
