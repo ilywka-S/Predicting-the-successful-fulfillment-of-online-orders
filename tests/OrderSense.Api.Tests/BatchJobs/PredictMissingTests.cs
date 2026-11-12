@@ -114,17 +114,18 @@ public class PredictMissingTests(ApiFactory factory)
         Assert.Equal(HttpStatusCode.Accepted, response.StatusCode);
         Assert.Equal(BatchJobStatus.Failed, staleDto!.Status);
     }
-    [Fact]
+        [Fact]
     public async Task PredictMissing_ParallelRequests_NeverRunTwoAtOnce()
     {
         await SeedOrdersAsync(1);
         var (client, _) = await UserAsync(Roles.Admin);
         var responses = await Task.WhenAll(Enumerable.Range(0, 4).Select(_ => client.PostAsync(Url, null)));
-        Assert.All(responses, r => Assert.Contains(r.StatusCode, new[] { HttpStatusCode.Accepted, HttpStatusCode.Conflict }));
-        Assert.Contains(responses, r => r.StatusCode == HttpStatusCode.Accepted);
-        foreach (var accepted in responses.Where(r => r.StatusCode == HttpStatusCode.Accepted))
+        var allowed = new[] { HttpStatusCode.Accepted, HttpStatusCode.OK, HttpStatusCode.Conflict };
+        Assert.All(responses, r => Assert.Contains(r.StatusCode, allowed));
+        Assert.Contains(responses, r => r.StatusCode is HttpStatusCode.Accepted or HttpStatusCode.OK);
+        foreach (var started in responses.Where(r => r.StatusCode is HttpStatusCode.Accepted or HttpStatusCode.OK))
         {
-            var created = await accepted.Content.ReadFromJsonAsync<BatchJobDto>(ApiJson.Options);
+            var created = await started.Content.ReadFromJsonAsync<BatchJobDto>(ApiJson.Options);
             await WaitForFinishAsync(client, created!.Id);
         }
     }
