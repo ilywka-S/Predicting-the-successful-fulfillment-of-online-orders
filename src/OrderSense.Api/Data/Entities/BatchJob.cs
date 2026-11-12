@@ -7,6 +7,7 @@ public class BatchJob
     public Guid Id { get; set; }
 
     public Guid UserId { get; set; }
+    public BatchJobKind Kind { get; set; }
 
     public BatchJobStatus Status { get; set; }
 
