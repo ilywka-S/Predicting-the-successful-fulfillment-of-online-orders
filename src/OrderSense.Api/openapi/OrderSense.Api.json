@@ -721,25 +721,8 @@
               }
             }
           },
-          "200": {
-            "description": "OK",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/BatchJobDto"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BatchJobDto"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BatchJobDto"
-                }
-              }
-            }
+          "204": {
+            "description": "No Content"
           },
           "409": {
             "description": "Conflict",
