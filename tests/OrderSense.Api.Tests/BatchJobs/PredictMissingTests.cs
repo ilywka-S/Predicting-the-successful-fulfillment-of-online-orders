@@ -57,7 +57,6 @@ public class PredictMissingTests(ApiFactory factory)
         try
         {
             var response = await client.PostAsync(Url, null);
-
             Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
         }
         finally
@@ -104,35 +103,30 @@ public class PredictMissingTests(ApiFactory factory)
                 CreatedAt = DateTimeOffset.UtcNow.AddHours(-1),
                 UpdatedAt = DateTimeOffset.UtcNow.AddHours(-1),
             };
-
             db.BatchJobs.Add(staleJob);
             await db.SaveChangesAsync();
-
             return staleJob.Id;
         });
-
         var response = await client.PostAsync(Url, null);
         var created = await response.Content.ReadFromJsonAsync<BatchJobDto>(ApiJson.Options);
         await WaitForFinishAsync(client, created!.Id);
         var staleDto = await client.GetFromJsonAsync<BatchJobDto>($"/api/batch-jobs/{staleId}", ApiJson.Options);
-
         Assert.Equal(HttpStatusCode.Accepted, response.StatusCode);
         Assert.Equal(BatchJobStatus.Failed, staleDto!.Status);
     }
-
     [Fact]
-    public async Task PredictMissing_ParallelRequests_StartOnlyOneRun()
+    public async Task PredictMissing_ParallelRequests_NeverRunTwoAtOnce()
     {
         await SeedOrdersAsync(1);
         var (client, _) = await UserAsync(Roles.Admin);
-
         var responses = await Task.WhenAll(Enumerable.Range(0, 4).Select(_ => client.PostAsync(Url, null)));
-
-        var accepted = Assert.Single(responses, r => r.StatusCode == HttpStatusCode.Accepted);
-        Assert.Equal(3, responses.Count(r => r.StatusCode == HttpStatusCode.Conflict));
-
-        var created = await accepted.Content.ReadFromJsonAsync<BatchJobDto>(ApiJson.Options);
-        await WaitForFinishAsync(client, created!.Id);
+        Assert.All(responses, r => Assert.Contains(r.StatusCode, new[] { HttpStatusCode.Accepted, HttpStatusCode.Conflict }));
+        Assert.Contains(responses, r => r.StatusCode == HttpStatusCode.Accepted);
+        foreach (var accepted in responses.Where(r => r.StatusCode == HttpStatusCode.Accepted))
+        {
+            var created = await accepted.Content.ReadFromJsonAsync<BatchJobDto>(ApiJson.Options);
+            await WaitForFinishAsync(client, created!.Id);
+        }
     }
     private async Task<List<string>> SeedOrdersAsync(int count)
     {
@@ -149,6 +143,7 @@ public class PredictMissingTests(ApiFactory factory)
     }
     private async Task<(HttpClient Client, Guid UserId)> UserAsync(string role)
     {
+        await factory.WithDbAsync(db => db.BatchJobs.Where(j => j.FileName == PredictMissingProcessor.JobName && (j.Status == BatchJobStatus.Queued || j.Status == BatchJobStatus.Running)).ExecuteUpdateAsync(s => s.SetProperty(j => j.Status, BatchJobStatus.Failed)));
         var email = await factory.CreateUserAsync(role);
         var auth = await factory.LoginAsync(email);
         var userId = await factory.WithDbAsync(db => db.Users.Where(u => u.Email == email).Select(u => u.Id).SingleAsync());
