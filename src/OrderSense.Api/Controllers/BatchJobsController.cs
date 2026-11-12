@@ -24,7 +24,7 @@ public class BatchJobsController(AppDbContext db, IBackgroundJobClient jobs, Tim
     private const int MultipartOverhead = 1024 * 1024;
     private static readonly TimeSpan StaleAfter = TimeSpan.FromMinutes(30);
     private static readonly Action<ILogger, Guid, Exception?> EnqueueFailed = LoggerMessage.Define<Guid>(LogLevel.Error, new EventId(10, "BatchEnqueueFailed"), "Could not enqueue batch job {JobId}");
-    private static readonly Action<ILogger, Guid, Exception?> PredictMissingEnqueueFailed = LoggerMessage.Define<Guid>(LogLevel.Error, new EventId(1, "PredictMissingEnqueueFailed"), "Could not enqueue predict-missing job {JobId}");
+    private static readonly Action<ILogger, Guid, Exception?> PredictMissingEnqueueFailed = LoggerMessage.Define<Guid>(LogLevel.Error, new EventId(11, "PredictMissingEnqueueFailed"), "Could not enqueue predict-missing job {JobId}");
     [HttpPost(Name = "CreateBatchJob")]
     [Consumes("multipart/form-data")]
     [RequestSizeLimit(MaxCsvSize + MultipartOverhead)]
@@ -104,7 +104,7 @@ public class BatchJobsController(AppDbContext db, IBackgroundJobClient jobs, Tim
         [HttpPost("predict-missing", Name = "PredictMissingOrders")]
     [Authorize(Roles = Roles.Admin)]
     [ProducesResponseType<BatchJobDto>(StatusCodes.Status202Accepted)]
-    [ProducesResponseType<BatchJobDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status503ServiceUnavailable)]
     public async Task<IActionResult> PredictMissing(CancellationToken ct)
@@ -113,7 +113,7 @@ public class BatchJobsController(AppDbContext db, IBackgroundJobClient jobs, Tim
         var staleBefore = now - StaleAfter;
 
         await db.BatchJobs
-            .Where(j => j.FileName == PredictMissingProcessor.JobName
+            .Where(j => j.Kind == BatchJobKind.PredictMissing
                 && (j.Status == BatchJobStatus.Queued || j.Status == BatchJobStatus.Running)
                 && j.UpdatedAt < staleBefore)
             .ExecuteUpdateAsync(s => s
@@ -122,7 +122,7 @@ public class BatchJobsController(AppDbContext db, IBackgroundJobClient jobs, Tim
                 .SetProperty(j => j.UpdatedAt, now)
                 .SetProperty(j => j.FinishedAt, now), ct);
 
-        var active = await db.BatchJobs.AnyAsync(j => j.FileName == PredictMissingProcessor.JobName
+        var active = await db.BatchJobs.AnyAsync(j => j.Kind == BatchJobKind.PredictMissing
             && (j.Status == BatchJobStatus.Queued || j.Status == BatchJobStatus.Running), ct);
 
         if (active)
@@ -134,12 +134,13 @@ public class BatchJobsController(AppDbContext db, IBackgroundJobClient jobs, Tim
 
         if (total == 0)
         {
-            return Ok(new BatchJobDto(Guid.Empty, PredictMissingProcessor.JobName, BatchJobStatus.Done, 0, 0, null, now, now));
+            return NoContent();
         }
 
         var job = new BatchJob
         {
             UserId = CurrentUserId(),
+            Kind = BatchJobKind.PredictMissing,
             Status = BatchJobStatus.Queued,
             FileName = PredictMissingProcessor.JobName,
             TotalRows = total,
@@ -163,7 +164,7 @@ public class BatchJobsController(AppDbContext db, IBackgroundJobClient jobs, Tim
         }
         catch (Exception e)
         {
-            EnqueueFailed(logger, job.Id, e);
+            PredictMissingEnqueueFailed(logger, job.Id, e);
 
             await db.BatchJobs.Where(j => j.Id == job.Id).ExecuteUpdateAsync(s => s
                 .SetProperty(j => j.Status, BatchJobStatus.Failed)
