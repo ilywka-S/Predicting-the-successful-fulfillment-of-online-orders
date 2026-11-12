@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Hangfire;
+using Hangfire.Storage;
 using Microsoft.EntityFrameworkCore;
 using OrderSense.Api.Data;
 using OrderSense.Api.Data.Entities;
@@ -8,9 +9,9 @@ using OrderSense.Api.Dtos;
 using OrderSense.Api.Hubs;
 using OrderSense.Contracts;
 namespace OrderSense.Api.Predictions;
-public class BatchJobProcessor(AppDbContext db,
-    PredictionClient client,
+public class BatchJobProcessor(AppDbContext db, PredictionClient client,
     BatchProgressNotifier notifier,
+    JobStorage storage,
     TimeProvider timeProvider,
     ILogger<BatchJobProcessor> logger)
 {
@@ -20,19 +21,41 @@ public class BatchJobProcessor(AppDbContext db,
     {
         NumberHandling = JsonNumberHandling.AllowNamedFloatingPointLiterals,
     };
-    private static readonly Action<ILogger, Guid, Exception?> JobFailed = LoggerMessage.Define<Guid>( LogLevel.Error, new EventId(1, "BatchJobFailed"), "Batch job {JobId} failed");
+    private static readonly Action<ILogger, Guid, Exception?> JobFailed = LoggerMessage.Define<Guid>(LogLevel.Error, new EventId(1, "BatchJobFailed"), "Batch job {JobId} failed");
+    private static readonly Action<ILogger, Guid, Exception?> AlreadyRunning = LoggerMessage.Define<Guid>(LogLevel.Warning, new EventId(2, "BatchJobAlreadyRunning"), "Batch job {JobId} is already being processed, skipping the duplicate run");
+    private static readonly Action<ILogger, Guid, Exception?> NotifyFailed = LoggerMessage.Define<Guid>(LogLevel.Warning, new EventId(3, "BatchJobNotifyFailed"), "Could not send progress notification for batch job {JobId}");
     [AutomaticRetry(Attempts = 0)]
     public async Task RunAsync(Guid jobId, CancellationToken ct)
+    {
+        using IStorageConnection connection = storage.GetConnection();
+        IDisposable jobLock;
+        try
+        {
+            jobLock = connection.AcquireDistributedLock($"batch-job:{jobId}", TimeSpan.Zero);
+        }
+        catch (Exception e) when (!ct.IsCancellationRequested)
+        {
+            AlreadyRunning(logger, jobId, e);
+
+            return;
+        }
+        using (jobLock)
+        {
+            await ProcessAsync(jobId, ct);
+        }
+    }
+    private async Task ProcessAsync(Guid jobId, CancellationToken ct)
     {
         BatchJob? job = await db.BatchJobs.AsNoTracking().SingleOrDefaultAsync(j => j.Id == jobId, ct);
         if (job is null || job.Status is BatchJobStatus.Done or BatchJobStatus.Failed)
         {
             return;
         }
-        int processed = await db.BatchResults.CountAsync(r => r.JobId == jobId && r.Probability != null, ct);
-        await SetStatusAsync(job, BatchJobStatus.Running, processed, null, ct);
+        int processed = 0;
         try
         {
+            processed = await db.BatchResults.CountAsync(r => r.JobId == jobId && r.Probability != null, ct);
+            await SetStatusAsync(job, BatchJobStatus.Running, processed, null, ct);
             int lastRow = 0;
             while (true)
             {
@@ -66,7 +89,9 @@ public class BatchJobProcessor(AppDbContext db,
         catch (Exception e) when (!ct.IsCancellationRequested)
         {
             JobFailed(logger, jobId, e);
-            string message = e is PredictionServiceUnavailableException ? "Prediction service is unavailable" : "Unexpected error while processing the file";
+            string message = e is PredictionServiceUnavailableException
+                ? "Prediction service is unavailable"
+                : "Unexpected error while processing the file";
             await SetStatusAsync(job, BatchJobStatus.Failed, processed, message, CancellationToken.None);
         }
     }
@@ -75,8 +100,7 @@ public class BatchJobProcessor(AppDbContext db,
         List<OrderFeatures> features = rows.Select(r => JsonSerializer.Deserialize<OrderFeatures>(r.Input, Json)!).ToList();
         IReadOnlyList<OrderPrediction?> predictions = await PredictAsync(features, ct);
         List<RiskFactor>[] factors = new List<RiskFactor>[rows.Count];
-        await Parallel.ForEachAsync(Enumerable.Range(0, rows.Count),
-            new ParallelOptions { MaxDegreeOfParallelism = ExplainParallelism, CancellationToken = ct },
+        await Parallel.ForEachAsync(Enumerable.Range(0, rows.Count), new ParallelOptions { MaxDegreeOfParallelism = ExplainParallelism, CancellationToken = ct },
             async (i, token) => factors[i] = predictions[i] is null ? [] : await ExplainAsync(features[i], token));
         for (int i = 0; i < rows.Count; i++)
         {
@@ -132,7 +156,7 @@ public class BatchJobProcessor(AppDbContext db,
         }
         catch (PredictionServiceUnavailableException)
         {
-            //рядок лишається без чинників
+            // рядок лишається без чинників
         }
         return RiskFactorMapping.Top(candidates, RiskFactorMapping.MaxFactors);
     }
@@ -156,6 +180,13 @@ public class BatchJobProcessor(AppDbContext db,
             .SetProperty(j => j.ProcessedRows, processed)
             .SetProperty(j => j.Error, error)
             .SetProperty(j => j.FinishedAt, finished), ct);
-        await notifier.NotifyAsync(job.UserId, new BatchJobProgressDto(job.Id, processed, job.TotalRows, status));
+        try
+        {
+            await notifier.NotifyAsync(job.UserId, new BatchJobProgressDto(job.Id, processed, job.TotalRows, status));
+        }
+        catch (Exception e) when (e is not OperationCanceledException)
+        {
+            NotifyFailed(logger, job.Id, e);
+        }
     }
 }

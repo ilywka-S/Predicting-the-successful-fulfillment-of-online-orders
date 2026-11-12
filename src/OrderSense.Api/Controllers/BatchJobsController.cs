@@ -23,15 +23,15 @@ public class BatchJobsController(AppDbContext db, IBackgroundJobClient jobs, Tim
     private const int MaxCsvSize = 1024 * 1024 * 1024;
     private const int MultipartOverhead = 1024 * 1024;
     private static readonly TimeSpan StaleAfter = TimeSpan.FromMinutes(30);
-
-    private static readonly Action<ILogger, Guid, Exception?> EnqueueFailed = LoggerMessage.Define<Guid>(LogLevel.Error, new EventId(1, "PredictMissingEnqueueFailed"), "Could not enqueue predict-missing job {JobId}");
-
+    private static readonly Action<ILogger, Guid, Exception?> EnqueueFailed = LoggerMessage.Define<Guid>(LogLevel.Error, new EventId(10, "BatchEnqueueFailed"), "Could not enqueue batch job {JobId}");
+    private static readonly Action<ILogger, Guid, Exception?> PredictMissingEnqueueFailed = LoggerMessage.Define<Guid>(LogLevel.Error, new EventId(1, "PredictMissingEnqueueFailed"), "Could not enqueue predict-missing job {JobId}");
     [HttpPost(Name = "CreateBatchJob")]
     [Consumes("multipart/form-data")]
     [RequestSizeLimit(MaxCsvSize + MultipartOverhead)]
     [RequestFormLimits(MultipartBodyLengthLimit = MaxCsvSize)]
     [ProducesResponseType<BatchJobDto>(StatusCodes.Status202Accepted)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType<ProblemDetails>(StatusCodes.Status503ServiceUnavailable)]
     public async Task<IActionResult> Create(IFormFile? file, CancellationToken ct)
     {
         if (file is null || file.Length == 0)
@@ -82,7 +82,22 @@ public class BatchJobsController(AppDbContext db, IBackgroundJobClient jobs, Tim
         };
         db.BatchJobs.Add(job);
         await db.SaveChangesAsync(ct);
-        jobs.Enqueue<BatchJobProcessor>(p => p.RunAsync(job.Id, CancellationToken.None));
+        try
+        {
+            jobs.Enqueue<BatchJobProcessor>(p => p.RunAsync(job.Id, CancellationToken.None));
+        }
+        catch (Exception e)
+        {
+            EnqueueFailed(logger, job.Id, e);
+            await db.BatchJobs.Where(j => j.Id == job.Id).ExecuteUpdateAsync(s => s
+                .SetProperty(j => j.Status, BatchJobStatus.Failed)
+                .SetProperty(j => j.Error, "Could not queue the job")
+                .SetProperty(j => j.FinishedAt, time.GetUtcNow()), CancellationToken.None);
+            return Problem(
+                title: "The job could not be queued",
+                detail: "Try uploading the file again in a minute.",
+                statusCode: StatusCodes.Status503ServiceUnavailable);
+        }
         var dto = BatchJobMapping.ToDto(job);
         return AcceptedAtRoute("GetBatchJob", new { id = job.Id }, dto);
     }

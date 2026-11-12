@@ -137,9 +137,12 @@ builder.Services.AddScoped<WhatIfService>();
 builder.Services.AddScoped<BatchJobProcessor>();
 builder.Services.AddScoped<PredictMissingProcessor>();
 
+bool poolerRemoved = false;
 if (!isOpenApiGeneration)
 {
-    string hangfireConnection = builder.Configuration.GetConnectionString("ordersense") ?? throw new InvalidOperationException("Connection string 'ordersense' is not configured");
+    HangfireConnectionInfo hangfireInfo = HangfireConnection.Resolve(builder.Configuration);
+    string hangfireConnection = hangfireInfo.ConnectionString;
+    poolerRemoved = hangfireInfo.PoolerRemoved;
 
     builder.Services.AddHangfire(config => config
         .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
@@ -157,6 +160,11 @@ if (!isOpenApiGeneration)
 }
 
 var app = builder.Build();
+
+if (poolerRemoved)
+{
+    app.Logger.LogWarning("Hangfire needs a direct database endpoint: '-pooler' was removed from the host name");
+}
 
 if (!isOpenApiGeneration)
 {

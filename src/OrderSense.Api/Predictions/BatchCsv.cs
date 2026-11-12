@@ -190,10 +190,10 @@ public static class BatchCsv
             DistanceKm = ReadNumber(csv, columns, "distanceKm", delimiter, errors),
             Installments = ReadNumber(csv, columns, "installments", delimiter, errors),
             PurchaseDayOfWeek = ReadNumber(csv, columns, "purchaseDayOfWeek", delimiter, errors),
-            CustomerState = ReadText(csv, columns, "customerState", errors),
-            SellerState = ReadText(csv, columns, "sellerState", errors),
+            CustomerState = ReadText(csv, columns, "customerState", errors).ToUpperInvariant(),
+            SellerState = ReadText(csv, columns, "sellerState", errors).ToUpperInvariant(),
             MainCategory = ReadText(csv, columns, "mainCategory", errors),
-            PaymentType = ReadText(csv, columns, "paymentType", errors),
+            PaymentType = ReadText(csv, columns, "paymentType", errors).ToLowerInvariant(),
         };
         errors.AddRange(BatchRowRules.Validate(features));
         if (errors.Count > 0)
@@ -243,35 +243,92 @@ public static class BatchCsv
 }
 public static class BatchRowRules
 {
+    private static readonly string[] PaymentTypes = ["credit_card", "boleto", "voucher", "debit_card", "not_defined"];
+
     public static List<string> Validate(OrderFeatures f)
     {
         List<string> errors = new List<string>();
-        Required("itemsCount", f.ItemsCount, 1, 100000, errors);
-        Required("totalPrice", f.TotalPrice, 0, 100000000, errors);
-        Required("freightShare", f.FreightShare, 0, 1, errors);
-        Optional("totalWeightG", f.TotalWeightG, 0, 100000000, errors);
-        Optional("promisedDays", f.PromisedDays, -365, 3650, errors);
-        Optional("distanceKm", f.DistanceKm, 0, 20000, errors);
-        Optional("installments", f.Installments, 0, 100, errors);
-        Optional("purchaseDayOfWeek", f.PurchaseDayOfWeek, 0, 6, errors);
+
+        Whole("itemsCount", f.ItemsCount, 1, 100000, true, errors);
+        Number("totalPrice", f.TotalPrice, 0, 100000000, true, errors);
+        Number("freightShare", f.FreightShare, 0, 1, true, errors);
+        Number("totalWeightG", f.TotalWeightG, 0, 100000000, false, errors);
+        Whole("promisedDays", f.PromisedDays, -365, 3650, false, errors);
+        Number("distanceKm", f.DistanceKm, 0, 20000, false, errors);
+        Whole("installments", f.Installments, 0, 100, false, errors);
+        Whole("purchaseDayOfWeek", f.PurchaseDayOfWeek, 0, 6, false, errors);
+
+        State("customerState", f.CustomerState, true, errors);
+        State("sellerState", f.SellerState, false, errors);
+        PaymentType(f.PaymentType, errors);
+
         return errors;
     }
-    private static void Required(string name, float value, float min, float max, List<string> errors)
+
+    private static void Number(string name, float value, float min, float max, bool required, List<string> errors)
     {
+        if (float.IsNaN(value))
+        {
+            if (required)
+            {
+                errors.Add($"{name} is required");
+            }
+
+            return;
+        }
+
         if (!float.IsFinite(value) || value < min || value > max)
         {
             errors.Add($"{name} must be a number from {min} to {max}");
         }
     }
-    private static void Optional(string name, float value, float min, float max, List<string> errors)
+
+    private static void Whole(string name, float value, float min, float max, bool required, List<string> errors)
     {
-        if (float.IsNaN(value))
+        int before = errors.Count;
+        Number(name, value, min, max, required, errors);
+
+        if (errors.Count > before || float.IsNaN(value))
         {
             return;
         }
-        if (!float.IsFinite(value) || value < min || value > max)
+
+        if (value % 1 != 0)
         {
-            errors.Add($"{name} must be empty or a number from {min} to {max}");
+            errors.Add($"{name} must be a whole number");
+        }
+    }
+
+    private static void State(string name, string value, bool required, List<string> errors)
+    {
+        if (value.Length == 0)
+        {
+            if (required)
+            {
+                errors.Add($"{name} is required");
+            }
+
+            return;
+        }
+
+        bool valid = value.Length == 2 && char.IsAsciiLetterUpper(value[0]) && char.IsAsciiLetterUpper(value[1]);
+
+        if (!valid)
+        {
+            errors.Add($"{name} must be a two-letter state code");
+        }
+    }
+
+    private static void PaymentType(string value, List<string> errors)
+    {
+        if (value.Length == 0)
+        {
+            return;
+        }
+
+        if (Array.IndexOf(PaymentTypes, value) < 0)
+        {
+            errors.Add($"paymentType must be one of: {string.Join(", ", PaymentTypes)}");
         }
     }
 }
