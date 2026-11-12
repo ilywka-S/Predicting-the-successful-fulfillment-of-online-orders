@@ -18,7 +18,7 @@ public static class RiskCharts
     [
         new LineSeries<double?>
         {
-            Name = "Ризикові",
+            Name = "Частка ризикових",
             Values = points.Select(Share).ToArray(),
             Stroke = new SolidColorPaint(Accent, 2),
             Fill = new SolidColorPaint(Accent.WithAlpha(40)),
@@ -26,27 +26,32 @@ public static class RiskCharts
             GeometryFill = null,
             GeometryStroke = null,
             LineSmoothness = 0.3,
-            YToolTipLabelFormatter = point => Percent(point.Coordinate.PrimaryValue),
+            YToolTipLabelFormatter = point => Tooltip(points, point.Index),
         },
     ];
 
-    public static ISeries[] RowSeries(IReadOnlyList<AnalyticsPointDto> points) =>
-    [
-        new RowSeries<double?>
-        {
-            Name = "Ризикові",
-            Values = points.Reverse().Select(Share).ToArray(),
-            Fill = new SolidColorPaint(Accent),
-            Stroke = null,
-            MaxBarWidth = 18,
-            Padding = 4,
-            XToolTipLabelFormatter = point => Percent(point.Coordinate.PrimaryValue),
-            DataLabelsPaint = new SolidColorPaint(Muted),
-            DataLabelsSize = 11,
-            DataLabelsPosition = LiveChartsCore.Measure.DataLabelsPosition.End,
-            DataLabelsFormatter = point => Percent(point.Coordinate.PrimaryValue),
-        },
-    ];
+    public static ISeries[] RowSeries(IReadOnlyList<AnalyticsPointDto> points)
+    {
+        var rows = points.Reverse().ToList();
+
+        return
+        [
+            new RowSeries<double?>
+            {
+                Name = "Частка ризикових",
+                Values = rows.Select(Share).ToArray(),
+                Fill = new SolidColorPaint(Accent),
+                Stroke = null,
+                MaxBarWidth = 18,
+                Padding = 4,
+                XToolTipLabelFormatter = point => Tooltip(rows, point.Index),
+                DataLabelsPaint = new SolidColorPaint(Muted),
+                DataLabelsSize = 11,
+                DataLabelsPosition = LiveChartsCore.Measure.DataLabelsPosition.End,
+                DataLabelsFormatter = point => Percent(point.Coordinate.PrimaryValue),
+            },
+        ];
+    }
 
     public static ICartesianAxis[] LabelAxes(IReadOnlyList<AnalyticsPointDto> points, string dimension)
     {
@@ -60,6 +65,9 @@ public static class RiskCharts
         [
             new Axis
             {
+                Name = dimension == "day" ? "Дата покупки" : null,
+                NamePaint = new SolidColorPaint(Muted),
+                NameTextSize = 11,
                 Labels = labels.ToArray(),
                 TextSize = 11,
                 LabelsPaint = new SolidColorPaint(Muted),
@@ -73,6 +81,9 @@ public static class RiskCharts
     [
         new Axis
         {
+            Name = "Частка ризикових замовлень",
+            NamePaint = new SolidColorPaint(Muted),
+            NameTextSize = 11,
             MinLimit = 0,
             Labeler = Percent,
             TextSize = 11,
@@ -89,6 +100,21 @@ public static class RiskCharts
         "seller" => Formats.ShortId(key),
         _ => key ?? "—",
     };
+
+    public static string Tooltip(IReadOnlyList<AnalyticsPointDto> points, int index)
+    {
+        if (index < 0 || index >= points.Count)
+        {
+            return string.Empty;
+        }
+
+        var point = points[index];
+        var risky = point.Medium + point.High;
+
+        return point.RiskyShare is { } share
+            ? $"{Percent(share * 100)} ризикових ({risky} з {point.Predicted})"
+            : "Немає прогнозів";
+    }
 
     private static double? Share(AnalyticsPointDto point) => point.RiskyShare * 100;
 
