@@ -67,6 +67,11 @@ public sealed class FakePredictionService : HttpMessageHandler
         get; 
         set; 
     }
+    public Func<Task>? BeforeBatch 
+    { 
+        get; 
+        set; 
+    }
     private int _singleCalls;
     public void FailNextCall() => _failNextCall = true;
     public void Reset()
@@ -75,6 +80,7 @@ public sealed class FakePredictionService : HttpMessageHandler
         FailExplain = false;
         RejectBatches = false;
         SucceedSinglesCount = null;
+        BeforeBatch = null;
         _singleCalls = 0;
         Result = new OrderPrediction { Probability = 0.9f, RiskLevel = "low", ModelVersion = "v-test" };
         Model = CreateModel();
@@ -158,6 +164,10 @@ public sealed class FakePredictionService : HttpMessageHandler
         if (path == "/predict/batch")
         {
             BatchCalls++;
+            if (BeforeBatch is { } beforeBatch)
+            {
+                await beforeBatch();
+            }
             List<OrderFeatures>? batch = await request.Content!.ReadFromJsonAsync<List<OrderFeatures>>(Json, cancellationToken);
             List<OrderPrediction> list = (batch ?? []).Select(_ => Result).ToList();
             return new HttpResponseMessage(HttpStatusCode.OK) { Content = JsonContent.Create(list, options: Json) };

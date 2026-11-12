@@ -46,6 +46,7 @@ public class PredictMissingTests(ApiFactory factory)
             var running = new BatchJob
             {
                 UserId = userId,
+                Kind = BatchJobKind.PredictMissing,
                 Status = BatchJobStatus.Running,
                 FileName = PredictMissingProcessor.JobName,
                 TotalRows = 1,
@@ -97,6 +98,7 @@ public class PredictMissingTests(ApiFactory factory)
             var staleJob = new BatchJob
             {
                 UserId = userId,
+                Kind = BatchJobKind.PredictMissing,
                 Status = staleStatus,
                 FileName = PredictMissingProcessor.JobName,
                 TotalRows = 1,
@@ -117,17 +119,131 @@ public class PredictMissingTests(ApiFactory factory)
         [Fact]
     public async Task PredictMissing_ParallelRequests_NeverRunTwoAtOnce()
     {
-        await SeedOrdersAsync(1);
+        var orderIds = await SeedOrdersAsync(1);
         var (client, _) = await UserAsync(Roles.Admin);
         var responses = await Task.WhenAll(Enumerable.Range(0, 4).Select(_ => client.PostAsync(Url, null)));
-        var allowed = new[] { HttpStatusCode.Accepted, HttpStatusCode.OK, HttpStatusCode.Conflict };
+        var allowed = new[] { HttpStatusCode.Accepted, HttpStatusCode.NoContent, HttpStatusCode.Conflict };
         Assert.All(responses, r => Assert.Contains(r.StatusCode, allowed));
-        Assert.Contains(responses, r => r.StatusCode is HttpStatusCode.Accepted or HttpStatusCode.OK);
-        foreach (var started in responses.Where(r => r.StatusCode is HttpStatusCode.Accepted or HttpStatusCode.OK))
+        Assert.Contains(responses, r => r.StatusCode == HttpStatusCode.Accepted);
+        foreach (var started in responses.Where(r => r.StatusCode == HttpStatusCode.Accepted))
         {
             var created = await started.Content.ReadFromJsonAsync<BatchJobDto>(ApiJson.Options);
             await WaitForFinishAsync(client, created!.Id);
         }
+        var predictions = await factory.WithDbAsync(db => db.Predictions.CountAsync(p => p.OrderId == orderIds[0]));
+        Assert.Equal(1, predictions);
+    }
+    [Fact]
+    public async Task PredictMissing_NothingToPredict_Returns204WithoutJob()
+    {
+        await SeedOrdersAsync(1);
+        var (client, _) = await UserAsync(Roles.Admin);
+        var first = await client.PostAsync(Url, null);
+        var created = await first.Content.ReadFromJsonAsync<BatchJobDto>(ApiJson.Options);
+        await WaitForFinishAsync(client, created!.Id);
+        var jobsBefore = await factory.WithDbAsync(db => db.BatchJobs.CountAsync());
+        var second = await client.PostAsync(Url, null);
+        var jobsAfter = await factory.WithDbAsync(db => db.BatchJobs.CountAsync());
+        Assert.Equal(HttpStatusCode.NoContent, second.StatusCode);
+        Assert.Equal(jobsBefore, jobsAfter);
+    }
+    [Fact]
+    public async Task PredictMissing_UploadNamedLikeJob_DoesNotBlockRun()
+    {
+        await SeedOrdersAsync(1);
+        var (client, userId) = await UserAsync(Roles.Admin);
+        var uploadId = await SeedActiveJobAsync(userId, BatchJobKind.Upload);
+        try
+        {
+            var response = await client.PostAsync(Url, null);
+            var created = await response.Content.ReadFromJsonAsync<BatchJobDto>(ApiJson.Options);
+            await WaitForFinishAsync(client, created!.Id);
+            Assert.Equal(HttpStatusCode.Accepted, response.StatusCode);
+        }
+        finally
+        {
+            await CloseJobAsync(uploadId);
+        }
+    }
+    [Fact]
+    public async Task Upload_NamedLikeJob_WhileRunActive_IsAccepted()
+    {
+        var (_, adminId) = await UserAsync(Roles.Admin);
+        var (analyst, _) = await UserAsync(Roles.Analyst);
+        var runningId = await SeedActiveJobAsync(adminId, BatchJobKind.PredictMissing);
+        try
+        {
+            var file = new ByteArrayContent(BatchCsv.TemplateBytes());
+            file.Headers.ContentType = new("text/csv");
+            var response = await analyst.PostAsync("/api/batch-jobs", new MultipartFormDataContent { { file, "file", PredictMissingProcessor.JobName } });
+            var created = await response.Content.ReadFromJsonAsync<BatchJobDto>(ApiJson.Options);
+            await WaitForFinishAsync(analyst, created!.Id);
+            Assert.Equal(HttpStatusCode.Accepted, response.StatusCode);
+        }
+        finally
+        {
+            await CloseJobAsync(runningId);
+        }
+    }
+    [Fact]
+    public async Task PredictMissing_JobClosedWhileRunning_IsNotReopened()
+    {
+        var orderIds = await SeedOrdersAsync(1);
+        var (client, _) = await UserAsync(Roles.Admin);
+        factory.Prediction.BeforeBatch = () => factory.WithDbAsync(db => db.BatchJobs
+            .Where(j => j.Kind == BatchJobKind.PredictMissing && j.Status == BatchJobStatus.Running)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(j => j.Status, BatchJobStatus.Failed)
+                .SetProperty(j => j.Error, "The job stopped responding")));
+        try
+        {
+            var response = await client.PostAsync(Url, null);
+            var created = await response.Content.ReadFromJsonAsync<BatchJobDto>(ApiJson.Options);
+            await WaitForPredictionAsync(orderIds[0]);
+            await Task.Delay(1000);
+            var job = await client.GetFromJsonAsync<BatchJobDto>($"/api/batch-jobs/{created!.Id}", ApiJson.Options);
+            Assert.Equal(BatchJobStatus.Failed, job!.Status);
+            Assert.Equal("The job stopped responding", job.Error);
+        }
+        finally
+        {
+            factory.Prediction.Reset();
+        }
+    }
+    private Task<Guid> SeedActiveJobAsync(Guid userId, BatchJobKind kind)
+    {
+        return factory.WithDbAsync(async db =>
+        {
+            var job = new BatchJob
+            {
+                UserId = userId,
+                Kind = kind,
+                Status = BatchJobStatus.Running,
+                FileName = PredictMissingProcessor.JobName,
+                TotalRows = 1,
+            };
+            db.BatchJobs.Add(job);
+            await db.SaveChangesAsync();
+            return job.Id;
+        });
+    }
+    private Task<int> CloseJobAsync(Guid id)
+    {
+        return factory.WithDbAsync(db => db.BatchJobs
+            .Where(j => j.Id == id)
+            .ExecuteUpdateAsync(s => s.SetProperty(j => j.Status, BatchJobStatus.Done)));
+    }
+    private async Task WaitForPredictionAsync(string orderId)
+    {
+        for (var attempt = 0; attempt < 60; attempt++)
+        {
+            if (await factory.WithDbAsync(db => db.Predictions.AnyAsync(p => p.OrderId == orderId)))
+            {
+                return;
+            }
+            await Task.Delay(500);
+        }
+        throw new TimeoutException("Order was not predicted in 30 s");
     }
     private async Task<List<string>> SeedOrdersAsync(int count)
     {
@@ -144,7 +260,7 @@ public class PredictMissingTests(ApiFactory factory)
     }
     private async Task<(HttpClient Client, Guid UserId)> UserAsync(string role)
     {
-        await factory.WithDbAsync(db => db.BatchJobs.Where(j => j.FileName == PredictMissingProcessor.JobName && (j.Status == BatchJobStatus.Queued || j.Status == BatchJobStatus.Running)).ExecuteUpdateAsync(s => s.SetProperty(j => j.Status, BatchJobStatus.Failed)));
+        await factory.WithDbAsync(db => db.BatchJobs.Where(j => j.Kind == BatchJobKind.PredictMissing && (j.Status == BatchJobStatus.Queued || j.Status == BatchJobStatus.Running)).ExecuteUpdateAsync(s => s.SetProperty(j => j.Status, BatchJobStatus.Failed)));
         var email = await factory.CreateUserAsync(role);
         var auth = await factory.LoginAsync(email);
         var userId = await factory.WithDbAsync(db => db.Users.Where(u => u.Email == email).Select(u => u.Id).SingleAsync());
