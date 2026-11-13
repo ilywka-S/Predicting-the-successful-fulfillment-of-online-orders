@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -7,20 +6,20 @@ using Microsoft.EntityFrameworkCore;
 using OrderSense.Api.Data;
 using OrderSense.Api.Data.Entities;
 using OrderSense.Contracts;
-namespace OrderSense.PredictAll;
-public sealed class BatchPredictor(AppDbContext db, HttpClient http)
+namespace OrderSense.Api.Predictions;
+public sealed class BatchPredictor(AppDbContext db, HttpClient http, TimeProvider? timeProvider = null)
 {
+    private readonly TimeProvider _clock = timeProvider ?? TimeProvider.System;
     private static readonly JsonSerializerOptions Json = new JsonSerializerOptions(JsonSerializerDefaults.Web)
     {
         NumberHandling = JsonNumberHandling.AllowNamedFloatingPointLiterals,
     };
     private readonly Dictionary<string, int> _modelVersionIds = new Dictionary<string, int>();
-    public async Task<BatchRunResult> RunAsync(int batchSize, int maxOrders, CancellationToken ct)
+    public async Task<BatchRunResult> RunAsync(int batchSize, int maxOrders, CancellationToken ct, Func<BatchRunResult, CancellationToken, Task>? onBatchDone = null)
     {
         Dictionary<string, (double Lat, double Lng)> coordinates = await LoadCoordinatesAsync(ct);
         BatchRunResult result = new BatchRunResult();
         List<string> skippedIds = new List<string>();
-        Stopwatch watch = Stopwatch.StartNew();
         while (result.Predicted + result.Skipped < maxOrders)
         {
             int take = Math.Min(batchSize, maxOrders - result.Predicted - result.Skipped);
@@ -48,7 +47,6 @@ public sealed class BatchPredictor(AppDbContext db, HttpClient http)
             for (int i = 0; i < orders.Count; i++)
             {
                 OrderPrediction? prediction = predictions[i];
-
                 if (prediction == null || !TryReadRisk(prediction, out RiskLevel risk))
                 {
                     skippedIds.Add(orders[i].Id);
@@ -63,15 +61,17 @@ public sealed class BatchPredictor(AppDbContext db, HttpClient http)
                     ModelVersionId = modelVersionId,
                     Probability = prediction.Probability,
                     RiskLevel = risk,
-                    CreatedAt = DateTimeOffset.UtcNow,
+                    CreatedAt = _clock.GetUtcNow(),
                 });
-
                 result.Predicted++;
             }
             await db.SaveChangesAsync(ct);
             db.ChangeTracker.Clear();
             result.Batches++;
-            Console.WriteLine($"Партія {result.Batches}: разом записано {result.Predicted}, пропущено {result.Skipped}, {watch.Elapsed:mm\\:ss}");
+            if (onBatchDone != null)
+            {
+                await onBatchDone(result, ct);
+            }
         }
         return result;
     }
@@ -215,7 +215,7 @@ public sealed class BatchPredictor(AppDbContext db, HttpClient http)
                 List<OrderPrediction>? predictions = await response.Content.ReadFromJsonAsync<List<OrderPrediction>>(Json, ct);
                 if (predictions == null || predictions.Count != features.Count)
                 {
-                    throw new InvalidOperationException("Prediction service returned a wrong number of predictions");
+                    throw new PredictionServiceUnavailableException("Сервіс прогнозування повернув неправильну кількість прогнозів");
                 }
                 foreach (OrderPrediction prediction in predictions)
                 {
@@ -263,7 +263,7 @@ public sealed class BatchPredictor(AppDbContext db, HttpClient http)
         ModelVersion? model = await db.ModelVersions.AsNoTracking().SingleOrDefaultAsync(m => m.Version == version, ct);
         if (model == null)
         {
-            DateTimeOffset now = DateTimeOffset.UtcNow;
+            DateTimeOffset now = _clock.GetUtcNow();
             await db.Database.ExecuteSqlAsync($"INSERT INTO model_versions (version, trained_at, is_active) VALUES ({version}, {now}, TRUE) ON CONFLICT (version) DO NOTHING", ct);
             model = await db.ModelVersions.AsNoTracking().SingleAsync(m => m.Version == version, ct);
         }

@@ -297,6 +297,12 @@ namespace OrderSense.Api.Data.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("finished_at");
 
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("kind");
+
                     b.Property<int>("ProcessedRows")
                         .HasColumnType("integer")
                         .HasColumnName("processed_rows");
@@ -311,12 +317,23 @@ namespace OrderSense.Api.Data.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("total_rows");
 
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at")
+                        .HasDefaultValueSql("now()");
+
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid")
                         .HasColumnName("user_id");
 
                     b.HasKey("Id")
                         .HasName("pk_batch_jobs");
+
+                    b.HasIndex("Kind")
+                        .IsUnique()
+                        .HasDatabaseName("ux_batch_jobs_active_predict_missing")
+                        .HasFilter("kind = 'PredictMissing' AND status IN ('Queued', 'Running')");
 
                     b.HasIndex("UserId")
                         .HasDatabaseName("ix_batch_jobs_user_id");

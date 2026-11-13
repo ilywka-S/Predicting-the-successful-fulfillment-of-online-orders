@@ -102,6 +102,22 @@ public class ApiJsonTests
         items[1].RiskLevel.Should().BeNull();
     }
 
+    [Fact]
+    public async Task GetOrderPredictions_ReadsHistory()
+    {
+        var client = CreateClient("""
+            [
+              { "createdAt": "2026-11-10T09:00:00+00:00", "modelVersion": "v2", "probability": 0.81, "riskLevel": "low" },
+              { "createdAt": "2026-11-01T09:00:00+00:00", "modelVersion": "v1", "probability": 0.42, "riskLevel": "high" }
+            ]
+            """);
+
+        var history = (await client.GetOrderPredictionsAsync("a1")).ToList();
+
+        history.Select(h => h.RiskLevel).Should().Equal(RiskLevel.Low, RiskLevel.High);
+        history[0].ModelVersion.Should().Be("v2");
+    }
+
     private static Client CreateClient(string json) =>
         new(new HttpClient(new JsonHandler(json)) { BaseAddress = new Uri("https://api.example.test") });
 

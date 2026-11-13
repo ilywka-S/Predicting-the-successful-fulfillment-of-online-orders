@@ -27,6 +27,8 @@
 
     <controls:FactorValueConverter x:Key="FactorValue" />
 
+    <controls:TopFactorConverter x:Key="TopFactor" />
+
     <controls:RiskSeriesConverter x:Key="RiskSeries" />
 
     <controls:RiskLabelAxesConverter x:Key="RiskLabelAxes" />

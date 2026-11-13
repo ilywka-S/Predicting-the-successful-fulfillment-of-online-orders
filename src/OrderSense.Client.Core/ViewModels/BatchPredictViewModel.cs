@@ -240,7 +240,8 @@ public partial class BatchPredictionViewModel : ObservableObject, IDisposable
         catch (ApiException ex) when (ex.StatusCode == 400)
         {
             IsProcessing = false;
-            StatusMessage = "Помилка валідації файлу (400 Bad Request).";
+            StatusMessage = "У файлі є помилки. Виправте їх і завантажте файл ще раз.";
+            ShowRowErrors(ex);
         }
         catch (ApiException ex) when (ex.StatusCode == 501)
         {

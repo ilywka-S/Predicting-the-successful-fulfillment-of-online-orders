@@ -1,4 +1,4 @@
-namespace OrderSense.PredictAll;
+namespace OrderSense.Api.Predictions;
 public sealed class BatchRunResult
 {
     public int Predicted 
