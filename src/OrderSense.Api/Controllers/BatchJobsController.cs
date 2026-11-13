@@ -31,7 +31,7 @@ public class BatchJobsController(AppDbContext db, IBackgroundJobClient jobs, Tim
     [RequestFormLimits(MultipartBodyLengthLimit = MaxCsvSize)]
     [ProducesResponseType<BatchJobDto>(StatusCodes.Status202Accepted)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType<ProblemDetails>(StatusCodes.Status503ServiceUnavailable)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status503ServiceUnavailable)]
     public async Task<IActionResult> Create(IFormFile? file, CancellationToken ct)
     {
         if (file is null || file.Length == 0)
@@ -42,8 +42,8 @@ public class BatchJobsController(AppDbContext db, IBackgroundJobClient jobs, Tim
 
         if (file.Length > MaxCsvSize)
         {
-        ModelState.AddModelError("file", $"The file is larger than {MaxCsvSize / (1024 * 1024)} MB.");
-        return ValidationProblem(ModelState);
+            ModelState.AddModelError("file", $"The file is larger than {MaxCsvSize / (1024 * 1024)} MB.");
+            return ValidationProblem(ModelState);
         }
         BatchCsvParseResult parsed;
         await using (var stream = file.OpenReadStream())

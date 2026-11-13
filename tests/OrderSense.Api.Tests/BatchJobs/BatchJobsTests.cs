@@ -10,6 +10,7 @@ using OrderSense.Api.Predictions;
 namespace OrderSense.Api.Tests.BatchJobs;
 using Hangfire;
 using Microsoft.Extensions.DependencyInjection;
+using System.Text.Json;
 [Collection(ApiCollection.Name)]
 public class BatchJobsTests(ApiFactory factory)
 {
@@ -224,6 +225,34 @@ public class BatchJobsTests(ApiFactory factory)
         var finished = await WaitForFinishAsync(client, jobId);
         Assert.Equal(BatchJobStatus.Failed, finished.Status);
         Assert.Equal("Unexpected error while processing the file", finished.Error);
+    }
+    [Fact]
+    public async Task Run_JobAlreadyLocked_SkipsDuplicateRun()
+    {
+        var (client, userId) = await AnalystAsync();
+        var features = BatchCsv.Parse(new MemoryStream(BatchCsv.TemplateBytes())).Rows[0].Features;
+        var jobId = await factory.WithDbAsync(async db =>
+        {
+            var job = new BatchJob
+            {
+                UserId = userId,
+                Status = BatchJobStatus.Queued,
+                FileName = "locked.csv",
+                TotalRows = 1,
+                Results = [new BatchResult { RowNo = 1, Input = JsonSerializer.Serialize(features, BatchJobProcessor.Json) }],
+            };
+            db.BatchJobs.Add(job);
+            await db.SaveChangesAsync();
+            return job.Id;
+        });
+        using (var connection = JobStorage.Current.GetConnection())
+        using (connection.AcquireDistributedLock($"batch-job:{jobId}", TimeSpan.FromSeconds(5)))
+        using (var scope = factory.Services.CreateScope())
+        {
+            await scope.ServiceProvider.GetRequiredService<BatchJobProcessor>().RunAsync(jobId, CancellationToken.None);
+        }
+        var result = await client.GetFromJsonAsync<BatchJobDto>($"/api/batch-jobs/{jobId}", ApiJson.Options);
+        Assert.Equal(BatchJobStatus.Queued, result!.Status);
     }
     [Fact]
     public async Task Create_SomeRowsCannotBePredicted_JobDoneCountsOnlyPredictedRows()

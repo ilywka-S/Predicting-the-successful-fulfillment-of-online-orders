@@ -153,7 +153,9 @@ if (!isOpenApiGeneration)
             new PostgreSqlStorageOptions
             {
                 SchemaName = "hangfire",
-                QueuePollInterval = TimeSpan.FromSeconds(2),
+                QueuePollInterval = TimeSpan.FromSeconds(15),
+                EnableLongPolling = true,
+                UseSlidingInvisibilityTimeout = true,
             }));
 
     builder.Services.AddHangfireServer(options => options.WorkerCount = 2);
