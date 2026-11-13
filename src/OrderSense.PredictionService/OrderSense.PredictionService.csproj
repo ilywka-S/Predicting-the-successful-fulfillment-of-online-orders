@@ -20,6 +20,8 @@
   <ItemGroup>
     <None Include="..\..\ml\models\v1\model.zip" Link="models\v1\model.zip" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\ml\models\v1\model-info.json" Link="models\v1\model-info.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\ml\models\v2\model.zip" Link="models\v2\model.zip" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\ml\models\v2\model-info.json" Link="models\v2\model-info.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

@@ -45,7 +45,7 @@ public sealed class PredictEndpointTests : IClassFixture<WebApplicationFactory<P
         var result = await response.Content.ReadFromJsonAsync<OrderPrediction>(Json);
         Assert.NotNull(result);
         Assert.InRange(result.Probability, 0f, 1f);
-        Assert.Equal("v1", result.ModelVersion);
+        Assert.Equal("v2", result.ModelVersion);
         Assert.Contains(result.RiskLevel, RiskLevels);
     }
 
@@ -107,7 +107,7 @@ public sealed class PredictEndpointTests : IClassFixture<WebApplicationFactory<P
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var result = await response.Content.ReadFromJsonAsync<OrderExplanation>(Json);
         Assert.NotNull(result);
-        Assert.Equal("v1", result.ModelVersion);
+        Assert.Equal("v2", result.ModelVersion);
         Assert.InRange(result.Factors.Count, 1, 5);
 
         var impacts = result.Factors.Select(f => Math.Abs(f.Contribution)).ToList();
@@ -145,12 +145,12 @@ public sealed class PredictEndpointTests : IClassFixture<WebApplicationFactory<P
         ModelDetails? info = await response.Content.ReadFromJsonAsync<ModelDetails>(Json);
 
         Assert.NotNull(info);
-        Assert.Equal("v1", info.Version);
+        Assert.Equal("v2", info.Version);
         Assert.InRange(info.RocAuc, 0f, 1f);
         Assert.True(info.PrAuc > info.BaselinePrAuc);
         Assert.Equal(12, info.FeatureImportances.Count);
-        Assert.Equal(0.12, info.RiskMediumFrom, 3);
-        Assert.Equal(0.20, info.RiskHighFrom, 3);
+        Assert.Equal(0.09, info.RiskMediumFrom, 3);
+        Assert.Equal(0.14, info.RiskHighFrom, 3);
     }
     [Fact]
     public async Task PredictBatch_ReturnsOnePredictionPerItemInSameOrder()
@@ -164,7 +164,7 @@ public sealed class PredictEndpointTests : IClassFixture<WebApplicationFactory<P
         Assert.NotNull(result);
         Assert.NotNull(single);
         Assert.Equal(2, result.Count);
-        Assert.Equal("v1", result[0].ModelVersion);
+        Assert.Equal("v2", result[0].ModelVersion);
         Assert.Equal(single.Probability, result[1].Probability);
         Assert.Equal(single.RiskLevel, result[1].RiskLevel);
     }

@@ -13,8 +13,8 @@ public sealed record ModelInfo(string Version);
 
 public sealed class RiskThresholds
 {
-    public float MediumFrom { get; set; } = 0.12f;
-    public float HighFrom { get; set; } = 0.20f;
+    public float MediumFrom { get; set; } = 0.09f;
+    public float HighFrom { get; set; } = 0.14f;
 
     public string Level(float pProblem) =>
         pProblem >= HighFrom ? "high" : pProblem >= MediumFrom ? "medium" : "low";
