@@ -82,3 +82,23 @@ public class FactorValueConverter : IValueConverter
     public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
         throw new NotSupportedException();
 }
+
+public class TopFactorConverter : IValueConverter
+{
+    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        if (value is not IEnumerable<OrderSense.Client.Core.RiskFactorDto> factors || factors.FirstOrDefault() is not { } factor)
+        {
+            return "—";
+        }
+
+        var factorValue = string.IsNullOrWhiteSpace(factor.DisplayValue)
+            ? Formats.FactorValue(factor.Feature, factor.Value)
+            : factor.DisplayValue;
+
+        return string.IsNullOrEmpty(factorValue) ? factor.Label : $"{factor.Label}: {factorValue}";
+    }
+
+    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        throw new NotSupportedException();
+}
