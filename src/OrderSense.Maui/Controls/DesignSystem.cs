@@ -1,9 +1,11 @@
+using LiveChartsCore.SkiaSharpView.Maui;
 using Microsoft.Maui.Handlers;
 using OrderSense.Maui.Controls;
+using SkiaSharp.Views.Maui.Controls.Hosting;
 
 namespace OrderSense.Maui;
 
-public static class DesignSystem
+public static partial class DesignSystem
 {
     public static MauiAppBuilder UseDesignSystem(this MauiAppBuilder builder)
     {
@@ -16,7 +18,12 @@ public static class DesignSystem
             fonts.AddFont("Lucide.ttf", "Lucide");
         });
 
+        builder
+            .UseSkiaSharp()
+            .UseLiveCharts();
+
         RemoveNativeInputChrome();
+        RemoveDatePickerChrome();
         return builder;
     }
 

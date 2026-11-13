@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:lvc="clr-namespace:LiveChartsCore.SkiaSharpView.Maui;assembly=LiveChartsCore.SkiaSharpView.Maui"
+             xmlns:vm="clr-namespace:OrderSense.Client.Core.ViewModels;assembly=OrderSense.Client.Core"
+             xmlns:controls="clr-namespace:OrderSense.Maui.Controls"
+             x:Class="OrderSense.Maui.Views.DashboardPage"
+             x:DataType="vm:DashboardViewModel"
+             Title="Дашборд">
+
+    <ContentPage.Resources>
+        <Style x:Key="StatTile" TargetType="Border" BasedOn="{StaticResource Card}">
+            <Setter Property="Padding" Value="{OnIdiom Phone='12', Default='20'}" />
+        </Style>
+        <Style x:Key="ChartCard" TargetType="Border" BasedOn="{StaticResource Card}">
+            <Setter Property="Padding" Value="{OnIdiom Phone='12,16', Default='20'}" />
+        </Style>
+    </ContentPage.Resources>
+
+    <ScrollView>
+        <VerticalStackLayout Style="{StaticResource PageStack}">
+
+            <Grid ColumnDefinitions="*,*,Auto,Auto" ColumnSpacing="12">
+                <controls:DateField Placeholder="Від"
+                                    Date="{Binding PeriodFrom}"
+                                    MaximumDate="{Binding PeriodTo}" />
+                <controls:DateField Grid.Column="1"
+                                    Placeholder="До"
+                                    Date="{Binding PeriodTo}"
+                                    MinimumDate="{Binding PeriodFrom}" />
+                <Button Grid.Column="2"
+                        Style="{StaticResource ButtonGhost}"
+                        VerticalOptions="Start"
+                        Text="Увесь час"
+                        IsVisible="{Binding HasPeriod}"
+                        Command="{Binding ResetPeriodCommand}" />
+                <Button Grid.Column="3"
+                        Style="{StaticResource ButtonIconOutline}"
+                        VerticalOptions="Start"
+                        Text="{x:Static controls:Icons.RefreshCw}"
+                        SemanticProperties.Description="Оновити"
+                        ToolTipProperties.Text="Оновити"
+                        Command="{Binding LoadAnalyticsCommand}" />
+            </Grid>
+
+            <VerticalStackLayout IsVisible="{Binding IsAnalyticsLoading}" Spacing="16">
+                <Grid ColumnDefinitions="*,*,*" ColumnSpacing="12">
+                    <controls:Skeleton HeightRequest="88" />
+                    <controls:Skeleton Grid.Column="1" HeightRequest="88" />
+                    <controls:Skeleton Grid.Column="2" HeightRequest="88" />
+                </Grid>
+                <controls:Skeleton HeightRequest="280" />
+                <controls:Skeleton HeightRequest="280" />
+            </VerticalStackLayout>
+
+            <controls:EmptyState IsVisible="{Binding HasAnalyticsError}"
+                                 IsError="True"
+                                 Icon="{x:Static controls:Icons.WifiOff}"
+                                 Title="Не вдалося завантажити аналітику"
+                                 Description="{Binding AnalyticsError}"
+                                 ActionText="Спробувати знову"
+                                 ActionCommand="{Binding LoadAnalyticsCommand}" />
+
+            <controls:EmptyState IsVisible="{Binding IsAnalyticsEmpty}"
+                                 Icon="{x:Static controls:Icons.Inbox}"
+                                 Title="За цей період замовлень немає"
+                                 ActionText="Показати весь час"
+                                 ActionCommand="{Binding ResetPeriodCommand}" />
+
+            <VerticalStackLayout IsVisible="{Binding IsAnalyticsVisible}" Spacing="{OnIdiom Phone=16, Default=24}">
+
+                <Grid ColumnDefinitions="*,*,*" ColumnSpacing="12">
+                    <Border Style="{StaticResource StatTile}">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Style="{StaticResource TextSmall}" Text="Замовлень" />
+                            <Label Style="{StaticResource TextStat}" Text="{Binding TotalOrders, StringFormat='{0:N0}'}" />
+                        </VerticalStackLayout>
+                    </Border>
+                    <Border Grid.Column="1" Style="{StaticResource StatTile}">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Style="{StaticResource TextSmall}" Text="З прогнозом" />
+                            <Label Style="{StaticResource TextStat}" Text="{Binding PredictedOrders, StringFormat='{0:N0}'}" />
+                        </VerticalStackLayout>
+                    </Border>
+                    <Border Grid.Column="2" Style="{StaticResource StatTile}">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Style="{StaticResource TextSmall}" Text="Ризикові" />
+                            <Label Style="{StaticResource TextStat}"
+                                   TextColor="{AppThemeBinding Light={StaticResource RiskMediumTextLight}, Dark={StaticResource RiskMediumTextDark}}"
+                                   Text="{Binding RiskyShare, Converter={StaticResource Percent}}" />
+                        </VerticalStackLayout>
+                    </Border>
+                </Grid>
+
+                <Border Style="{StaticResource ChartCard}">
+                    <VerticalStackLayout Spacing="12">
+                        <VerticalStackLayout Spacing="2">
+                            <Label Style="{StaticResource TextH3}" Text="Частка ризикових за днями" />
+                            <Label Style="{StaticResource TextSmall}" Text="Середній або високий ризик за останнім прогнозом" />
+                        </VerticalStackLayout>
+                        <lvc:CartesianChart HeightRequest="{OnIdiom Phone=220, Default=300}"
+                                            Series="{Binding RiskByDay, Converter={StaticResource RiskSeries}, ConverterParameter=line}"
+                                            XAxes="{Binding RiskByDay, Converter={StaticResource RiskLabelAxes}, ConverterParameter=day}"
+                                            YAxes="{Binding RiskByDay, Converter={StaticResource PercentAxes}}"
+                                            TooltipPosition="Top" />
+                    </VerticalStackLayout>
+                </Border>
+
+                <Grid ColumnDefinitions="{OnIdiom Phone='*', Default='*,*,*'}"
+                      RowDefinitions="{OnIdiom Phone='Auto,Auto,Auto', Default='Auto'}"
+                      ColumnSpacing="24"
+                      RowSpacing="16">
+
+                    <Border Style="{StaticResource ChartCard}">
+                        <VerticalStackLayout Spacing="12">
+                            <Label Style="{StaticResource TextH3}" Text="За категоріями" />
+                            <lvc:CartesianChart HeightRequest="340"
+                                                Series="{Binding RiskByCategory, Converter={StaticResource RiskSeries}, ConverterParameter=rows}"
+                                                YAxes="{Binding RiskByCategory, Converter={StaticResource RiskLabelAxes}, ConverterParameter=category}"
+                                                XAxes="{Binding RiskByCategory, Converter={StaticResource PercentAxes}}"
+                                                TooltipPosition="Right" />
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <Border Grid.Row="{OnIdiom Phone=1, Default=0}"
+                            Grid.Column="{OnIdiom Phone=0, Default=1}"
+                            Style="{StaticResource ChartCard}">
+                        <VerticalStackLayout Spacing="12">
+                            <Label Style="{StaticResource TextH3}" Text="За штатами клієнтів" />
+                            <lvc:CartesianChart HeightRequest="340"
+                                                Series="{Binding RiskByState, Converter={StaticResource RiskSeries}, ConverterParameter=rows}"
+                                                YAxes="{Binding RiskByState, Converter={StaticResource RiskLabelAxes}, ConverterParameter=state}"
+                                                XAxes="{Binding RiskByState, Converter={StaticResource PercentAxes}}"
+                                                TooltipPosition="Right" />
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <Border Grid.Row="{OnIdiom Phone=2, Default=0}"
+                            Grid.Column="{OnIdiom Phone=0, Default=2}"
+                            Style="{StaticResource ChartCard}">
+                        <VerticalStackLayout Spacing="12">
+                            <Label Style="{StaticResource TextH3}" Text="За продавцями" />
+                            <lvc:CartesianChart HeightRequest="340"
+                                                Series="{Binding RiskBySeller, Converter={StaticResource RiskSeries}, ConverterParameter=rows}"
+                                                YAxes="{Binding RiskBySeller, Converter={StaticResource RiskLabelAxes}, ConverterParameter=seller}"
+                                                XAxes="{Binding RiskBySeller, Converter={StaticResource PercentAxes}}"
+                                                TooltipPosition="Right" />
+                        </VerticalStackLayout>
+                    </Border>
+
+                </Grid>
+
+            </VerticalStackLayout>
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

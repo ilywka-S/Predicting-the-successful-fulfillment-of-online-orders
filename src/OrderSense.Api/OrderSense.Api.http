@@ -1,0 +1,54 @@
+﻿### 1. Сервер живий
+GET {{baseUrl}}/alive
+
+### 2. Без токена → 401
+GET {{baseUrl}}/api/orders
+
+### 3. Вхід адміном → 200, токени
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{ "email": "{{adminEmail}}", "password": "{{adminPassword}}" }
+
+> {% client.global.set("token", response.body.accessToken); %}
+
+### 4. Хто я → 200, роль admin
+GET {{baseUrl}}/api/auth/me
+Authorization: Bearer {{token}}
+
+### 5. Список з фільтрами й пагінацією → 200
+GET {{baseUrl}}/api/orders?status=delivered&customerState=SP&page=2&pageSize=20
+Authorization: Bearer {{token}}
+
+> {% client.global.set("orderId", response.body.items[0].id); %}
+
+### 6. Неправильний параметр → 400 з поясненням
+GET {{baseUrl}}/api/orders?pageSize=500
+Authorization: Bearer {{token}}
+
+### 7. Картка замовлення → 200
+GET {{baseUrl}}/api/orders/{{orderId}}
+Authorization: Bearer {{token}}
+
+### 8. Неіснуюче замовлення → 404
+GET {{baseUrl}}/api/orders/does-not-exist
+Authorization: Bearer {{token}}
+
+### 9. Адмін створює менеджера → 201
+POST {{baseUrl}}/api/users
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "email": "manager@ordersense.local", "password": "{{managerPassword}}", "fullName": "Demo Manager", "role": "manager" }
+
+### 10. Вхід менеджером
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{ "email": "manager@ordersense.local", "password": "{{managerPassword}}" }
+
+> {% client.global.set("managerToken", response.body.accessToken); %}
+
+### 11. Менеджер до списку користувачів → 403
+GET {{baseUrl}}/api/users
+Authorization: Bearer {{managerToken}}

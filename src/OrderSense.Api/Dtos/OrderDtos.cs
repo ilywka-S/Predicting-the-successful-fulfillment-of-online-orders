@@ -53,4 +53,10 @@ public enum FactorImpact
     Decreases
 }
 
-public record RiskFactorDto(string Feature, string Label, float? Value, FactorImpact Impact);    
+public record RiskFactorDto(string Feature, string Label, float? Value, FactorImpact Impact, string? DisplayValue = null);
+
+public record PredictionHistoryItemDto(
+    DateTimeOffset CreatedAt,
+    string ModelVersion,
+    float Probability,
+    RiskLevel RiskLevel);   

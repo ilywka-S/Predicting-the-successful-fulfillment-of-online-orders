@@ -57,3 +57,48 @@ public class RoleConverter : FormatConverter
 {
     protected override string Format(object value) => Formats.Role(value.ToString());
 }
+
+public class CountConverter : IValueConverter
+{
+    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        var forms = (parameter as string ?? string.Empty).Split('|');
+        var count = System.Convert.ToInt64(value ?? 0, CultureInfo.InvariantCulture);
+
+        return forms.Length == 3 ? Formats.Count(count, forms[0], forms[1], forms[2]) : count.ToString(CultureInfo.InvariantCulture);
+    }
+
+    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        throw new NotSupportedException();
+}
+
+public class FactorValueConverter : IValueConverter
+{
+    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        value is OrderSense.Client.Core.RiskFactorDto factor
+            ? string.IsNullOrWhiteSpace(factor.DisplayValue) ? Formats.FactorValue(factor.Feature, factor.Value) : factor.DisplayValue
+            : string.Empty;
+
+    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        throw new NotSupportedException();
+}
+
+public class TopFactorConverter : IValueConverter
+{
+    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        if (value is not IEnumerable<OrderSense.Client.Core.RiskFactorDto> factors || factors.FirstOrDefault() is not { } factor)
+        {
+            return "—";
+        }
+
+        var factorValue = string.IsNullOrWhiteSpace(factor.DisplayValue)
+            ? Formats.FactorValue(factor.Feature, factor.Value)
+            : factor.DisplayValue;
+
+        return string.IsNullOrEmpty(factorValue) ? factor.Label : $"{factor.Label}: {factorValue}";
+    }
+
+    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        throw new NotSupportedException();
+}

@@ -26,7 +26,7 @@ public class SecureTokenStorage : ITokenStorage
         await SecureStorage.Default.SetAsync("user_role", role ?? string.Empty);
     }
 
-    public async Task<string> GetRoleAsync()
+    public async Task<string?> GetRoleAsync()
     {
         return await SecureStorage.Default.GetAsync("user_role");
     }

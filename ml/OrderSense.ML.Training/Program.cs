@@ -5,15 +5,12 @@ using OrderSense.ML.Training;
 using OrderSense.Contracts;
 using Microsoft.ML;
 using Microsoft.ML.Transforms;
+using OrderSense.Olist;
 
 var csvConfig = new CsvConfiguration(CultureInfo.InvariantCulture);
 
-List<T> ReadCsv<T>(string fileName)
-{
-    using var reader = new StreamReader($"../../data/olist/{fileName}");
-    using var csv = new CsvReader(reader, csvConfig);
-    return csv.GetRecords<T>().ToList();
-}
+List<T> ReadCsv<T>(string fileName) =>
+    OlistCsv.Read<T>("../../data/olist", fileName);
 
 Console.WriteLine("Читаю файли...");
 
@@ -30,7 +27,7 @@ Console.WriteLine($"orders: {orders.Count}, items: {items.Count}, products: {pro
 
 //середнє по координатинатах по кожному zip-префіксу
 var zipToCoords = geolocation
-    .GroupBy(g => g.ZipCodePrefix)
+    .GroupBy(g => ZipCode.Normalize(g.ZipCodePrefix))
     .ToDictionary(
         g => g.Key,
         g => (Lat: g.Average(x => x.Lat), Lng: g.Average(x => x.Lng)));
@@ -165,8 +162,8 @@ OrderCard? BuildCard(OrderRow order)
     //відстань продавець - клієнт
     if (customer != null && sellersById.TryGetValue(mainSellerId, out var sellerForDistance))
     {
-        if (zipToCoords.TryGetValue(customer.CustomerZipCodePrefix, out var custCoords) &&
-            zipToCoords.TryGetValue(sellerForDistance.SellerZipCodePrefix, out var sellCoords))
+        if (zipToCoords.TryGetValue(ZipCode.Normalize(customer.CustomerZipCodePrefix), out var custCoords) &&
+            zipToCoords.TryGetValue(ZipCode.Normalize(sellerForDistance.SellerZipCodePrefix), out var sellCoords))
         {
             card.DistanceKm = HaversineKm(custCoords.Lat, custCoords.Lng, sellCoords.Lat, sellCoords.Lng);
         }
@@ -210,13 +207,13 @@ TrainingRow? BuildTrainingRow(OrderRow order)
     sellersById.TryGetValue(mainSellerId, out var seller);
 
     (double Lat, double Lng)? customerCoords = null;
-    if (customer != null && zipToCoords.TryGetValue(customer.CustomerZipCodePrefix, out var cc))
+    if (customer != null && zipToCoords.TryGetValue(ZipCode.Normalize(customer.CustomerZipCodePrefix), out var cc))
     {
         customerCoords = cc;
     }
 
     (double Lat, double Lng)? sellerCoords = null;
-    if (seller != null && zipToCoords.TryGetValue(seller.SellerZipCodePrefix, out var sc))
+    if (seller != null && zipToCoords.TryGetValue(ZipCode.Normalize(seller.SellerZipCodePrefix), out var sc))
     {
         sellerCoords = sc;
     }
@@ -356,3 +353,5 @@ var baseMetrics = mlContext.BinaryClassification.Evaluate(baselineData, labelCol
 
 Console.WriteLine($"\nБазова модель: ROC-AUC {baseMetrics.AreaUnderRocCurve:F4}, PR-AUC {baseMetrics.AreaUnderPrecisionRecallCurve:F4}");
 Console.WriteLine($"Модель v1:     ROC-AUC {metrics.AreaUnderRocCurve:F4}, PR-AUC {metrics.AreaUnderPrecisionRecallCurve:F4}");
+
+ModelInfoWriter.Write(mlContext, model, trainRows, testRows, metrics, baseMetrics, modelDir, modelVersion);

@@ -9,7 +9,12 @@
       "src\\OrderSense.Contracts\\OrderSense.Contracts.csproj",
       "src\\OrderSense.Client.Core\\OrderSense.Client.Core.csproj",
       "ml\\OrderSense.ML.Training\\OrderSense.ML.Training.csproj",
-      "tests\\OrderSense.Api.Tests\\OrderSense.Api.Tests.csproj"
+      "tests\\OrderSense.Api.Tests\\OrderSense.Api.Tests.csproj",
+      "tests\\OrderSense.Client.Core.Tests\\OrderSense.Client.Core.Tests.csproj",
+      "tests\\OrderSense.PredictionService.Tests\\OrderSense.PredictionService.Tests.csproj",
+      "src\\OrderSense.Olist\\OrderSense.Olist.csproj",
+      "tools\\OrderSense.OlistImport\\OrderSense.OlistImport.csproj",
+      "tools\\OrderSense.PredictAll\\OrderSense.PredictAll.csproj",
     ]
   }
 }

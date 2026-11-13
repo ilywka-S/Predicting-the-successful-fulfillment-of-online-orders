@@ -482,3 +482,9 @@ $RECYCLE.BIN/
 *.swp
 
 *.csv
+
+coveragereport/
+*.keystore
+*.private.env.json
+
+!tests/OrderSense.Api.Tests/Import/Data/*.csv

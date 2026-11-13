@@ -23,9 +23,22 @@
 
     <controls:RoleConverter x:Key="Role" />
 
+    <controls:CountConverter x:Key="Count" />
+
+    <controls:FactorValueConverter x:Key="FactorValue" />
+
+    <controls:TopFactorConverter x:Key="TopFactor" />
+
+    <controls:RiskSeriesConverter x:Key="RiskSeries" />
+
+    <controls:RiskLabelAxesConverter x:Key="RiskLabelAxes" />
+
+    <controls:PercentAxesConverter x:Key="PercentAxes" />
+
     <toolkit:InvertedBoolConverter x:Key="Not" />
     <toolkit:IsStringNotNullOrEmptyConverter x:Key="HasText" />
     <toolkit:IsNotNullConverter x:Key="NotNull" />
     <toolkit:IsNullConverter x:Key="IsNull" />
+    <toolkit:IsEqualConverter x:Key="IsEqual" />
 
 </ResourceDictionary>

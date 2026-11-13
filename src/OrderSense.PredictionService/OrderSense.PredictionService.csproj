@@ -8,11 +8,18 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.12" />
+    <PackageReference Include="Microsoft.Extensions.ML" Version="5.0.1" />
+    <PackageReference Include="Microsoft.ML.FastTree" Version="5.0.1" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\OrderSense.ServiceDefaults\OrderSense.ServiceDefaults.csproj" />
     <ProjectReference Include="..\OrderSense.Contracts\OrderSense.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\ml\models\v1\model.zip" Link="models\v1\model.zip" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\ml\models\v1\model-info.json" Link="models\v1\model-info.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

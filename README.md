@@ -136,6 +136,27 @@ dotnet run
 
 Модель v1 поки слабка: на тестових даних ROC-AUC 0,60, PR-AUC 0,064 проти 0,040 у базової моделі. Сигнал є, але калібрування, підбір ознак і AutoML ще попереду (до 10.11).
 
+### Імпорт Olist у базу
+
+Імпорт читає CSV з `data/olist/` і записує їх у таблиці PostgreSQL. Схему веде API, тому імпорт використовує його `AppDbContext`.
+
+1. Покладіть 9 CSV з Kaggle (Brazilian E-Commerce Public Dataset by Olist) у `data/olist/`.
+2. Задайте рядок підключення до порожньої бази змінною середовища (у git його не кладемо):
+
+```
+$env:ConnectionStrings__ordersense = "Host=...;Database=...;Username=...;Password=...;SSL Mode=Require"
+```
+
+3. Запустіть імпорт:
+
+```
+dotnet run --project tools/OrderSense.OlistImport -- data/olist
+```
+
+Таблиці імпортуються в порядку `geo_zip`, `customers`, `sellers`, `products`, `orders`, `order_items`, `order_payments`; кожна окремою транзакцією, пачками по 5000 рядків. Непорожню таблицю пропущено, тож повторний запуск нічого не дублює. У кінці виводяться кількості рядків і розмір бази. Рядки з посиланнями на неіснуючі записи відкидаються, причини в лозі.
+
+База має бути порожньою: демо-дані блокують таблиці як «вже імпортовано». Вимкнути їх: `dotnet user-secrets set "Parameters:demo-orders" "0" --project src/OrderSense.AppHost`.
+
 ## API
 
 | Метод | Шлях | Хто має доступ |
@@ -156,7 +177,20 @@ dotnet run
 ## Продакшн
 
 - API: `https://ordersense-api.onrender.com`, перевірка: `/alive`.
-- Render (безкоштовний план, Франкфурт) збирає Docker-образ з `src/OrderSense.Api/Dockerfile`. Поки що деплой запускаємо вручну, автодеплой після злиття — у планах.
+- Prediction Service: `https://ordersense-prediction.onrender.com`, перевірка: `/alive`. API знаходить його через змінну `services__prediction__https__0`
+- Render (безкоштовний план, Франкфурт) збирає Docker-образи з `src/OrderSense.Api/Dockerfile` і `src/OrderSense.PredictionService/Dockerfile`
+- Автодеплой: після злиття в `main` воркфлоу `Deploy` проганяє тести і викликає Deploy Hook обох сервісів. URL хуків лежать лише в секретах GitHub `RENDER_API_DEPLOY_HOOK` і `RENDER_PREDICTION_DEPLOY_HOOK`, Auto-Deploy у самому Render вимкнено. Статус видно у вкладці Actions, там само можна запустити деплой вручну через Run workflow
 - База: окремий проєкт Neon `ordersense-prod`, PostgreSQL 18, Франкфурт. Рядок підключення, ключ JWT і пароль адміна задані лише в змінних середовища Render.
 - Безкоштовний Render засинає після 15 хвилин без запитів, і тоді перший запит іде до хвилини. Щоб цього не було вдень, cron-job.org смикає `/alive` кожні 10 хвилин з 07:00 до 23:59 за Києвом.
 - Демо-дані в продакшні не створюються, тож до імпорту Olist список замовлень там порожній.
+
+## Завантаження артефактів (Готової збірки)
+
+Окрім локальної збірки, CI автоматично створює інсталяційні пакети (APK та MSIX) для кожної успішної збірки в гілках `staging` та `main` (або за ручним запуском у вкладці Actions).
+
+1. Перейдіть на сторінку репозиторію на GitHub у вкладку **Actions**.
+2. Оберіть успішний воркфлоу **Release Artifacts**.
+3. Проскрольте сторінку вниз до розділу **Artifacts**.
+4. Завантажте потрібний пакет:
+   - **`OrderSense-Android-APK`** — для встановлення на Android-пристрої чи емулятори.
+   - **`OrderSense-Windows-MSIX`** — для встановлення на Windows 11.

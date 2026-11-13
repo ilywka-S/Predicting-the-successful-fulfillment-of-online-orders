@@ -3,10 +3,12 @@ using System.Net.Http.Json;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using OrderSense.Api.Data;
 using OrderSense.Api.Data.Entities;
 using OrderSense.Api.Dtos;
+using OrderSense.Api.Predictions;
 
 namespace OrderSense.Api.Tests.Infrastructure;
 
@@ -19,6 +21,8 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
     private const string JwtKey = "integration-tests-signing-key-0123456789";
 
     private readonly string _connectionString = TestConnectionString.CreateUnique();
+    
+    public FakePredictionService Prediction { get; } = new();
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -26,6 +30,20 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         builder.UseSetting("Jwt:Key", JwtKey);
         builder.UseSetting("Seed:AdminEmail", AdminEmail);
         builder.UseSetting("Seed:AdminPassword", AdminPassword);
+        builder.UseSetting("services:prediction:http:0", "http://prediction.test");
+        
+#pragma warning disable EXTEXP0001
+        builder.ConfigureTestServices(services =>
+        {
+            services.AddHttpClient<PredictionClient>()
+                .RemoveAllResilienceHandlers()
+                .ConfigurePrimaryHttpMessageHandler(() => Prediction);
+
+            services.AddHttpClient<BatchPredictor>()
+                .RemoveAllResilienceHandlers()
+                .ConfigurePrimaryHttpMessageHandler(() => Prediction);
+        });
+#pragma warning restore EXTEXP0001
     }
 
     public Task InitializeAsync()

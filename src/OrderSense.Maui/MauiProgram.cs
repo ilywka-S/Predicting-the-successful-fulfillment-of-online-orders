@@ -1,10 +1,13 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using CommunityToolkit.Maui;
 using OrderSense.Client.Core;
-using OrderSense.Maui.ViewModels;
 using OrderSense.Maui.Views;
 using OrderSense.Client.Core.ViewModels;
 using OrderSense.Client.Core.Interfaces;
+using OrderSense.Client.Core.Services;
+using OrderSense.Maui.Services;
+using CommunityToolkit.Maui.Storage;
+
 namespace OrderSense.Maui;
 
 public static class MauiProgram
@@ -18,40 +21,66 @@ public static class MauiProgram
             .UseMauiCommunityToolkit()
             .UseDesignSystem();
 
-			builder.Services.AddTransient<MainViewModel>();
-			builder.Services.AddTransient<DetailsViewModel>();
+#if DEBUG
+        var baseAddress = DeviceInfo.Platform == DevicePlatform.Android 
+            ? "https://10.0.2.2:7250" 
+            : "https://localhost:7250";
+#else
+        var baseAddress = "https://ordersense-api.onrender.com"; 
+#endif
 
-			builder.Services.AddTransient<MainPage>();
-			builder.Services.AddTransient<DetailsPage>();
-            builder.Services.AddTransient<LoginViewModel>();
-            builder.Services.AddTransient<LoginPage>();
-            builder.Services.AddTransient<LoadingViewModel>();
-            builder.Services.AddTransient<LoadingPage>();
-            builder.Services.AddTransient<AppShell>();
+        // ViewModels & Pages
+        builder.Services.AddTransient<MainViewModel>();
+        builder.Services.AddTransient<OrderDetailsViewModel>();
 
-            builder.Services.AddTransient<JwtAuthHandler>();
-            builder.Services.AddSingleton<ITokenStorage, SecureTokenStorage>();
+        builder.Services.AddTransient<MainPage>();
+        builder.Services.AddTransient<DashboardPage>();
+        builder.Services.AddTransient<OrderDetailsPage>();
+        builder.Services.AddTransient<WhatIfViewModel>();
+        builder.Services.AddTransient<WhatIfPage>();
+        builder.Services.AddTransient<LoginViewModel>();
+        builder.Services.AddTransient<LoginPage>();
+        builder.Services.AddTransient<LoadingViewModel>();
+        builder.Services.AddTransient<LoadingPage>();
+        builder.Services.AddTransient<OrdersViewModel>();
+        builder.Services.AddTransient<OrdersPage>();
+        builder.Services.AddTransient<AppShell>();
+        builder.Services.AddSingleton<AppShellViewModel>();
+        builder.Services.AddTransient<BatchPredictionViewModel>();
+        builder.Services.AddTransient<BatchPredictionPage>();
 
-            builder.Services.AddSingleton<IAuthNavigation, MauiAuthNavigation>();
+        // Services & Handlers
+        builder.Services.AddSingleton<ITokenStorage, SecureTokenStorage>();
+        builder.Services.AddSingleton<IAuthTokenManager, AuthTokenManager>();
+        builder.Services.AddTransient<JwtAuthHandler>();
+        builder.Services.AddSingleton<IAuthNavigation, MauiAuthNavigation>();
+        builder.Services.AddSingleton<IOrderNavigation, MauiOrderNavigation>();
+        builder.Services.AddTransient<DashboardViewModel>();
+        builder.Services.AddTransient<IAnalyticsService, ApiAnalyticsService>();
+        builder.Services.AddTransient<IWhatIfService, ApiWhatIfService>();
+        builder.Services.AddSingleton<IFileSaver>(FileSaver.Default);
+        builder.Services.AddSingleton<IFileService, MauiFileService>();
 
-            string baseAddress = "https://ordersense-api.onrender.com"; 
 
-            #if DEBUG
-                baseAddress = DeviceInfo.Platform == DevicePlatform.Android 
-                    ? "https://10.0.2.2:7250" 
-                    : "https://localhost:7250";
-            #endif
+        // SignalR Service
+        builder.Services.AddSingleton<ISignalRService>(sp => 
+        {
+            var tokenManager = sp.GetRequiredService<IAuthTokenManager>();
+            return new SignalRService(tokenManager, baseAddress); 
+        });
 
-            builder.Services.AddHttpClient("AuthClient", client => 
-            {
-                client.BaseAddress = new Uri(baseAddress);
-            });
+        // HTTP Clients
+        builder.Services.AddHttpClient("AuthClient", client => 
+        {
+            client.BaseAddress = new Uri(baseAddress);
+        });
 
-            builder.Services.AddHttpClient<IClient, Client.Core.Client>(client =>
-            {
-                client.BaseAddress = new Uri(baseAddress);
-            })
-            .AddHttpMessageHandler<JwtAuthHandler>();
+        builder.Services.AddHttpClient<IClient, Client.Core.Client>(client =>
+        {
+            client.BaseAddress = new Uri(baseAddress);
+            client.Timeout = TimeSpan.FromMinutes(30);
+        })
+        .AddHttpMessageHandler<JwtAuthHandler>();
 
         return builder.Build();
     }

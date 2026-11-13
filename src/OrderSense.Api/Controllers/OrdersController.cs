@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using OrderSense.Api.Data;
 using OrderSense.Api.Data.Entities;
 using OrderSense.Api.Dtos;
+using OrderSense.Api.Predictions;
 
 namespace OrderSense.Api.Controllers;
 
@@ -115,6 +116,8 @@ public class OrdersController(AppDbContext db) : ControllerBase
             return Problem(statusCode: StatusCodes.Status404NotFound, title: $"Order '{id}' not found");
         }
 
+        FactorContext context = RiskFactorMapping.CreateContext(order.Customer, order.Items, order.Payments);
+
         var prediction = order.Prediction is null
             ? null
             : new PredictionDto(
@@ -122,12 +125,85 @@ public class OrdersController(AppDbContext db) : ControllerBase
                 order.Prediction.RiskLevel,
                 order.Prediction.Version,
                 order.Prediction.CreatedAt,
-                order.Prediction.Factors
-                    .OrderByDescending(f => Math.Abs(f.Contribution))
-                    .Take(5)
-                    .Select(RiskFactorMapping.ToDto)
-                    .ToList());
+                RiskFactorMapping.ToDtos(order.Prediction.Factors, context));
 
         return new OrderDetailsDto(order.Id, order.Status, order.PurchasedAt, order.ApprovedAt, order.EstimatedDeliveryAt, order.DeliveredCustomerAt, order.Customer, order.Items, order.Payments, prediction);
+    }
+    [HttpGet("{id}/predictions", Name = "GetOrderPredictions")]
+    [ProducesResponseType<List<PredictionHistoryItemDto>>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<List<PredictionHistoryItemDto>>> GetPredictions(string id, CancellationToken ct)
+    {
+        bool exists = await db.Orders.AnyAsync(o => o.Id == id, ct);
+        if (!exists)
+        {
+            return Problem(statusCode: StatusCodes.Status404NotFound, title: $"Order '{id}' not found");
+        }
+        List<PredictionHistoryItemDto> history = await db.Predictions
+            .AsNoTracking()
+            .Where(p => p.OrderId == id)
+            .OrderByDescending(p => p.CreatedAt)
+            .ThenByDescending(p => p.Id)
+            .Select(p => new PredictionHistoryItemDto(p.CreatedAt, p.ModelVersion.Version, p.Probability, p.RiskLevel))
+            .ToListAsync(ct);
+        return history;
+    }
+    [HttpPost("{id}/predict", Name = "PredictOrder")]
+    [ProducesResponseType<PredictionDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status422UnprocessableEntity)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status503ServiceUnavailable)]
+    public async Task<ActionResult<PredictionDto>> Predict(string id, [FromServices] OrderPredictor predictor, CancellationToken ct)
+    {
+        try
+        {
+            var prediction = await predictor.PredictAsync(id, ct);
+
+            if (prediction is null)
+            {
+                return Problem(statusCode: StatusCodes.Status404NotFound, title: $"Order '{id}' not found");
+            }
+
+            return prediction;
+        }
+        catch (OrderNotPredictableException e)
+        {
+            return Problem(statusCode: StatusCodes.Status422UnprocessableEntity, title: e.Message);
+        }
+        catch (PredictionServiceUnavailableException)
+        {
+            return Problem(statusCode: StatusCodes.Status503ServiceUnavailable, title: "Prediction service is unavailable");
+        }
+    }
+    [HttpPost("{id}/what-if", Name = "WhatIf")]
+    [ProducesResponseType<WhatIfResultDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status422UnprocessableEntity)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status503ServiceUnavailable)]
+    public async Task<ActionResult<WhatIfResultDto>> WhatIf(string id, WhatIfRequest request, [FromServices] WhatIfService whatIf, CancellationToken ct)
+    {
+        try
+        {
+            WhatIfResultDto? result = await whatIf.RunAsync(id, request, ct);
+            if (result is null)
+            {
+                return Problem(statusCode: StatusCodes.Status404NotFound, title: $"Order '{id}' not found");
+            }
+            return result;
+        }
+        catch (WhatIfValidationException e)
+        {
+            ModelState.AddModelError(e.Field, e.Message);
+            return ValidationProblem(ModelState);
+        }
+        catch (OrderNotPredictableException e)
+        {
+            return Problem(statusCode: StatusCodes.Status422UnprocessableEntity, title: e.Message);
+        }
+        catch (PredictionServiceUnavailableException)
+        {
+            return Problem(statusCode: StatusCodes.Status503ServiceUnavailable, title: "Prediction service is unavailable");
+        }
     }
 }

@@ -9,6 +9,6 @@ public interface ITokenStorage
     Task ClearTokensAsync();
 
     Task SetRoleAsync(string role);
-    Task<string> GetRoleAsync();
+    Task<string?> GetRoleAsync();
     
 }
