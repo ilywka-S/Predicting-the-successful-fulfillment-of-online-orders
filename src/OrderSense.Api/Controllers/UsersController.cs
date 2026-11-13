@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using OrderSense.Api.Auth;
 using OrderSense.Api.Data;
 using OrderSense.Api.Data.Entities;
@@ -34,33 +35,49 @@ public class UsersController(AppDbContext db, UserManager<AppUser> userManager) 
     [HttpPost]
     [ProducesResponseType<UserDto>(StatusCodes.Status201Created)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult<UserDto>> Create(CreateUserRequest request)
+    public async Task<ActionResult<UserDto>> Create(CreateUserRequest request, CancellationToken ct)
     {
         if (!Roles.All.Contains(request.Role))
         {
             ModelState.AddModelError(nameof(request.Role), $"Role must be one of: {string.Join(", ", Roles.All)}");
-            
+
             return ValidationProblem(ModelState);
         }
 
-        var user = new AppUser { UserName = request.Email, Email = request.Email, EmailConfirmed = true, FullName = request.FullName };
-        var created = await userManager.CreateAsync(user, request.Password);
-        
-        if (!created.Succeeded)
+        return await db.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
         {
-            return IdentityProblem(created);
-        }
+            db.ChangeTracker.Clear();
+            await using var transaction = await db.Database.BeginTransactionAsync(ct);
 
-        var roleAdded = await userManager.AddToRoleAsync(user, request.Role);
-        
-        if (!roleAdded.Succeeded)
+            var user = new AppUser { UserName = request.Email, Email = request.Email, EmailConfirmed = true, FullName = request.FullName };
+            var result = await CreateUserAsync(user, request.Password);
+
+            if (result.Succeeded)
+            {
+                result = await userManager.AddToRoleAsync(user, request.Role);
+            }
+
+            if (!result.Succeeded)
+            {
+                return IdentityProblem(result);
+            }
+
+            await transaction.CommitAsync(ct);
+
+            return StatusCode(StatusCodes.Status201Created, TokenService.ToUserDto(user, request.Role));
+        });
+    }
+
+    private async Task<IdentityResult> CreateUserAsync(AppUser user, string password)
+    {
+        try
         {
-            await userManager.DeleteAsync(user);
-            
-            return IdentityProblem(roleAdded);
+            return await userManager.CreateAsync(user, password);
         }
-
-        return StatusCode(StatusCodes.Status201Created, TokenService.ToUserDto(user, request.Role));
+        catch (DbUpdateException e) when (e.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation })
+        {
+            return IdentityResult.Failed(userManager.ErrorDescriber.DuplicateEmail(user.Email!));
+        }
     }
 
     private ActionResult IdentityProblem(IdentityResult result)
