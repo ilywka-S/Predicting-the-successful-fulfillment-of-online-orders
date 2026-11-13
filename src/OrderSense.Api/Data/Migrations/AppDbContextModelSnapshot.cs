@@ -17,7 +17,7 @@ namespace OrderSense.Api.Data.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.12")
+                .HasAnnotation("ProductVersion", "10.0.14")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -403,6 +403,9 @@ namespace OrderSense.Api.Data.Migrations
                     b.HasKey("Id")
                         .HasName("pk_customers");
 
+                    b.HasIndex("State")
+                        .HasDatabaseName("ix_customers_state");
+
                     b.HasIndex("UniqueId")
                         .HasDatabaseName("ix_customers_unique_id");
 
@@ -559,6 +562,11 @@ namespace OrderSense.Api.Data.Migrations
                     b.HasIndex("CustomerId")
                         .IsUnique()
                         .HasDatabaseName("ix_orders_customer_id");
+
+                    b.HasIndex("Id")
+                        .HasDatabaseName("ix_orders_id_pattern");
+
+                    NpgsqlIndexBuilderExtensions.HasOperators(b.HasIndex("Id"), new[] { "varchar_pattern_ops" });
 
                     b.HasIndex("PurchasedAt")
                         .HasDatabaseName("ix_orders_purchased_at");
