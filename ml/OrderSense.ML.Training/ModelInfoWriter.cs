@@ -73,7 +73,7 @@ public static class ModelInfoWriter
         return $"{first:yyyy-MM} – {last:yyyy-MM}";
     }
 
-    private static List<FeatureImportance> ComputeImportances(
+    internal static List<FeatureImportance> ComputeImportances(
         MLContext mlContext, ITransformer model, List<TrainingRow> testRows, float basePrAuc)
     {
         const int repeats = 3;
