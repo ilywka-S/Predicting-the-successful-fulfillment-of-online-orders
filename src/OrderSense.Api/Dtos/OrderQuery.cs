@@ -10,8 +10,10 @@ public class OrderQuery : IValidatableObject
     [AllowedValues(null, "created", "approved", "invoiced", "processing", "shipped", "delivered", "canceled", "unavailable")]
     public string? Status { get; init; }
     
+    [SupportedDate]
     public DateOnly? From { get; init; }
     
+    [SupportedDate]
     public DateOnly? To { get; init; }
     
     [RegularExpression("^[A-Z]{2}$")]

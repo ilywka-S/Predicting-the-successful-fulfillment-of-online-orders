@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 namespace OrderSense.Api.Data.Entities;
 
 [Index(nameof(UniqueId))]
+[Index(nameof(State))]
 public class Customer
 {
     [MaxLength(32)]

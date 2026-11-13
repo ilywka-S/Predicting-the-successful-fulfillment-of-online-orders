@@ -10,11 +10,13 @@ public record AnalyticsPointDto(
     double? RiskyShare);
 public class AnalyticsQuery : IValidatableObject
 {
+    [SupportedDate]
     public DateOnly? From 
     { 
         get; 
         init; 
     }
+    [SupportedDate]
     public DateOnly? To 
     { 
         get; 

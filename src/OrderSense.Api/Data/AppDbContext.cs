@@ -44,6 +44,11 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
             .WithOne(c => c.Order)
             .HasForeignKey<Order>(o => o.CustomerId)
             .OnDelete(DeleteBehavior.Restrict);
+        
+        builder.Entity<Order>()
+            .HasIndex(o => o.Id)
+            .HasDatabaseName("ix_orders_id_pattern")
+            .HasOperators("varchar_pattern_ops");
 
         builder.Entity<OrderItem>(e =>
         {

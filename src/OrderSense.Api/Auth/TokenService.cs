@@ -89,8 +89,15 @@ public class TokenService(
             return null;
         }
 
-        token.RevokedAt = now;
-        await db.SaveChangesAsync(ct);
+        var redeemed = await db.RefreshTokens
+            .Where(t => t.Id == token.Id && t.RevokedAt == null)
+            .ExecuteUpdateAsync(s => s.SetProperty(t => t.RevokedAt, now), ct);
+
+        if (redeemed == 0)
+        {
+            return null;
+        }
+        
         return await userManager.FindByIdAsync(token.UserId.ToString());
     }
     

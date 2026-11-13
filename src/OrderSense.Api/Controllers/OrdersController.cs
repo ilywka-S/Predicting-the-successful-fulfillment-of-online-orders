@@ -44,10 +44,10 @@ public class OrdersController(AppDbContext db) : ControllerBase
 
         if (query.RiskLevel is { } risk)
         {
-            orders = orders.Where(o => o.Predictions
-                .OrderByDescending(p => p.CreatedAt)
-                .Select(p => (RiskLevel?)p.RiskLevel)
-                .FirstOrDefault() == risk);
+            orders = orders
+                .Where(o => o.Predictions
+                    .Any(p => p.RiskLevel == risk && !db.Predictions
+                        .Any(n => n.OrderId == p.OrderId && n.CreatedAt > p.CreatedAt)));
         }
 
         if (!string.IsNullOrWhiteSpace(query.Search))
