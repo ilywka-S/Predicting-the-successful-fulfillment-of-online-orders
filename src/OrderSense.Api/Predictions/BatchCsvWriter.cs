@@ -25,7 +25,7 @@ public static class BatchCsvWriter
 
             AppendRow(csv, [
                 result.RowNo.ToString(CultureInfo.InvariantCulture),
-                .. columns.Select(c => inputs[i][c]?.ToString() ?? ""),
+                .. columns.Select(c => Cell(inputs[i][c])),
                 result.Probability?.ToString("0.###", CultureInfo.InvariantCulture) ?? "",
                 result.RiskLevel?.ToString().ToLowerInvariant() ?? "",
                 string.Join(", ", factors),
@@ -43,4 +43,9 @@ public static class BatchCsvWriter
     private static string Escape(string value) => value.IndexOfAny([Separator, '"', '\r', '\n']) >= 0
         ? $"\"{value.Replace("\"", "\"\"")}\""
         : value;
+    private static string Cell(JsonNode? node)
+    {
+        string text = node?.ToString() ?? "";
+        return text == "NaN" ? "" : text;
+    }
 }

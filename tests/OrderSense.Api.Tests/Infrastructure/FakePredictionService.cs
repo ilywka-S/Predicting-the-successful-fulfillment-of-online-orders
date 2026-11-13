@@ -51,11 +51,31 @@ public sealed class FakePredictionService : HttpMessageHandler
         get; 
         private set; 
     }
+    public int BatchCalls 
+    { 
+        get; 
+        private set; 
+    }
+    public bool RejectBatches 
+    { 
+        get; 
+        set; 
+    }
+
+    public int? SucceedSinglesCount 
+    { 
+        get; 
+        set; 
+    }
+    private int _singleCalls;
     public void FailNextCall() => _failNextCall = true;
     public void Reset()
     {
         _failNextCall = false;
         FailExplain = false;
+        RejectBatches = false;
+        SucceedSinglesCount = null;
+        _singleCalls = 0;
         Result = new OrderPrediction { Probability = 0.9f, RiskLevel = "low", ModelVersion = "v-test" };
         Model = CreateModel();
         Explanation = CreateExplanation();
@@ -114,6 +134,19 @@ public sealed class FakePredictionService : HttpMessageHandler
             _failNextCall = false;
             throw new HttpRequestException("Prediction service is down");
         }
+        if (path == "/predict/batch" && RejectBatches)
+        {
+            return new HttpResponseMessage(HttpStatusCode.BadRequest);
+        }
+        if (path == "/predict")
+        {
+            _singleCalls++;
+
+            if (SucceedSinglesCount is { } limit && _singleCalls > limit)
+            {
+                return new HttpResponseMessage(HttpStatusCode.ServiceUnavailable);
+            }
+        }
         if (request.Method == HttpMethod.Get && path == "/model")
         {
             if (Model == null)
@@ -122,7 +155,15 @@ public sealed class FakePredictionService : HttpMessageHandler
             }
             return new HttpResponseMessage(HttpStatusCode.OK) { Content = JsonContent.Create(Model, options: Json) };
         }
+        if (path == "/predict/batch")
+        {
+            BatchCalls++;
+            List<OrderFeatures>? batch = await request.Content!.ReadFromJsonAsync<List<OrderFeatures>>(Json, cancellationToken);
+            List<OrderPrediction> list = (batch ?? []).Select(_ => Result).ToList();
+            return new HttpResponseMessage(HttpStatusCode.OK) { Content = JsonContent.Create(list, options: Json) };
+        }
         LastFeatures = await request.Content!.ReadFromJsonAsync<OrderFeatures>(Json, cancellationToken);
+        
         return new HttpResponseMessage(HttpStatusCode.OK) { Content = JsonContent.Create(Result, options: Json) };
     }
 }

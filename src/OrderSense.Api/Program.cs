@@ -14,6 +14,8 @@ using OrderSense.Api.Data.Entities;
 using OrderSense.Api.Demo;
 using OrderSense.Api.Hubs;
 using OrderSense.Api.Predictions;
+using Hangfire;
+using Hangfire.PostgreSql;
 
 var isOpenApiGeneration = Assembly.GetEntryAssembly()?.GetName().Name == "GetDocument.Insider";
 
@@ -121,8 +123,37 @@ builder.Services.AddSignalR().AddJsonProtocol(o => o.PayloadSerializerOptions.Co
 builder.Services.AddSingleton<IUserIdProvider, SubUserIdProvider>();
 builder.Services.AddSingleton<BatchProgressNotifier>();
 builder.Services.AddScoped<WhatIfService>();
+builder.Services.AddScoped<BatchJobProcessor>();
+bool poolerRemoved = false;
+if (!isOpenApiGeneration)
+{
+    HangfireConnectionInfo hangfireInfo = HangfireConnection.Resolve(builder.Configuration);
+    string hangfireConnection = hangfireInfo.ConnectionString;
+    poolerRemoved = hangfireInfo.PoolerRemoved;
+
+    builder.Services.AddHangfire(config => config
+        .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+        .UseSimpleAssemblyNameTypeSerializer()
+        .UseRecommendedSerializerSettings()
+        .UsePostgreSqlStorage(
+            options => options.UseNpgsqlConnection(hangfireConnection),
+            new PostgreSqlStorageOptions
+            {
+                SchemaName = "hangfire",
+                QueuePollInterval = TimeSpan.FromSeconds(15),
+                EnableLongPolling = true,
+                UseSlidingInvisibilityTimeout = true,
+            }));
+
+    builder.Services.AddHangfireServer(options => options.WorkerCount = 2);
+}
 
 var app = builder.Build();
+
+if (poolerRemoved)
+{
+    app.Logger.LogWarning("Hangfire needs a direct database endpoint: '-pooler' was removed from the host name");
+}
 
 if (!isOpenApiGeneration)
 {
