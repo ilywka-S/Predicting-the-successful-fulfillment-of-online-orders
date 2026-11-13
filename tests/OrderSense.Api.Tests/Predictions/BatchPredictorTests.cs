@@ -8,7 +8,7 @@ using OrderSense.Api.Data.Entities;
 using OrderSense.Api.Tests.Infrastructure;
 using OrderSense.Api.Tests.Orders;
 using OrderSense.Contracts;
-using OrderSense.PredictAll;
+using OrderSense.Api.Predictions;
 namespace OrderSense.Api.Tests.Predictions;
 
 public sealed class FakeBatchHandler : HttpMessageHandler

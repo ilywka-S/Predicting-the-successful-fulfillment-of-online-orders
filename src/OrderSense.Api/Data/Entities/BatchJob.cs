@@ -7,6 +7,7 @@ public class BatchJob
     public Guid Id { get; set; }
 
     public Guid UserId { get; set; }
+    public BatchJobKind Kind { get; set; }
 
     public BatchJobStatus Status { get; set; }
 
@@ -20,6 +21,8 @@ public class BatchJob
     public string? Error { get; set; }
 
     public DateTimeOffset CreatedAt { get; set; }
+
+    public DateTimeOffset UpdatedAt { get; set; }
 
     public DateTimeOffset? FinishedAt { get; set; }
 

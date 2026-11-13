@@ -33,10 +33,16 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         builder.UseSetting("services:prediction:http:0", "http://prediction.test");
         
 #pragma warning disable EXTEXP0001
-        builder.ConfigureTestServices(services => services
-            .AddHttpClient<PredictionClient>()
-            .RemoveAllResilienceHandlers()
-            .ConfigurePrimaryHttpMessageHandler(() => Prediction));
+        builder.ConfigureTestServices(services =>
+        {
+            services.AddHttpClient<PredictionClient>()
+                .RemoveAllResilienceHandlers()
+                .ConfigurePrimaryHttpMessageHandler(() => Prediction);
+
+            services.AddHttpClient<BatchPredictor>()
+                .RemoveAllResilienceHandlers()
+                .ConfigurePrimaryHttpMessageHandler(() => Prediction);
+        });
 #pragma warning restore EXTEXP0001
     }
 

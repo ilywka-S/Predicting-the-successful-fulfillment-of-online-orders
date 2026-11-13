@@ -14,7 +14,11 @@ public enum BatchJobStatus
     Done,
     Failed,
 }
-
+public enum BatchJobKind
+{
+    Upload,
+    PredictMissing,
+}
 public enum DevicePlatform
 {
     Android,
