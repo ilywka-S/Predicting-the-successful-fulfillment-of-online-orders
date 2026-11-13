@@ -2,6 +2,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Hangfire;
 using Hangfire.Storage;
+using Hangfire.PostgreSql;
 using Microsoft.EntityFrameworkCore;
 using OrderSense.Api.Data;
 using OrderSense.Api.Data.Entities;
@@ -33,10 +34,9 @@ public class BatchJobProcessor(AppDbContext db, PredictionClient client,
         {
             jobLock = connection.AcquireDistributedLock($"batch-job:{jobId}", TimeSpan.Zero);
         }
-        catch (Exception e) when (!ct.IsCancellationRequested)
+        catch (PostgreSqlDistributedLockException e)
         {
             AlreadyRunning(logger, jobId, e);
-
             return;
         }
         using (jobLock)
