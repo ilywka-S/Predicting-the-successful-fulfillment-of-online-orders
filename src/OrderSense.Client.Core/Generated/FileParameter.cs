@@ -1,3 +1,5 @@
+#pragma warning disable CS8625
+
 namespace OrderSense.Client.Core
 {
     public class FileParameter

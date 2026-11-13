@@ -86,7 +86,7 @@ public class AuthTokenManager : IAuthTokenManager, IDisposable
         await _authNavigation.NavigateToLoginAsync();
     }
 
-    private bool IsTokenExpired(string? token)
+    private static bool IsTokenExpired(string? token)
     {
         if (string.IsNullOrEmpty(token)) return true;
         
