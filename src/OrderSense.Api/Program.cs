@@ -16,6 +16,7 @@ using OrderSense.Api.Hubs;
 using OrderSense.Api.Predictions;
 using Hangfire;
 using Hangfire.PostgreSql;
+using OrderSense.Api.Logging;
 
 var isOpenApiGeneration = Assembly.GetEntryAssembly()?.GetName().Name == "GetDocument.Insider";
 
@@ -165,7 +166,7 @@ var app = builder.Build();
 
 if (poolerRemoved)
 {
-    app.Logger.LogWarning("Hangfire needs a direct database endpoint: '-pooler' was removed from the host name");
+    app.Logger.HangfirePoolerRemoved();
 }
 
 if (!isOpenApiGeneration)

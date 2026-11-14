@@ -20,8 +20,8 @@ public class LoginViewModelTests
         _navigationMock = new Mock<IAuthNavigation>();
 
         _viewModel = new LoginViewModel(
-            _apiClientMock.Object, 
-            _tokenStorageMock.Object, 
+            _apiClientMock.Object,
+            _tokenStorageMock.Object,
             _navigationMock.Object
         );
     }
@@ -34,9 +34,9 @@ public class LoginViewModelTests
         _viewModel.Password = "password123";
 
         var loginResponse = new AuthResponse
-        { 
-            AccessToken = "fake_access", 
-            RefreshToken = "fake_refresh" 
+        {
+            AccessToken = "fake_access",
+            RefreshToken = "fake_refresh"
         };
 
         var userProfile = new UserDto { Role = "manager" };
@@ -68,16 +68,16 @@ public class LoginViewModelTests
 
         _apiClientMock
             .Setup(x => x.LoginAsync(It.IsAny<LoginRequest>()))
-            .ThrowsAsync(new Exception("Invalid credentials")); 
+            .ThrowsAsync(new UnauthorizedAccessException("Invalid credentials"));
 
         // Act
         await _viewModel.LoginCommand.ExecuteAsync(null);
 
         // Assert
         _tokenStorageMock.Verify(x => x.SaveTokensAsync(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
-        
+
         _navigationMock.Verify(x => x.NavigateToMainAsync(), Times.Never);
-        
+
         _viewModel.ErrorMessage.Should().NotBeNullOrEmpty();
     }
 
@@ -93,7 +93,7 @@ public class LoginViewModelTests
 
         // Assert
         _apiClientMock.Verify(x => x.LoginAsync(It.IsAny<LoginRequest>()), Times.Never);
-        
+
         _navigationMock.Verify(x => x.NavigateToMainAsync(), Times.Never);
     }
 }

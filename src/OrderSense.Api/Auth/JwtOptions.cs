@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace OrderSense.Api.Auth;
 
@@ -9,8 +9,8 @@ public class JwtOptions
     [Required] public string Issuer { get; set; } = "";
 
     [Required] public string Audience { get; set; } = "";
-    
-    [Required] [MinLength(32)] public string Key { get; set; } = "";
+
+    [Required][MinLength(32)] public string Key { get; set; } = "";
 
     [Range(1, 1440)] public int AccessTokenMinutes { get; set; } = 30;
 

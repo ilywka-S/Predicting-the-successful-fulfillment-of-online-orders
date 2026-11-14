@@ -1,5 +1,6 @@
 using OrderSense.Contracts;
 namespace OrderSense.Api.Predictions;
+
 public static class FactorValues
 {
     public static float? Numeric(OrderFeatures features, string feature)

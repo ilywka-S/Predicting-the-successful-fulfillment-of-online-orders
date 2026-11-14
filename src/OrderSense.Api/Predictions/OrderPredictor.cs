@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.SignalR;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using OrderSense.Api.Data;
 using OrderSense.Api.Data.Entities;
@@ -6,6 +6,7 @@ using OrderSense.Api.Dtos;
 using OrderSense.Api.Hubs;
 using OrderSense.Contracts;
 namespace OrderSense.Api.Predictions;
+
 public class OrderPredictor(
     AppDbContext db,
     OrderFeatureLoader featureLoader,

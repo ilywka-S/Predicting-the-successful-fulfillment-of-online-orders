@@ -1,4 +1,4 @@
-﻿using OrderSense.Client.Core.ViewModels;
+using OrderSense.Client.Core.ViewModels;
 namespace OrderSense.Maui;
 
 public partial class AppShell : Shell
@@ -13,7 +13,7 @@ public partial class AppShell : Shell
     {
         InitializeComponent();
     }
-    
+
     public AppShell(AppShellViewModel? viewModel = null)
     {
         InitializeComponent();

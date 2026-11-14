@@ -26,7 +26,7 @@ public partial class DashboardViewModel : ObservableObject
     public DashboardViewModel(ISignalRService signalRService)
     {
         _signalRService = signalRService;
-        
+
         _syncContext = SynchronizationContext.Current;
 
         _signalRService.OnOrderCreated += HandleOrderCreated;
@@ -56,13 +56,13 @@ public partial class DashboardViewModel : ObservableObject
 
     private void HandleBatchProgress(BatchJobProgress data)
     {
-        PostToUI(() => 
+        PostToUI(() =>
         {
-            var progressValue = data.TotalRows > 0 
-                ? (data.ProcessedRows * 100) / data.TotalRows 
+            var progressValue = data.TotalRows > 0
+                ? (data.ProcessedRows * 100) / data.TotalRows
                 : 0;
 
-            BatchJobProgress = progressValue; 
+            BatchJobProgress = progressValue;
         });
     }
 

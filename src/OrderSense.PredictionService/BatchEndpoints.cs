@@ -2,6 +2,7 @@ using Microsoft.Extensions.ML;
 using Microsoft.Extensions.Options;
 using OrderSense.Contracts;
 namespace OrderSense.PredictionService;
+
 public static class BatchEndpoints
 {
     public const int MaxBatchSize = 1000;

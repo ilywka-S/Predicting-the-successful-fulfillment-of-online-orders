@@ -48,17 +48,17 @@ public partial class LoginViewModel : ObservableObject
 
         try
         {
-            var response = await _apiClient.LoginAsync(new LoginRequest 
-            { 
-                Email = this.Email, 
-                Password = this.Password 
+            var response = await _apiClient.LoginAsync(new LoginRequest
+            {
+                Email = this.Email,
+                Password = this.Password
             });
 
             await _tokenStorage.SaveTokensAsync(response.AccessToken, response.RefreshToken);
 
-            var userProfile = await _apiClient.MeAsync(); 
+            var userProfile = await _apiClient.MeAsync();
             var userRole = userProfile.Role;
-            
+
             await _tokenStorage.SetRoleAsync(userRole);
             await _navigation.NavigateToMainAsync();
         }

@@ -3,6 +3,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\OrderSense.Api\OrderSense.Api.csproj" />
     <ProjectReference Include="..\..\src\OrderSense.Contracts\OrderSense.Contracts.csproj" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
 
   <PropertyGroup>

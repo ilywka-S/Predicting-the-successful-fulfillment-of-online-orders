@@ -6,7 +6,7 @@ namespace OrderSense.Client.Core.ViewModels;
 
 public partial class MainViewModel : ObservableObject
 {
-    private readonly IClient _apiClient; 
+    private readonly IClient _apiClient;
     private readonly ITokenStorage _tokenStorage;
     private readonly IAuthNavigation _navigation;
 
@@ -20,18 +20,18 @@ public partial class MainViewModel : ObservableObject
     [RelayCommand]
     private async Task LogoutAsync()
     {
-        try 
+        try
         {
             var refreshToken = await _tokenStorage.GetRefreshTokenAsync();
 
-            var request = new RefreshRequest 
-            { 
-                RefreshToken = refreshToken 
+            var request = new RefreshRequest
+            {
+                RefreshToken = refreshToken
             };
 
-            await _apiClient.LogoutAsync(request); 
+            await _apiClient.LogoutAsync(request);
         }
-        catch 
+        catch
         {
         }
 

@@ -1,4 +1,4 @@
-﻿using CsvHelper;
+using CsvHelper;
 using CsvHelper.Configuration;
 using System.Globalization;
 using OrderSense.ML.Training;
@@ -71,7 +71,7 @@ string? GetLabel(OrderRow order)
 OrderCard? BuildCard(OrderRow order)
 {
     var orderItems = itemsByOrder[order.OrderId].ToList();
-    if (orderItems.Count == 0) 
+    if (orderItems.Count == 0)
     {
         return null; //замовлення без позицій пропускаємо
     }
@@ -96,7 +96,7 @@ OrderCard? BuildCard(OrderRow order)
         .OrderByDescending(g => g.Sum(i => i.Price))
         .First().Key;
     if (sellersById.TryGetValue(mainSellerId, out var mainSeller))
-    { 
+    {
         card.SellerState = mainSeller.SellerState;
     }
 
@@ -114,14 +114,14 @@ OrderCard? BuildCard(OrderRow order)
     bool anyVolume = false;
     foreach (var item in orderItems)
     {
-        if (!productsById.TryGetValue(item.ProductId, out var p)) 
+        if (!productsById.TryGetValue(item.ProductId, out var p))
         {
             continue;
         }
-        if (p.ProductWeightG.HasValue) 
-        { 
-            totalWeight += p.ProductWeightG.Value; 
-            anyWeight = true; 
+        if (p.ProductWeightG.HasValue)
+        {
+            totalWeight += p.ProductWeightG.Value;
+            anyWeight = true;
         }
         if (p.ProductLengthCm.HasValue && p.ProductHeightCm.HasValue && p.ProductWidthCm.HasValue)
         {
@@ -177,13 +177,13 @@ OrderCard? BuildCard(OrderRow order)
 TrainingRow? BuildTrainingRow(OrderRow order)
 {
     var label = GetLabel(order);
-    if (label == null || !order.OrderPurchaseTimestamp.HasValue) 
+    if (label == null || !order.OrderPurchaseTimestamp.HasValue)
     {
         return null;
     }
 
     var orderItems = itemsByOrder[order.OrderId].ToList();
-    if (orderItems.Count == 0) 
+    if (orderItems.Count == 0)
     {
         return null;
     }
@@ -233,7 +233,7 @@ var cards = new List<OrderCard>();
 foreach (var order in orders)
 {
     var card = BuildCard(order);
-    if (card != null) 
+    if (card != null)
     {
         cards.Add(card);
     }
@@ -307,7 +307,24 @@ var mlContext = new MLContext(seed: 42);
 var trainData = mlContext.Data.LoadFromEnumerable(trainRows);
 var testData = mlContext.Data.LoadFromEnumerable(testRows);
 
+if (args.Contains("--experiments"))
+{
+    ModelExperiments.Run(mlContext, trainRows, testRows);
+    return;
+}
+if (args.Contains("--compare"))
+{
+    ModelExperiments.RunComparison(mlContext, trainRows.Concat(testRows).ToList());
+    return;
+}
+if (args.Contains("--train-v2"))
+{
+    ModelExperiments.TrainV2(mlContext, trainRows, testRows);
+    return;
+}
+
 var numericCols = new[] { "ItemsCount", "TotalPrice", "FreightShare", "TotalWeightG", "PromisedDays", "DistanceKm", "Installments", "PurchaseDayOfWeek" };
+
 
 var pipeline = mlContext.Transforms
     .ReplaceMissingValues(numericCols.Select(c => new InputOutputColumnPair(c)).ToArray(), MissingValueReplacingEstimator.ReplacementMode.Mean)
@@ -318,7 +335,7 @@ var pipeline = mlContext.Transforms
         new InputOutputColumnPair("MainCategoryEnc", "MainCategory"),
         new InputOutputColumnPair("PaymentTypeEnc", "PaymentType"),
     }))
-    .Append(mlContext.Transforms.Concatenate("Features", numericCols.Concat(new[] { "CustomerStateEnc", "SellerStateEnc", "MainCategoryEnc", "PaymentTypeEnc" }).ToArray()))
+    .Append(mlContext.Transforms.Concatenate("Features", numericCols.Concat(CategoricalEncodedCols).ToArray()))
     .Append(mlContext.BinaryClassification.Trainers.FastTree(labelColumnName: "IsProblem", featureColumnName: "Features"));
 
 Console.WriteLine("\nНавчаю модель...");
@@ -355,3 +372,14 @@ Console.WriteLine($"\nБазова модель: ROC-AUC {baseMetrics.AreaUnderR
 Console.WriteLine($"Модель v1:     ROC-AUC {metrics.AreaUnderRocCurve:F4}, PR-AUC {metrics.AreaUnderPrecisionRecallCurve:F4}");
 
 ModelInfoWriter.Write(mlContext, model, trainRows, testRows, metrics, baseMetrics, modelDir, modelVersion);
+
+internal partial class Program
+{
+    private static readonly string[] CategoricalEncodedCols =
+    [
+        "CustomerStateEnc",
+        "SellerStateEnc",
+        "MainCategoryEnc",
+        "PaymentTypeEnc"
+    ];
+}

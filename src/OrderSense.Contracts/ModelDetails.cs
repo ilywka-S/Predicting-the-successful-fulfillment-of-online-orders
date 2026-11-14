@@ -27,27 +27,27 @@ public sealed class ModelDetails
 
     public float F1 { get; set; }
 
-    public float BaselinePrAuc 
-    { 
-        get; 
-        set; 
+    public float BaselinePrAuc
+    {
+        get;
+        set;
     }
 
-    public float RiskMediumFrom 
-    { 
-        get; 
-        set; 
+    public float RiskMediumFrom
+    {
+        get;
+        set;
     }
 
-    public float RiskHighFrom 
-    { 
-        get; 
-        set; 
+    public float RiskHighFrom
+    {
+        get;
+        set;
     }
 
-    public List<FeatureImportance> FeatureImportances 
-    { 
-        get; 
-        set; 
+    public List<FeatureImportance> FeatureImportances
+    {
+        get;
+        set;
     } = [];
 }

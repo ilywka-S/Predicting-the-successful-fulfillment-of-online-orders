@@ -1,4 +1,4 @@
-﻿namespace OrderSense.Maui;
+namespace OrderSense.Maui;
 
 public partial class App : Application
 {

@@ -79,7 +79,7 @@ public partial class DateField : ContentView
             Input.ClearValue(DatePicker.MaximumDateProperty);
         }
     }
-   
+
     private void OnInputFocusChanged(object? sender, FocusEventArgs e) =>
         VisualStateManager.GoToState(InputBorder, e.IsFocused ? "Focused" : "Normal");
 

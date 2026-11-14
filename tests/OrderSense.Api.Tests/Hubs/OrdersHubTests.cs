@@ -1,4 +1,4 @@
-﻿using System.Net;
+using System.Net;
 using Microsoft.AspNetCore.Http.Connections;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.EntityFrameworkCore;
@@ -61,7 +61,7 @@ public class OrdersHubTests(ApiFactory factory)
 
         Assert.Equal(new BatchJobProgressDto(job.Id, 4, 10, BatchJobStatus.Running), progress);
     }
-    
+
     private HubConnection CreateConnection(string? accessToken) => new HubConnectionBuilder()
         .WithUrl(new Uri(factory.Server.BaseAddress, "/hubs/orders"), o =>
         {

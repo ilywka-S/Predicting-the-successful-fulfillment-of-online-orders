@@ -4,16 +4,17 @@ using CsvHelper;
 using CsvHelper.Configuration;
 using OrderSense.Contracts;
 namespace OrderSense.Api.Predictions;
+
 public sealed record ParsedRow(int RowNo, OrderFeatures? Features, string? Error);
 public sealed class BatchCsvParseResult
 {
-    public List<string> FileErrors 
-    { 
-        get; 
+    public List<string> FileErrors
+    {
+        get;
     } = new List<string>();
-    public List<ParsedRow> Rows 
-    { 
-        get; 
+    public List<ParsedRow> Rows
+    {
+        get;
     } = new List<ParsedRow>();
 }
 public static class BatchCsv
