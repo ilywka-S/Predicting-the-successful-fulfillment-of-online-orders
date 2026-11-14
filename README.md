@@ -79,7 +79,7 @@ Invoke-RestMethod "http://localhost:5128/api/orders?pageSize=3" -Headers @{ Auth
 | Збірка | Куди звертається застосунок | Ким входити |
 |---|---|---|
 | Debug | локальне API з кроку 3 | адміністратор із user-secrets |
-| Release | `https://ordersense-api.onrender.com` | продакшн-адміністратор |
+| Release | `https://ordersense-api-bzau.onrender.com` | продакшн-адміністратор |
 
 **Windows.** Збираємо й одразу запускаємо Release-збірку, вона працює з API на Render:
 
@@ -176,8 +176,8 @@ dotnet run --project tools/OrderSense.OlistImport -- data/olist
 
 ## Продакшн
 
-- API: `https://ordersense-api.onrender.com`, перевірка: `/alive`.
-- Prediction Service: `https://ordersense-prediction.onrender.com`, перевірка: `/alive`. API знаходить його через змінну `services__prediction__https__0`
+- API: `https://ordersense-api-bzau.onrender.com`, перевірка: `/alive`.
+- Prediction Service: `https://ordersense-prediction-aklc.onrender.com`, перевірка: `/alive`. API знаходить його через змінну `services__prediction__https__0`
 - Render (безкоштовний план, Франкфурт) збирає Docker-образи з `src/OrderSense.Api/Dockerfile` і `src/OrderSense.PredictionService/Dockerfile`
 - Автодеплой: після злиття в `main` воркфлоу `Deploy` проганяє тести і викликає Deploy Hook обох сервісів. URL хуків лежать лише в секретах GitHub `RENDER_API_DEPLOY_HOOK` і `RENDER_PREDICTION_DEPLOY_HOOK`, Auto-Deploy у самому Render вимкнено. Статус видно у вкладці Actions, там само можна запустити деплой вручну через Run workflow
 - База: окремий проєкт Neon `ordersense-prod`, PostgreSQL 18, Франкфурт. Рядок підключення, ключ JWT і пароль адміна задані лише в змінних середовища Render.
