@@ -30,10 +30,6 @@
                           ContentTemplate="{DataTemplate views:DashboardPage}"
                           Route="DashboardPage" />
         </Tab>
-        <Tab Title="Головна" Icon="dotnet_bot.png">
-            <ShellContent Route="MainPage" ContentTemplate="{DataTemplate views:MainPage}" />
-        </Tab>
-
         <Tab Title="Пакетний прогноз" IsVisible="{Binding IsBatchPredictionVisible}">
             <ShellContent 
                 ContentTemplate="{DataTemplate views:BatchPredictionPage}" />

@@ -30,10 +30,8 @@ public static class MauiProgram
 #endif
 
         // ViewModels & Pages
-        builder.Services.AddTransient<MainViewModel>();
         builder.Services.AddTransient<OrderDetailsViewModel>();
 
-        builder.Services.AddTransient<MainPage>();
         builder.Services.AddTransient<DashboardPage>();
         builder.Services.AddTransient<OrderDetailsPage>();
         builder.Services.AddTransient<WhatIfViewModel>();
