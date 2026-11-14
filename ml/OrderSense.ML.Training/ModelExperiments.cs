@@ -85,8 +85,8 @@ public static partial class ModelExperiments
                 PrintRow(result);
             }
         }
-        Candidate bestFastTree = gridResults.Where(x => x.Candidate.Name.StartsWith("FastTree")).MaxBy(x => x.Result.PrAuc).Candidate;
-        Candidate bestLightGbm = gridResults.Where(x => x.Candidate.Name.StartsWith("LightGBM")).MaxBy(x => x.Result.PrAuc).Candidate;
+        Candidate bestFastTree = gridResults.Where(x => x.Candidate.Name.StartsWith("FastTree", StringComparison.Ordinal)).MaxBy(x => x.Result.PrAuc).Candidate;
+        Candidate bestLightGbm = gridResults.Where(x => x.Candidate.Name.StartsWith("LightGBM", StringComparison.Ordinal)).MaxBy(x => x.Result.PrAuc).Candidate;
         Candidate bestOnAll = gridResults.MaxBy(x => x.Result.PrAuc).Candidate;
         Console.WriteLine($"\nКраща FastTree: {bestFastTree.Name}\nКраща LightGBM: {bestLightGbm.Name}\nКраща загалом: {bestOnAll.Name}");
 

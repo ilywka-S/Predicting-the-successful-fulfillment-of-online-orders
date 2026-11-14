@@ -47,7 +47,7 @@ public static partial class ModelExperiments
                     {
                         PrintRow(calibrated);
                     }
-                    if (label.StartsWith("C"))
+                    if (label.StartsWith('C'))
                     {
                         (float[] p, bool[] y) = Scores(ml, model, test);
                         foldC.Add((candidate.Name, p, y));
