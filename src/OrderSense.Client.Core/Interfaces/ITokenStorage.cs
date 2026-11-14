@@ -10,5 +10,5 @@ public interface ITokenStorage
 
     Task SetRoleAsync(string role);
     Task<string?> GetRoleAsync();
-    
+
 }

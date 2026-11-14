@@ -1,4 +1,4 @@
-﻿namespace OrderSense.Api.Dtos;
+namespace OrderSense.Api.Dtos;
 
 public record FeatureImportanceDto(string Feature, float Importance);
 

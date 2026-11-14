@@ -15,7 +15,7 @@ public sealed class PredictEndpointTests : IClassFixture<WebApplicationFactory<P
     };
 
     private readonly HttpClient _client;
-        private static readonly string[] RiskLevels = ["low", "medium", "high"];
+    private static readonly string[] RiskLevels = ["low", "medium", "high"];
 
     public PredictEndpointTests(WebApplicationFactory<Program> factory) =>
         _client = factory.CreateClient();
@@ -89,7 +89,7 @@ public sealed class PredictEndpointTests : IClassFixture<WebApplicationFactory<P
         Assert.Contains("FreightShare", body);
         Assert.Contains("PurchaseDayOfWeek", body);
     }
-        private static OrderFeatures Risky()
+    private static OrderFeatures Risky()
     {
         var f = Valid();
         f.PromisedDays = 8;

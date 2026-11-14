@@ -7,6 +7,7 @@ using OrderSense.Api.Dtos;
 using OrderSense.Api.Hubs;
 using Polly;
 namespace OrderSense.Api.Predictions;
+
 public class PredictMissingProcessor(
     AppDbContext db,
     BatchPredictor predictor,

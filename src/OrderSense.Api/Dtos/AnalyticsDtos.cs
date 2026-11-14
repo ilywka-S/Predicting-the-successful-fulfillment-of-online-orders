@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 namespace OrderSense.Api.Dtos;
+
 public record AnalyticsPointDto(
     string Key,
     int Orders,
@@ -11,22 +12,22 @@ public record AnalyticsPointDto(
 public class AnalyticsQuery : IValidatableObject
 {
     [SupportedDate]
-    public DateOnly? From 
-    { 
-        get; 
-        init; 
+    public DateOnly? From
+    {
+        get;
+        init;
     }
     [SupportedDate]
-    public DateOnly? To 
-    { 
-        get; 
-        init; 
+    public DateOnly? To
+    {
+        get;
+        init;
     }
     [Range(1, 50)]
-    public int Top 
-    { 
-        get; 
-        init; 
+    public int Top
+    {
+        get;
+        init;
     } = 10;
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {

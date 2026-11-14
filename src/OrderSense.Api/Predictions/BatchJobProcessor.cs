@@ -10,6 +10,7 @@ using OrderSense.Api.Dtos;
 using OrderSense.Api.Hubs;
 using OrderSense.Contracts;
 namespace OrderSense.Api.Predictions;
+
 public class BatchJobProcessor(AppDbContext db, PredictionClient client,
     BatchProgressNotifier notifier,
     JobStorage storage,

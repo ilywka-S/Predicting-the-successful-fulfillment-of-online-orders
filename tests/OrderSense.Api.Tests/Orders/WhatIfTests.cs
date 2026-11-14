@@ -4,6 +4,7 @@ using OrderSense.Api.Data.Entities;
 using OrderSense.Api.Dtos;
 using OrderSense.Api.Tests.Infrastructure;
 namespace OrderSense.Api.Tests.Orders;
+
 [Collection(ApiCollection.Name)]
 public class WhatIfTests(ApiFactory factory)
 {

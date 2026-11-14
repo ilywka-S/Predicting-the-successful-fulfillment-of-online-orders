@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 using CommunityToolkit.Maui;
 using OrderSense.Client.Core;
 using OrderSense.Maui.Views;
@@ -15,15 +15,15 @@ public static class MauiProgram
     public static MauiApp CreateMauiApp()
     {
         var builder = MauiApp.CreateBuilder();
-        
+
         builder
             .UseMauiApp<App>()
             .UseMauiCommunityToolkit()
             .UseDesignSystem();
 
 #if DEBUG
-        var baseAddress = DeviceInfo.Platform == DevicePlatform.Android 
-            ? "https://10.0.2.2:7250" 
+        var baseAddress = DeviceInfo.Platform == DevicePlatform.Android
+            ? "https://10.0.2.2:7250"
             : "https://localhost:7250";
 #else
         var baseAddress = "https://ordersense-api.onrender.com"; 
@@ -63,14 +63,14 @@ public static class MauiProgram
 
 
         // SignalR Service
-        builder.Services.AddSingleton<ISignalRService>(sp => 
+        builder.Services.AddSingleton<ISignalRService>(sp =>
         {
             var tokenManager = sp.GetRequiredService<IAuthTokenManager>();
-            return new SignalRService(tokenManager, baseAddress); 
+            return new SignalRService(tokenManager, baseAddress);
         });
 
         // HTTP Clients
-        builder.Services.AddHttpClient("AuthClient", client => 
+        builder.Services.AddHttpClient("AuthClient", client =>
         {
             client.BaseAddress = new Uri(baseAddress);
         });

@@ -1,4 +1,5 @@
-﻿using OrderSense.Api.Data.Entities;
+using System.Globalization;
+using OrderSense.Api.Data.Entities;
 
 namespace OrderSense.Api.Demo;
 
@@ -71,7 +72,7 @@ public sealed class DemoDataGenerator
             _products.Add(CreateProduct());
         }
     }
-    
+
     public DemoDataGenerator(IEnumerable<Seller> sellers, IEnumerable<Product> products, int seed)
     {
         _random = new Random(seed);
@@ -100,7 +101,11 @@ public sealed class DemoDataGenerator
         var state = Pick(States, s => s.CustomerWeight);
         var customer = new Customer
         {
-            Id = NextId(), UniqueId = NextId(), ZipPrefix = CreateZip(state), City = state.Capital, State = state.Code,
+            Id = NextId(),
+            UniqueId = NextId(),
+            ZipPrefix = CreateZip(state),
+            City = state.Capital,
+            State = state.Code,
         };
 
         var status = Pick(Statuses, s => s.Weight).Name;
@@ -167,7 +172,7 @@ public sealed class DemoDataGenerator
             ],
         };
     }
-    
+
     public Order CreateNewOrder(DateTime purchasedAt)
     {
         var order = CreateOrder(purchasedAt);
@@ -202,10 +207,10 @@ public sealed class DemoDataGenerator
             PhotosQty = _random.Next(1, 6),
         };
     }
-    
+
     private string CreateZip(State state)
     {
-        var zip = _random.Next(state.ZipFrom, state.ZipTo + 1).ToString("D5");
+        var zip = _random.Next(state.ZipFrom, state.ZipTo + 1).ToString("D5", CultureInfo.InvariantCulture);
 
         if (!_geoZips.ContainsKey(zip))
         {

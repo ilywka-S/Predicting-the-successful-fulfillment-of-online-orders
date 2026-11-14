@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.SignalR;
+using Microsoft.AspNetCore.SignalR;
 using OrderSense.Api.Data.Entities;
 using OrderSense.Api.Dtos;
 

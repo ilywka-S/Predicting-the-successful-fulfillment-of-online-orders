@@ -1,4 +1,4 @@
-﻿namespace OrderSense.Api.Demo;
+namespace OrderSense.Api.Demo;
 
 public class SimulatorOptions
 {

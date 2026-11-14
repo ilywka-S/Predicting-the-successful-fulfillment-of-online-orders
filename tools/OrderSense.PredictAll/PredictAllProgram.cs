@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Globalization;
 using Microsoft.EntityFrameworkCore;
 using OrderSense.Api.Data;
 using OrderSense.Api.Data.Entities;
@@ -7,6 +8,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using OrderSense.Contracts;
 namespace OrderSense.PredictAll;
+
 public static class PredictAllProgram
 {
     public static async Task<int> Main(string[] args)
@@ -18,9 +20,9 @@ public static class PredictAllProgram
             return 1;
         }
         bool recalculate = args.Contains("--recalculate");
-        string[] positional = args.Where(a => !a.StartsWith("--")).ToArray();
+        string[] positional = args.Where(a => !a.StartsWith("--", StringComparison.Ordinal)).ToArray();
         string serviceUrl = positional.Length > 0 ? positional[0] : "http://localhost:5002";
-        int maxOrders = positional.Length > 1 ? int.Parse(positional[1]) : int.MaxValue;
+        int maxOrders = positional.Length > 1 ? int.Parse(positional[1], CultureInfo.InvariantCulture) : int.MaxValue;
         DbContextOptions<AppDbContext> options = new DbContextOptionsBuilder<AppDbContext>()
             .UseNpgsql(connectionString)
             .UseSnakeCaseNamingConvention()

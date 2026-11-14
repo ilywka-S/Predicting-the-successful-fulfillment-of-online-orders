@@ -2,6 +2,7 @@ using System.Text.Json;
 using Microsoft.Extensions.Options;
 using OrderSense.Contracts;
 namespace OrderSense.PredictionService;
+
 public sealed class ModelInfoService
 {
     private static readonly JsonSerializerOptions JsonOptions = new JsonSerializerOptions(JsonSerializerDefaults.Web);

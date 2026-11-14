@@ -18,20 +18,20 @@ public sealed class FakeBatchHandler : HttpMessageHandler
         NumberHandling = JsonNumberHandling.AllowNamedFloatingPointLiterals,
     };
 
-    public int BatchCalls 
-    { 
-        get; 
-        private set; 
+    public int BatchCalls
+    {
+        get;
+        private set;
     }
-    public int SingleCalls 
-    { 
-        get; 
-        private set; 
+    public int SingleCalls
+    {
+        get;
+        private set;
     }
-    public bool RejectBatches 
-    { 
-        get; 
-        set; 
+    public bool RejectBatches
+    {
+        get;
+        set;
     }
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {

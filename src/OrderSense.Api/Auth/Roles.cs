@@ -1,4 +1,4 @@
-﻿namespace OrderSense.Api.Auth;
+namespace OrderSense.Api.Auth;
 
 public static class Roles
 {

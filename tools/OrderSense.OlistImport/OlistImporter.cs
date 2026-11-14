@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using OrderSense.Api.Data;
 using OrderSense.Api.Data.Entities;
 using OrderSense.Olist;
@@ -39,7 +39,7 @@ public sealed class OlistImporter(AppDbContext db, string folder)
         await tx.CommitAsync();
         Console.WriteLine($"{table}: прочитано {read}, записано {rows.Count}, відкинуто {rejects.Total}");
         foreach (var (reason, count) in rejects.Items)
-        { 
+        {
             Console.WriteLine($"    відкинуто {count}: {reason}");
         }
     }
@@ -70,20 +70,20 @@ public sealed class OlistImporter(AppDbContext db, string folder)
         {
             var zip = ZipCode.Normalize(r.CustomerZipCodePrefix);
             var state = r.CustomerState?.Trim();
-            if (zip.Length > 5) 
-            { 
-                rejects.Add("zip довший за 5 символів"); 
-                continue; 
+            if (zip.Length > 5)
+            {
+                rejects.Add("zip довший за 5 символів");
+                continue;
             }
-            if (state is not { Length: 2 }) 
-            { 
-                rejects.Add("штат не з 2 символів"); 
-                continue; 
+            if (state is not { Length: 2 })
+            {
+                rejects.Add("штат не з 2 символів");
+                continue;
             }
-            if (!seen.Add(r.CustomerId)) 
-            { 
-                rejects.Add("дублікат customer_id"); 
-                continue; 
+            if (!seen.Add(r.CustomerId))
+            {
+                rejects.Add("дублікат customer_id");
+                continue;
             }
             rows.Add(new Customer
             {
@@ -106,20 +106,20 @@ public sealed class OlistImporter(AppDbContext db, string folder)
         {
             var zip = ZipCode.Normalize(r.SellerZipCodePrefix);
             var state = r.SellerState?.Trim();
-            if (zip.Length > 5) 
-            { 
-                rejects.Add("zip довший за 5 символів"); 
-                continue; 
+            if (zip.Length > 5)
+            {
+                rejects.Add("zip довший за 5 символів");
+                continue;
             }
-            if (state is not { Length: 2 }) 
-            { 
-                rejects.Add("штат не з 2 символів"); 
-                continue; 
+            if (state is not { Length: 2 })
+            {
+                rejects.Add("штат не з 2 символів");
+                continue;
             }
-            if (!seen.Add(r.SellerId)) 
-            { 
-                rejects.Add("дублікат seller_id"); 
-                continue; 
+            if (!seen.Add(r.SellerId))
+            {
+                rejects.Add("дублікат seller_id");
+                continue;
             }
             rows.Add(new Seller
             {
@@ -145,15 +145,15 @@ public sealed class OlistImporter(AppDbContext db, string folder)
 
         foreach (var r in source)
         {
-            if (!seen.Add(r.ProductId)) 
-            { 
-                rejects.Add("дублікат product_id"); 
-                continue; 
+            if (!seen.Add(r.ProductId))
+            {
+                rejects.Add("дублікат product_id");
+                continue;
             }
             var category = Clean(r.ProductCategoryName);
             string? categoryEn = null;
             if (category is not null && translations.TryGetValue(category, out var en))
-            { 
+            {
                 categoryEn = en;
             }
             rows.Add(new Product
@@ -180,30 +180,30 @@ public sealed class OlistImporter(AppDbContext db, string folder)
         var rows = new List<Order>();
         foreach (var r in source)
         {
-            if (!customerIds.Contains(r.CustomerId)) 
-            { 
-                rejects.Add("customer_id немає в customers"); 
-                continue; 
+            if (!customerIds.Contains(r.CustomerId))
+            {
+                rejects.Add("customer_id немає в customers");
+                continue;
             }
-            if (r.OrderPurchaseTimestamp is null) 
-            { 
-                rejects.Add("немає дати покупки"); 
-                continue; 
+            if (r.OrderPurchaseTimestamp is null)
+            {
+                rejects.Add("немає дати покупки");
+                continue;
             }
-            if (r.OrderEstimatedDeliveryDate is null) 
-            { 
-                rejects.Add("немає обіцяної дати доставки"); 
-                continue; 
+            if (r.OrderEstimatedDeliveryDate is null)
+            {
+                rejects.Add("немає обіцяної дати доставки");
+                continue;
             }
-            if (!seen.Add(r.OrderId)) 
-            { 
-                rejects.Add("дублікат order_id"); 
-                continue; 
+            if (!seen.Add(r.OrderId))
+            {
+                rejects.Add("дублікат order_id");
+                continue;
             }
-            if (!usedCustomers.Add(r.CustomerId)) 
-            { 
-                rejects.Add("customer_id уже в іншому замовленні"); 
-                continue; 
+            if (!usedCustomers.Add(r.CustomerId))
+            {
+                rejects.Add("customer_id уже в іншому замовленні");
+                continue;
             }
             rows.Add(new Order
             {
@@ -230,20 +230,20 @@ public sealed class OlistImporter(AppDbContext db, string folder)
         var rows = new List<OrderItem>();
         foreach (var r in source)
         {
-            if (!orderIds.Contains(r.OrderId)) 
-            { 
-                rejects.Add("order_id немає в orders"); 
-                continue; 
+            if (!orderIds.Contains(r.OrderId))
+            {
+                rejects.Add("order_id немає в orders");
+                continue;
             }
-            if (!productIds.Contains(r.ProductId)) 
-            { 
-                rejects.Add("product_id немає в products"); 
-                continue; 
+            if (!productIds.Contains(r.ProductId))
+            {
+                rejects.Add("product_id немає в products");
+                continue;
             }
-            if (!sellerIds.Contains(r.SellerId)) 
-            { 
-                rejects.Add("seller_id немає в sellers"); 
-                continue; 
+            if (!sellerIds.Contains(r.SellerId))
+            {
+                rejects.Add("seller_id немає в sellers");
+                continue;
             }
             if (!seen.Add((r.OrderId, r.OrderItemId))) { rejects.Add("дублікат (order_id, order_item_id)"); continue; }
             rows.Add(new OrderItem
@@ -268,15 +268,15 @@ public sealed class OlistImporter(AppDbContext db, string folder)
         var rows = new List<OrderPayment>();
         foreach (var r in source)
         {
-            if (!orderIds.Contains(r.OrderId)) 
-            { 
-                rejects.Add("order_id немає в orders"); 
-                continue; 
+            if (!orderIds.Contains(r.OrderId))
+            {
+                rejects.Add("order_id немає в orders");
+                continue;
             }
-            if (!seen.Add((r.OrderId, r.PaymentSequential))) 
-            { 
-                rejects.Add("дублікат (order_id, payment_sequential)"); 
-                continue; 
+            if (!seen.Add((r.OrderId, r.PaymentSequential)))
+            {
+                rejects.Add("дублікат (order_id, payment_sequential)");
+                continue;
             }
             rows.Add(new OrderPayment
             {

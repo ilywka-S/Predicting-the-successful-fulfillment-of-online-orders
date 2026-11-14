@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using OrderSense.Api.Data;
 using OrderSense.Contracts;
 

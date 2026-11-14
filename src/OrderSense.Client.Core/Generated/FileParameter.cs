@@ -5,12 +5,12 @@ namespace OrderSense.Client.Core
     public class FileParameter
     {
         public FileParameter(Stream data)
-            : this (data, null, null)
+            : this(data, null, null)
         {
         }
 
         public FileParameter(Stream data, string fileName)
-            : this (data, fileName, null)
+            : this(data, fileName, null)
         {
         }
 

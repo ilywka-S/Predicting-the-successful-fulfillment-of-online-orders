@@ -18,9 +18,18 @@ public sealed class PredictValidatorTests
 {
     private static OrderFeatures Valid() => new()
     {
-        ItemsCount = 1, TotalPrice = 100, FreightShare = 0.1f, TotalWeightG = 500,
-        PromisedDays = 15, DistanceKm = 300, CustomerState = "SP", SellerState = "SP",
-        MainCategory = "x", PaymentType = "boleto", Installments = 1, PurchaseDayOfWeek = 3
+        ItemsCount = 1,
+        TotalPrice = 100,
+        FreightShare = 0.1f,
+        TotalWeightG = 500,
+        PromisedDays = 15,
+        DistanceKm = 300,
+        CustomerState = "SP",
+        SellerState = "SP",
+        MainCategory = "x",
+        PaymentType = "boleto",
+        Installments = 1,
+        PurchaseDayOfWeek = 3
     };
 
     [Fact]

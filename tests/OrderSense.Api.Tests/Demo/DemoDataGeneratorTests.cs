@@ -1,4 +1,4 @@
-﻿using System.Text.RegularExpressions;
+using System.Text.RegularExpressions;
 using OrderSense.Api.Demo;
 using OrderSense.Api.Data.Entities;
 
@@ -100,7 +100,7 @@ public class DemoDataGeneratorTests
 
         Assert.InRange(lateShare, 0.03, 0.15);
     }
-    
+
     [Fact]
     public void CreateNewOrder_UsesGivenSellersAndProducts()
     {

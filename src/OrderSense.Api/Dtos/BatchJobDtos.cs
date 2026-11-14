@@ -1,4 +1,4 @@
-﻿using OrderSense.Api.Data.Entities;
+using OrderSense.Api.Data.Entities;
 
 namespace OrderSense.Api.Dtos;
 
@@ -19,7 +19,7 @@ public record BatchResultDto(
     IReadOnlyList<RiskFactorDto> Factors);
 
 public record BatchJobProgressDto(
-    Guid JobId, 
-    int ProcessedRows, 
-    int TotalRows, 
+    Guid JobId,
+    int ProcessedRows,
+    int TotalRows,
     BatchJobStatus Status);

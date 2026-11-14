@@ -8,6 +8,7 @@ using OrderSense.Api.Predictions;
 using OrderSense.Api.Tests.Infrastructure;
 using OrderSense.Api.Tests.Orders;
 namespace OrderSense.Api.Tests.BatchJobs;
+
 [Collection(ApiCollection.Name)]
 public class PredictMissingTests(ApiFactory factory)
 {
@@ -116,7 +117,7 @@ public class PredictMissingTests(ApiFactory factory)
         Assert.Equal(HttpStatusCode.Accepted, response.StatusCode);
         Assert.Equal(BatchJobStatus.Failed, staleDto!.Status);
     }
-        [Fact]
+    [Fact]
     public async Task PredictMissing_ParallelRequests_NeverRunTwoAtOnce()
     {
         var orderIds = await SeedOrdersAsync(1);

@@ -1,4 +1,4 @@
-﻿using System.Net;
+using System.Net;
 using System.Net.Http.Json;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
@@ -8,6 +8,7 @@ using OrderSense.Api.Dtos;
 using OrderSense.Api.Tests.Infrastructure;
 using OrderSense.Api.Predictions;
 namespace OrderSense.Api.Tests.BatchJobs;
+
 using Hangfire;
 using Microsoft.Extensions.DependencyInjection;
 using System.Text.Json;
@@ -133,36 +134,36 @@ public class BatchJobsTests(ApiFactory factory)
         var response = await client.PostAsync("/api/batch-jobs", Upload(BatchCsv.TemplateBytes()));
         var created = await response.Content.ReadFromJsonAsync<BatchJobDto>(ApiJson.Options);
         var job = await WaitForFinishAsync(client, created!.Id);
-        
+
         Assert.Equal(HttpStatusCode.Accepted, response.StatusCode);
         Assert.Equal(BatchJobStatus.Done, job.Status);
         Assert.Equal(2, job.ProcessedRows);
-        
+
         var page = await client.GetFromJsonAsync<PagedResponse<BatchResultDto>>($"/api/batch-jobs/{job.Id}/results", ApiJson.Options);
         Assert.All(page!.Items, r => Assert.Equal(RiskLevel.Low, r.RiskLevel));
         Assert.All(page.Items, r => Assert.NotEmpty(r.Factors));
     }
-    
+
     [Fact]
     public async Task Create_MissingColumns_Returns400WithErrors()
     {
         var (client, _) = await AnalystAsync();
-        
+
         var response = await client.PostAsync("/api/batch-jobs", Upload(Encoding.UTF8.GetBytes("itemsCount,totalPrice\r\n1,100\r\n")));
         var body = await response.Content.ReadAsStringAsync();
-        
+
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         Assert.Contains("Missing columns", body);
     }
-    
+
     [Fact]
     public async Task Create_InvalidRow_Returns400AndCreatesNoJob()
     {
         var (client, userId) = await AnalystAsync();
         var csv = BatchCsv.Header + "\r\n" + "abc,120,0.15,800,20,450,SP,RJ,cama_mesa_banho,credit_card,1,2\r\n";
-        
+
         var response = await client.PostAsync("/api/batch-jobs", Upload(Encoding.UTF8.GetBytes(csv)));
-        
+
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         Assert.Contains("row 1", await response.Content.ReadAsStringAsync());
         Assert.Empty(await factory.WithDbAsync(db => db.BatchJobs.Where(j => j.UserId == userId).ToListAsync()));

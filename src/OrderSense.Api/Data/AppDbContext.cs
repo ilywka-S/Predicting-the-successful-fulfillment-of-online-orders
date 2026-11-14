@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using OrderSense.Api.Data.Entities;
@@ -15,7 +15,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<OrderItem> OrderItems => Set<OrderItem>();
     public DbSet<OrderPayment> OrderPayments => Set<OrderPayment>();
     public DbSet<GeoZip> GeoZips => Set<GeoZip>();
-    
+
     public DbSet<ModelVersion> ModelVersions => Set<ModelVersion>();
     public DbSet<Prediction> Predictions => Set<Prediction>();
     public DbSet<BatchJob> BatchJobs => Set<BatchJob>();
@@ -38,13 +38,13 @@ public class AppDbContext(DbContextOptions<AppDbContext> options)
         builder.Entity<IdentityUserLogin<Guid>>().ToTable("user_logins");
         builder.Entity<IdentityUserToken<Guid>>().ToTable("user_tokens");
         builder.Entity<IdentityRoleClaim<Guid>>().ToTable("role_claims");
-        
+
         builder.Entity<Order>()
             .HasOne(o => o.Customer)
             .WithOne(c => c.Order)
             .HasForeignKey<Order>(o => o.CustomerId)
             .OnDelete(DeleteBehavior.Restrict);
-        
+
         builder.Entity<Order>()
             .HasIndex(o => o.Id)
             .HasDatabaseName("ix_orders_id_pattern")

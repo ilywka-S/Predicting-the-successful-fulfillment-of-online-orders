@@ -10,7 +10,7 @@ public class JwtAuthHandler(IAuthTokenManager tokenManager) : DelegatingHandler
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
         var path = request.RequestUri?.AbsolutePath ?? string.Empty;
-        
+
         if (path.Equals("/api/auth/login", StringComparison.OrdinalIgnoreCase) ||
             path.Equals("/api/auth/refresh", StringComparison.OrdinalIgnoreCase) ||
             path.Equals("/api/auth/logout", StringComparison.OrdinalIgnoreCase))
@@ -23,9 +23,9 @@ public class JwtAuthHandler(IAuthTokenManager tokenManager) : DelegatingHandler
         {
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
         }
-        
+
         bool isFileContent = request.Content is MultipartFormDataContent || request.Content is StreamContent;
-        
+
         if (request.Content != null && !isFileContent)
         {
             await request.Content.LoadIntoBufferAsync(cancellationToken);
@@ -49,7 +49,7 @@ public class JwtAuthHandler(IAuthTokenManager tokenManager) : DelegatingHandler
         }
 
         return response;
-        
+
     }
 
     private static async Task<HttpRequestMessage> CloneRequestAsync(HttpRequestMessage request, CancellationToken cancellationToken)

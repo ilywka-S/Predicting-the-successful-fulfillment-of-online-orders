@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using Microsoft.EntityFrameworkCore;
 
 namespace OrderSense.Api.Data.Entities;
@@ -12,7 +12,7 @@ public class OrderPayment
     public Order Order { get; set; } = null!;
 
     public int Sequential { get; set; }
-    
+
     [MaxLength(20)]
     public required string Type { get; set; }
 

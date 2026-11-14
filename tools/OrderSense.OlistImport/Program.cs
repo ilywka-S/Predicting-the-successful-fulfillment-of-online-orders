@@ -1,6 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using OrderSense.Api.Data;
 namespace OrderSense.OlistImport;
+
 public static class ImportProgram
 {
     public static async Task<int> Main(string[] args)
