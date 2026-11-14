@@ -15,17 +15,27 @@ public sealed class BatchPredictor(AppDbContext db, HttpClient http, TimeProvide
         NumberHandling = JsonNumberHandling.AllowNamedFloatingPointLiterals,
     };
     private readonly Dictionary<string, int> _modelVersionIds = new Dictionary<string, int>();
+    public string? RecalculateToVersion { get; init; }
     public async Task<BatchRunResult> RunAsync(int batchSize, int maxOrders, CancellationToken ct, Func<BatchRunResult, CancellationToken, Task>? onBatchDone = null)
     {
         Dictionary<string, (double Lat, double Lng)> coordinates = await LoadCoordinatesAsync(ct);
         BatchRunResult result = new BatchRunResult();
         List<string> skippedIds = new List<string>();
+        string? targetVersion = RecalculateToVersion;
+        string lastId = "";
         while (result.Predicted + result.Skipped < maxOrders)
         {
             int take = Math.Min(batchSize, maxOrders - result.Predicted - result.Skipped);
-            List<string> ids = await db.Orders
-                .AsNoTracking()
-                .Where(o => o.Items.Any() && !o.Predictions.Any() && !skippedIds.Contains(o.Id))
+            IQueryable<Order> query = db.Orders.AsNoTracking().Where(o => o.Items.Any() && !skippedIds.Contains(o.Id));
+            if (targetVersion is null)
+            {
+                query = query.Where(o => !o.Predictions.Any());
+            }
+            else
+            {
+                query = query.Where(o => !o.Predictions.Any(p => p.ModelVersion.Version == targetVersion) && string.Compare(o.Id, lastId) > 0);
+            }
+            List<string> ids = await query
                 .OrderBy(o => o.Id)
                 .Select(o => o.Id)
                 .Take(take)
@@ -35,6 +45,7 @@ public sealed class BatchPredictor(AppDbContext db, HttpClient http, TimeProvide
             {
                 break;
             }
+            lastId = ids[^1];
             List<BatchOrder> orders = await LoadOrdersAsync(ids, ct);
             MarkMissingAsSkipped(ids, orders, skippedIds, result);
             List<OrderFeatures> features = new List<OrderFeatures>();
