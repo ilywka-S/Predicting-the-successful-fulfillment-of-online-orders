@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:OrderSense.Client.Core.ViewModels;assembly=OrderSense.Client.Core"
+             xmlns:controls="clr-namespace:OrderSense.Maui.Controls"
+             x:Class="OrderSense.Maui.Views.SettingsPage"
+             x:DataType="vm:SettingsViewModel"
+             Title="Налаштування">
+
+    <ScrollView>
+        <VerticalStackLayout Style="{StaticResource PageStack}" MaximumWidthRequest="640">
+
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="16">
+                    <Label Style="{StaticResource TextH3}" Text="Обліковий запис" />
+
+                    <Grid IsVisible="{Binding IsProfileSkeletonVisible}" ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                        <controls:Skeleton WidthRequest="48" HeightRequest="48" />
+                        <VerticalStackLayout Grid.Column="1" Spacing="8" VerticalOptions="Center">
+                            <controls:Skeleton HeightRequest="16" WidthRequest="160" HorizontalOptions="Start" />
+                            <controls:Skeleton HeightRequest="12" WidthRequest="220" HorizontalOptions="Start" />
+                        </VerticalStackLayout>
+                    </Grid>
+
+                    <Grid IsVisible="{Binding HasUser}" ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                        <Border Style="{StaticResource Avatar}" WidthRequest="48" HeightRequest="48">
+                            <Label Style="{StaticResource TextSemiBold}"
+                                   HorizontalOptions="Center"
+                                   VerticalOptions="Center"
+                                   Text="{Binding Initials}" />
+                        </Border>
+                        <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
+                            <Label Style="{StaticResource TextMedium}"
+                                   IsVisible="{Binding Text, Source={RelativeSource Self}, Converter={StaticResource HasText}, x:DataType=Label}"
+                                   Text="{Binding Name}" />
+                            <Label Style="{StaticResource TextMuted}"
+                                   LineBreakMode="TailTruncation"
+                                   Text="{Binding Email}" />
+                        </VerticalStackLayout>
+                    </Grid>
+
+                    <Grid IsVisible="{Binding HasRole}" ColumnDefinitions="*,Auto">
+                        <Label Style="{StaticResource TextMuted}" VerticalOptions="Center" Text="Роль" />
+                        <Border Grid.Column="1" Style="{StaticResource BadgeSecondary}">
+                            <Label Style="{StaticResource BadgeSecondaryText}" Text="{Binding Role, Converter={StaticResource Role}}" />
+                        </Border>
+                    </Grid>
+
+                    <Border Style="{StaticResource AlertDestructive}" IsVisible="{Binding HasProfileError}">
+                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                            <Label Style="{StaticResource IconError}"
+                                   VerticalOptions="Center"
+                                   Text="{x:Static controls:Icons.WifiOff}" />
+                            <Label Grid.Column="1"
+                                   Style="{StaticResource TextError}"
+                                   VerticalOptions="Center"
+                                   Text="{Binding ProfileError}" />
+                            <Button Grid.Column="2"
+                                    Style="{StaticResource ButtonGhost}"
+                                    Text="Повторити"
+                                    Command="{Binding LoadCommand}" />
+                        </Grid>
+                    </Border>
+                </VerticalStackLayout>
+            </Border>
+
+            <Border Style="{StaticResource Card}">
+                <VerticalStackLayout Spacing="12">
+                    <VerticalStackLayout Spacing="2">
+                        <Label Style="{StaticResource TextH3}" Text="Тема" />
+                        <Label Style="{StaticResource TextSmall}" Text="«Системна» повторює налаштування пристрою" />
+                    </VerticalStackLayout>
+                    <controls:SegmentedControl Stretch="{OnIdiom Phone=True, Default=False}"
+                                               SelectedValue="{Binding SelectedTheme}">
+                        <controls:SegmentItem Text="Системна" Value="system" Icon="{x:Static controls:Icons.Monitor}" />
+                        <controls:SegmentItem Text="Світла" Value="light" Icon="{x:Static controls:Icons.Sun}" />
+                        <controls:SegmentItem Text="Темна" Value="dark" Icon="{x:Static controls:Icons.Moon}" />
+                    </controls:SegmentedControl>
+                </VerticalStackLayout>
+            </Border>
+
+            <Grid>
+                <Button Style="{StaticResource ButtonOutline}"
+                        Text="Вийти з облікового запису"
+                        Command="{Binding LogoutCommand}" />
+                <ActivityIndicator HorizontalOptions="Start"
+                                   Margin="14,0"
+                                   WidthRequest="16"
+                                   HeightRequest="16"
+                                   IsRunning="{Binding IsLoggingOut}"
+                                   IsVisible="{Binding IsLoggingOut}" />
+            </Grid>
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>
