@@ -26,7 +26,7 @@ public static class MauiProgram
             ? "https://10.0.2.2:7250"
             : "https://localhost:7250";
 #else
-        var baseAddress = "https://ordersense-api.onrender.com"; 
+        var baseAddress = "https://ordersense-api-bzau.onrender.com";
 #endif
 
         // ViewModels & Pages
