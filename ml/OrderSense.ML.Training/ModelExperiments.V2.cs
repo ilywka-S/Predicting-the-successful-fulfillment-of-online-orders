@@ -55,6 +55,23 @@ public static partial class ModelExperiments
         Console.WriteLine($"Базова модель: ROC-AUC {baseMetrics.AreaUnderRocCurve:F4}, PR-AUC {baseMetrics.AreaUnderPrecisionRecallCurve:F4}");
         Console.WriteLine($"Частка проблем: fit {Rate(fitRows):P2}, calib {Rate(calibRows):P2}, test {Rate(testRows):P2}");
 
+        double calibRate = Rate(calibRows);
+        float mediumFrom = (float)Math.Round(1.5 * calibRate, 2, MidpointRounding.AwayFromZero);
+        float highFrom = (float)Math.Round(2.5 * calibRate, 2, MidpointRounding.AwayFromZero);
+
+        List<ScoredRow> scored = ml.Data.CreateEnumerable<ScoredRow>(testScored, reuseRowObject: false).ToList();
+
+        float f1At05 = F1AtThreshold(scored, 0.5f);
+        float f1AtMedium = F1AtThreshold(scored, mediumFrom);
+        int flagged = scored.Count(x => x.Probability >= mediumFrom);
+        int flaggedProblems = scored.Count(x => x.Probability >= mediumFrom && x.IsProblem);
+        int allProblems = scored.Count(x => x.IsProblem);
+
+        Console.WriteLine($"\nF1 при порозі 0,5: {f1At05.ToString("F4", CultureInfo.InvariantCulture)}");
+        Console.WriteLine($"F1 при порозі medium ({mediumFrom.ToString("F2", CultureInfo.InvariantCulture)}): {f1AtMedium.ToString("F4", CultureInfo.InvariantCulture)}, " +
+            $"precision {(flaggedProblems / (double)Math.Max(1, flagged)).ToString("F4", CultureInfo.InvariantCulture)}, " +
+            $"recall {(flaggedProblems / (double)Math.Max(1, allProblems)).ToString("F4", CultureInfo.InvariantCulture)}");
+
         string modelDir = $"../../ml/models/{V2Version}";
         Directory.CreateDirectory(modelDir);
         string modelPath = Path.Combine(modelDir, "model.zip");
@@ -68,15 +85,10 @@ public static partial class ModelExperiments
         float maxDiff = expected.Select((v, i) => Math.Abs(v - actual[i])).Max();
         Console.WriteLine($"Перевірка збереження: максимальна різниця ймовірностей {maxDiff.ToString("E2", CultureInfo.InvariantCulture)} (має бути ~0)");
 
-        ModelInfoWriter.Write(ml, calibratedModel, fitRows, testRows, metrics, baseMetrics, modelDir, V2Version);
-
-        double calibRate = Rate(calibRows);
-        float mediumFrom = (float)Math.Round(1.5 * calibRate, 2, MidpointRounding.AwayFromZero);
-        float highFrom = (float)Math.Round(2.5 * calibRate, 2, MidpointRounding.AwayFromZero);
+        List<string> usedFeatures = features.Numeric.Concat(features.Categorical).ToList();
+        ModelInfoWriter.Write(ml, calibratedModel, fitRows, testRows, metrics, baseMetrics, modelDir, V2Version, usedFeatures, f1AtMedium);
 
         Console.WriteLine($"\nПропоновані пороги: medium від {mediumFrom.ToString("F2", CultureInfo.InvariantCulture)}, high від {highFrom.ToString("F2", CultureInfo.InvariantCulture)} (частота у calib {calibRate.ToString("P2", CultureInfo.InvariantCulture)})");
-
-        List<ScoredRow> scored = ml.Data.CreateEnumerable<ScoredRow>(testScored, reuseRowObject: false).ToList();
         Console.WriteLine("Рівні ризику на тесті: рівень | частка замовлень | фактична частка проблем");
 
         foreach (string level in new[] { "low", "medium", "high" })
@@ -92,6 +104,15 @@ public static partial class ModelExperiments
 
             Console.WriteLine($"  {level,-6} | {(group.Count / (double)scored.Count).ToString("P1", CultureInfo.InvariantCulture)} | {group.Average(x => x.IsProblem ? 1.0 : 0.0).ToString("P1", CultureInfo.InvariantCulture)}");
         }
+    }
+
+    private static float F1AtThreshold(List<ScoredRow> scored, float threshold)
+    {
+        int tp = scored.Count(x => x.IsProblem && x.Probability >= threshold);
+        int fp = scored.Count(x => !x.IsProblem && x.Probability >= threshold);
+        int fn = scored.Count(x => x.IsProblem && x.Probability < threshold);
+
+        return tp == 0 ? 0f : 2f * tp / (2f * tp + fp + fn);
     }
 
     private static string LevelOf(float pProblem, float mediumFrom, float highFrom)

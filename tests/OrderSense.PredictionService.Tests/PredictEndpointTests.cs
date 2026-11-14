@@ -148,7 +148,7 @@ public sealed class PredictEndpointTests : IClassFixture<WebApplicationFactory<P
         Assert.Equal("v2", info.Version);
         Assert.InRange(info.RocAuc, 0f, 1f);
         Assert.True(info.PrAuc > info.BaselinePrAuc);
-        Assert.Equal(12, info.FeatureImportances.Count);
+        Assert.Equal(10, info.FeatureImportances.Count);
         Assert.Equal(0.09, info.RiskMediumFrom, 3);
         Assert.Equal(0.14, info.RiskHighFrom, 3);
     }

@@ -1,13 +1,13 @@
 {
   "version": "v2",
-  "trainedAt": "2026-11-13T20:45:59.8232204+00:00",
+  "trainedAt": "2026-11-14T08:44:13.2954772+00:00",
   "trainRows": 64380,
   "testRows": 18689,
   "trainPeriod": "2017-01 \u2013 2018-03",
   "testPeriod": "2018-06 \u2013 2018-08",
   "rocAuc": 0.67665404,
   "prAuc": 0.07886488,
-  "f1": 0.020050125,
+  "f1": 0.1327166,
   "baselinePrAuc": 0.04014186,
   "riskMediumFrom": 0,
   "riskHighFrom": 0,
@@ -18,7 +18,7 @@
     },
     {
       "feature": "SellerState",
-      "importance": 0.0059439675
+      "importance": 0.0072281486
     },
     {
       "feature": "TotalPrice",
@@ -34,15 +34,7 @@
     },
     {
       "feature": "PaymentType",
-      "importance": 0.00038546746
-    },
-    {
-      "feature": "PurchaseDayOfWeek",
-      "importance": -1.9460392E-10
-    },
-    {
-      "feature": "MainCategory",
-      "importance": -1.9460392E-10
+      "importance": 0.0005957671
     },
     {
       "feature": "Installments",
@@ -58,7 +50,7 @@
     },
     {
       "feature": "CustomerState",
-      "importance": -0.0064025666
+      "importance": -0.0032479335
     }
   ]
 }
