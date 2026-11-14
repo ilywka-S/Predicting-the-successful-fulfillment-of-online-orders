@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:lvc="clr-namespace:LiveChartsCore.SkiaSharpView.Maui;assembly=LiveChartsCore.SkiaSharpView.Maui"
+             xmlns:vm="clr-namespace:OrderSense.Client.Core.ViewModels;assembly=OrderSense.Client.Core"
+             xmlns:controls="clr-namespace:OrderSense.Maui.Controls"
+             x:Class="OrderSense.Maui.Views.ModelInfoPage"
+             x:DataType="vm:ModelInfoViewModel"
+             Title="Про модель">
+
+    <ContentPage.Resources>
+        <Style x:Key="StatTile" TargetType="Border" BasedOn="{StaticResource Card}">
+            <Setter Property="Padding" Value="{OnIdiom Phone='12', Default='20'}" />
+        </Style>
+        <Style x:Key="ThresholdText" TargetType="Label" BasedOn="{StaticResource TextMedium}">
+            <Setter Property="VerticalOptions" Value="Center" />
+            <Setter Property="HorizontalOptions" Value="End" />
+        </Style>
+    </ContentPage.Resources>
+
+    <ScrollView>
+        <VerticalStackLayout Style="{StaticResource PageStack}">
+
+            <VerticalStackLayout IsVisible="{Binding IsLoading}" Spacing="16">
+                <controls:Skeleton HeightRequest="140" />
+                <Grid ColumnDefinitions="*,*,*" ColumnSpacing="12">
+                    <controls:Skeleton HeightRequest="104" />
+                    <controls:Skeleton Grid.Column="1" HeightRequest="104" />
+                    <controls:Skeleton Grid.Column="2" HeightRequest="104" />
+                </Grid>
+                <controls:Skeleton HeightRequest="360" />
+            </VerticalStackLayout>
+
+            <controls:EmptyState IsVisible="{Binding HasError}"
+                                 IsError="True"
+                                 Icon="{x:Static controls:Icons.ServerCrash}"
+                                 Title="Не вдалося завантажити модель"
+                                 Description="{Binding ErrorMessage}"
+                                 ActionText="Спробувати знову"
+                                 ActionCommand="{Binding LoadCommand}" />
+
+            <VerticalStackLayout IsVisible="{Binding IsContentVisible}" Spacing="{OnIdiom Phone=16, Default=24}">
+
+                <Grid ColumnDefinitions="{OnIdiom Phone='*', Default='3*,2*'}"
+                      RowDefinitions="{OnIdiom Phone='Auto,Auto', Default='Auto'}"
+                      ColumnSpacing="24"
+                      RowSpacing="16">
+
+                    <Border Style="{StaticResource Card}">
+                        <VerticalStackLayout Spacing="16">
+                            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                                <Border Style="{StaticResource IconTile}" VerticalOptions="Center">
+                                    <Label Style="{StaticResource Icon}"
+                                           HorizontalOptions="Center"
+                                           VerticalOptions="Center"
+                                           Text="{x:Static controls:Icons.BrainCircuit}" />
+                                </Border>
+                                <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
+                                    <Label Style="{StaticResource TextH3}" Text="{Binding Model.Version, StringFormat='Модель {0}'}" />
+                                    <Label Style="{StaticResource TextSmall}" Text="{Binding Model.TrainedAt, StringFormat='навчена {0:dd.MM.yyyy}'}" />
+                                </VerticalStackLayout>
+                                <Button Grid.Column="2"
+                                        Style="{StaticResource ButtonIconOutline}"
+                                        VerticalOptions="Center"
+                                        Text="{x:Static controls:Icons.RefreshCw}"
+                                        SemanticProperties.Description="Оновити"
+                                        ToolTipProperties.Text="Оновити"
+                                        Command="{Binding LoadCommand}" />
+                            </Grid>
+
+                            <Label Style="{StaticResource TextMuted}"
+                                   Text="Оцінює ймовірність проблеми із замовленням: скасування, недоступність товару або доставка пізніше обіцяної дати." />
+
+                            <Grid ColumnDefinitions="*,*" ColumnSpacing="16">
+                                <VerticalStackLayout Spacing="2">
+                                    <Label Style="{StaticResource TextSmall}" Text="Навчання" />
+                                    <Label Style="{StaticResource TextMedium}" Text="{Binding Model.TrainPeriod}" />
+                                    <Label Style="{StaticResource TextMuted}"
+                                           Text="{Binding Model.TrainRows, Converter={StaticResource Count}, ConverterParameter='замовлення|замовлення|замовлень'}" />
+                                </VerticalStackLayout>
+                                <VerticalStackLayout Grid.Column="1" Spacing="2">
+                                    <Label Style="{StaticResource TextSmall}" Text="Перевірка" />
+                                    <Label Style="{StaticResource TextMedium}" Text="{Binding Model.TestPeriod}" />
+                                    <Label Style="{StaticResource TextMuted}"
+                                           Text="{Binding Model.TestRows, Converter={StaticResource Count}, ConverterParameter='замовлення|замовлення|замовлень'}" />
+                                </VerticalStackLayout>
+                            </Grid>
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <Border Grid.Row="{OnIdiom Phone=1, Default=0}"
+                            Grid.Column="{OnIdiom Phone=0, Default=1}"
+                            Style="{StaticResource Card}">
+                        <VerticalStackLayout Spacing="12">
+                            <VerticalStackLayout Spacing="2">
+                                <Label Style="{StaticResource TextH3}" Text="Рівні ризику" />
+                                <Label Style="{StaticResource TextSmall}" Text="За ймовірністю проблеми" />
+                            </VerticalStackLayout>
+                            <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto" RowSpacing="10">
+                                <controls:RiskBadge Level="low" />
+                                <Label Grid.Column="1"
+                                       Style="{StaticResource ThresholdText}"
+                                       Text="{Binding Model.RiskMediumFrom, Converter={StaticResource Percent}, StringFormat='менше {0}'}" />
+                                <controls:RiskBadge Grid.Row="1" Level="medium" />
+                                <Label Grid.Row="1"
+                                       Grid.Column="1"
+                                       Style="{StaticResource ThresholdText}"
+                                       Text="{Binding Model.RiskMediumFrom, Converter={StaticResource Percent}, StringFormat='від {0}'}" />
+                                <controls:RiskBadge Grid.Row="2" Level="high" />
+                                <Label Grid.Row="2"
+                                       Grid.Column="1"
+                                       Style="{StaticResource ThresholdText}"
+                                       Text="{Binding Model.RiskHighFrom, Converter={StaticResource Percent}, StringFormat='від {0}'}" />
+                            </Grid>
+                        </VerticalStackLayout>
+                    </Border>
+                </Grid>
+
+                <Grid ColumnDefinitions="*,*,*" ColumnSpacing="12">
+                    <Border Style="{StaticResource StatTile}">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Style="{StaticResource TextSmall}" Text="ROC-AUC" />
+                            <Label Style="{StaticResource TextStat}" Text="{Binding Model.RocAuc, Converter={StaticResource Metric}}" />
+                            <Label Style="{StaticResource TextSmall}" Text="0,5 — навмання, 1 — ідеально" />
+                        </VerticalStackLayout>
+                    </Border>
+                    <Border Grid.Column="1" Style="{StaticResource StatTile}">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Style="{StaticResource TextSmall}" Text="PR-AUC" />
+                            <Label Style="{StaticResource TextStat}" Text="{Binding Model.PrAuc, Converter={StaticResource Metric}}" />
+                            <Label Style="{StaticResource TextSmall}">
+                                <Label.FormattedText>
+                                    <FormattedString>
+                                        <Span Text="{Binding PrAucLift, Converter={StaticResource Metric}, ConverterParameter=1, StringFormat='×{0}'}" />
+                                        <Span Text=" від базової " />
+                                        <Span Text="{Binding Model.BaselinePrAuc, Converter={StaticResource Metric}}" />
+                                    </FormattedString>
+                                </Label.FormattedText>
+                            </Label>
+                        </VerticalStackLayout>
+                    </Border>
+                    <Border Grid.Column="2" Style="{StaticResource StatTile}">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Style="{StaticResource TextSmall}" Text="F1" />
+                            <Label Style="{StaticResource TextStat}" Text="{Binding Model.F1, Converter={StaticResource Metric}}" />
+                            <Label Style="{StaticResource TextSmall}" Text="баланс точності й повноти" />
+                        </VerticalStackLayout>
+                    </Border>
+                </Grid>
+
+                <Border Style="{StaticResource Card}">
+                    <VerticalStackLayout Spacing="12">
+                        <VerticalStackLayout Spacing="2">
+                            <Label Style="{StaticResource TextH3}" Text="Важливість ознак" />
+                            <Label Style="{StaticResource TextSmall}"
+                                   Text="Наскільки падає PR-AUC на перевірці, якщо перемішати значення ознаки. Сірі смуги — ознака на перевірці не допомагає." />
+                        </VerticalStackLayout>
+                        <lvc:CartesianChart HeightRequest="{OnIdiom Phone=320, Default=360}"
+                                            Series="{Binding Importances, Converter={StaticResource ImportanceSeries}}"
+                                            YAxes="{Binding Importances, Converter={StaticResource ImportanceAxes}}"
+                                            XAxes="{Binding Importances, Converter={StaticResource ImportanceValueAxes}}"
+                                            TooltipPosition="Right" />
+                    </VerticalStackLayout>
+                </Border>
+
+            </VerticalStackLayout>
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

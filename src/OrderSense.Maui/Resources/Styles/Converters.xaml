@@ -37,6 +37,12 @@
 
     <controls:PercentAxesConverter x:Key="PercentAxes" />
 
+    <controls:ImportanceSeriesConverter x:Key="ImportanceSeries" />
+
+    <controls:ImportanceAxesConverter x:Key="ImportanceAxes" />
+
+    <controls:ImportanceValueAxesConverter x:Key="ImportanceValueAxes" />
+
     <toolkit:InvertedBoolConverter x:Key="Not" />
     <toolkit:IsStringNotNullOrEmptyConverter x:Key="HasText" />
     <toolkit:IsNotNullConverter x:Key="NotNull" />
