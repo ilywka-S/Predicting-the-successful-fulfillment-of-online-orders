@@ -23,6 +23,8 @@
 
     <controls:RoleConverter x:Key="Role" />
 
+    <controls:MetricConverter x:Key="Metric" />
+
     <controls:CountConverter x:Key="Count" />
 
     <controls:FactorValueConverter x:Key="FactorValue" />

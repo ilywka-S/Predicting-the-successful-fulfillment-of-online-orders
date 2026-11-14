@@ -59,6 +59,28 @@ public static class Formats
         };
     }
 
+    public static string Metric(double value, int decimals = 3) =>
+        double.IsNaN(value) ? "—" : value.ToString("0." + new string('0', decimals), Numbers);
+
+    public static string Feature(string? feature) =>
+        feature is not null && Features.TryGetValue(feature, out var label) ? label : feature ?? "—";
+
+    private static readonly Dictionary<string, string> Features = new()
+    {
+        ["ItemsCount"] = "Кількість товарів",
+        ["TotalPrice"] = "Сума замовлення",
+        ["FreightShare"] = "Частка вартості доставки",
+        ["TotalWeightG"] = "Загальна вага",
+        ["PromisedDays"] = "Обіцяний термін доставки",
+        ["DistanceKm"] = "Відстань продавець → клієнт",
+        ["CustomerState"] = "Штат клієнта",
+        ["SellerState"] = "Штат продавця",
+        ["MainCategory"] = "Категорія товару",
+        ["PaymentType"] = "Спосіб оплати",
+        ["Installments"] = "Кількість платежів",
+        ["PurchaseDayOfWeek"] = "День тижня покупки",
+    };
+
     public static string DayOfWeek(long day) => day switch
     {
         0 => "неділя",
