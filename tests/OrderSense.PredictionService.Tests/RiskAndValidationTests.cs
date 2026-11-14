@@ -6,9 +6,9 @@ public sealed class RiskThresholdsTests
 {
     [Theory]
     [InlineData(0.05f, "low")]
+    [InlineData(0.09f, "medium")]
     [InlineData(0.12f, "medium")]
-    [InlineData(0.15f, "medium")]
-    [InlineData(0.20f, "high")]
+    [InlineData(0.14f, "high")]
     [InlineData(0.90f, "high")]
     public void Level_maps_problem_probability(float pProblem, string expected) =>
         Assert.Equal(expected, new RiskThresholds().Level(pProblem));

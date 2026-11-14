@@ -26,7 +26,9 @@ public static class ModelInfoWriter
         BinaryClassificationMetrics metrics,
         BinaryClassificationMetrics baselineMetrics,
         string modelDirectory,
-        string version)
+        string version,
+        IReadOnlyList<string>? featureNames = null,
+        float? f1 = null)
     {
         float basePrAuc = (float)metrics.AreaUnderPrecisionRecallCurve;
 
@@ -40,9 +42,9 @@ public static class ModelInfoWriter
             TestPeriod = Period(testRows),
             RocAuc = (float)metrics.AreaUnderRocCurve,
             PrAuc = basePrAuc,
-            F1 = (float)metrics.F1Score,
+            F1 = f1 ?? (float)metrics.F1Score,
             BaselinePrAuc = (float)baselineMetrics.AreaUnderPrecisionRecallCurve,
-            FeatureImportances = ComputeImportances(mlContext, model, testRows, basePrAuc),
+            FeatureImportances = ComputeImportances(mlContext, model, testRows, basePrAuc, featureNames?.ToArray()),
         };
 
         string json = JsonSerializer.Serialize(info, JsonOptions);
@@ -73,14 +75,14 @@ public static class ModelInfoWriter
         return $"{first:yyyy-MM} – {last:yyyy-MM}";
     }
 
-    private static List<FeatureImportance> ComputeImportances(
-        MLContext mlContext, ITransformer model, List<TrainingRow> testRows, float basePrAuc)
+    internal static List<FeatureImportance> ComputeImportances(
+        MLContext mlContext, ITransformer model, List<TrainingRow> testRows, float basePrAuc, string[]? featureNames = null)
     {
         const int repeats = 3;
         Random random = new Random(42);
         List<FeatureImportance> result = new List<FeatureImportance>();
 
-        foreach (string feature in FeatureNames)
+        foreach (string feature in featureNames ?? FeatureNames)
         {
             double totalDrop = 0;
 

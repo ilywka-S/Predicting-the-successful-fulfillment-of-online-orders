@@ -307,6 +307,22 @@ var mlContext = new MLContext(seed: 42);
 var trainData = mlContext.Data.LoadFromEnumerable(trainRows);
 var testData = mlContext.Data.LoadFromEnumerable(testRows);
 
+if (args.Contains("--experiments"))
+{
+    ModelExperiments.Run(mlContext, trainRows, testRows);
+    return;
+}
+if (args.Contains("--compare"))
+{
+    ModelExperiments.RunComparison(mlContext, trainRows.Concat(testRows).ToList());
+    return;
+}
+if (args.Contains("--train-v2"))
+{
+    ModelExperiments.TrainV2(mlContext, trainRows, testRows);
+    return;
+}
+
 var numericCols = new[] { "ItemsCount", "TotalPrice", "FreightShare", "TotalWeightG", "PromisedDays", "DistanceKm", "Installments", "PurchaseDayOfWeek" };
 
 var pipeline = mlContext.Transforms

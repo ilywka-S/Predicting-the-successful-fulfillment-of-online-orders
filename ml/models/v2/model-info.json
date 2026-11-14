@@ -1,0 +1,56 @@
+{
+  "version": "v2",
+  "trainedAt": "2026-11-14T08:44:13.2954772+00:00",
+  "trainRows": 64380,
+  "testRows": 18689,
+  "trainPeriod": "2017-01 \u2013 2018-03",
+  "testPeriod": "2018-06 \u2013 2018-08",
+  "rocAuc": 0.67665404,
+  "prAuc": 0.07886488,
+  "f1": 0.1327166,
+  "baselinePrAuc": 0.04014186,
+  "riskMediumFrom": 0,
+  "riskHighFrom": 0,
+  "featureImportances": [
+    {
+      "feature": "PromisedDays",
+      "importance": 0.04063224
+    },
+    {
+      "feature": "SellerState",
+      "importance": 0.0072281486
+    },
+    {
+      "feature": "TotalPrice",
+      "importance": 0.00503988
+    },
+    {
+      "feature": "TotalWeightG",
+      "importance": 0.001707534
+    },
+    {
+      "feature": "ItemsCount",
+      "importance": 0.00070100685
+    },
+    {
+      "feature": "PaymentType",
+      "importance": 0.0005957671
+    },
+    {
+      "feature": "Installments",
+      "importance": -0.0012253209
+    },
+    {
+      "feature": "DistanceKm",
+      "importance": -0.0018694852
+    },
+    {
+      "feature": "FreightShare",
+      "importance": -0.0027362157
+    },
+    {
+      "feature": "CustomerState",
+      "importance": -0.0032479335
+    }
+  ]
+}
