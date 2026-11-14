@@ -1,4 +1,4 @@
-﻿using System.Security.Claims;
+using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.AspNetCore.Identity;
@@ -9,6 +9,7 @@ using Microsoft.IdentityModel.Tokens;
 using OrderSense.Api.Data;
 using OrderSense.Api.Data.Entities;
 using OrderSense.Api.Dtos;
+using OrderSense.Api.Logging;
 
 namespace OrderSense.Api.Auth;
 
@@ -80,7 +81,7 @@ public class TokenService(
 
         if (token.RevokedAt is not null)
         {
-            logger.LogWarning("Reuse of revoked refresh token for user {UserId}; revoking all sessions", token.UserId);
+            logger.RevokedRefreshTokenReused(token.UserId);
 
             await db.RefreshTokens
                 .Where(t => t.UserId == token.UserId && t.RevokedAt == null)

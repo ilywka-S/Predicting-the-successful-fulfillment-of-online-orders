@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Globalization;
 using Microsoft.EntityFrameworkCore;
 using OrderSense.Api.Data;
 using OrderSense.Api.Data.Entities;
@@ -23,7 +24,7 @@ public static class PredictAllProgram
         int maxOrders = int.MaxValue;
         if (args.Length > 1)
         {
-            maxOrders = int.Parse(args[1]);
+            maxOrders = int.Parse(args[1], CultureInfo.InvariantCulture);
         }
         DbContextOptions<AppDbContext> options = new DbContextOptionsBuilder<AppDbContext>()
             .UseNpgsql(connectionString)

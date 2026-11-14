@@ -1,4 +1,4 @@
-﻿using System.Globalization;
+using System.Globalization;
 using OrderSense.Api.Data.Entities;
 namespace OrderSense.Api.Dtos;
 

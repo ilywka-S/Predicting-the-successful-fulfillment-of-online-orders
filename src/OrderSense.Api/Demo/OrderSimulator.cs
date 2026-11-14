@@ -1,8 +1,9 @@
-﻿using Microsoft.AspNetCore.SignalR;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using OrderSense.Api.Data;
 using OrderSense.Api.Dtos;
 using OrderSense.Api.Hubs;
+using OrderSense.Api.Logging;
 using OrderSense.Api.Predictions;
 
 namespace OrderSense.Api.Demo;
@@ -35,7 +36,7 @@ public sealed class OrderSimulator : BackgroundService
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
-                _logger.LogWarning(ex, "Simulator could not create an order");
+                _logger.SimulatorOrderCreationFailed(ex);
             }
         }
     }
@@ -52,7 +53,8 @@ public sealed class OrderSimulator : BackgroundService
 
             if (sellers.Count == 0 || products.Count == 0)
             {
-                _logger.LogWarning("Simulator needs sellers and products in the database");
+
+                _logger.SimulatorMissingSeedData();
                 return;
             }
 

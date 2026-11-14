@@ -68,7 +68,7 @@ public class LoginViewModelTests
 
         _apiClientMock
             .Setup(x => x.LoginAsync(It.IsAny<LoginRequest>()))
-            .ThrowsAsync(new Exception("Invalid credentials"));
+            .ThrowsAsync(new UnauthorizedAccessException("Invalid credentials"));
 
         // Act
         await _viewModel.LoginCommand.ExecuteAsync(null);

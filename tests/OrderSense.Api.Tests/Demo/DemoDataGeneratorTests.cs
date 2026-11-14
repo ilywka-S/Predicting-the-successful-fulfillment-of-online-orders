@@ -1,4 +1,4 @@
-﻿using System.Text.RegularExpressions;
+using System.Text.RegularExpressions;
 using OrderSense.Api.Demo;
 using OrderSense.Api.Data.Entities;
 

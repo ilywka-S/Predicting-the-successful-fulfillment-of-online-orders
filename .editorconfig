@@ -1,0 +1,22 @@
+root = true
+
+[**/Migrations/*.cs]
+generated_code = true
+
+[*Tests.cs]
+dotnet_diagnostic.CA1707.severity = none
+
+[tests/**/*.cs]
+dotnet_diagnostic.CA1707.severity = none
+dotnet_diagnostic.CA1711.severity = none
+
+[**/Platforms/**/AppDelegate.cs]
+dotnet_diagnostic.CA1711.severity = none
+
+[*.cs]
+indent_style = space
+indent_size = 4
+end_of_line = lf
+charset = utf-8
+trim_trailing_whitespace = true
+insert_final_newline = true

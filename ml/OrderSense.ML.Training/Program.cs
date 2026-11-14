@@ -1,4 +1,4 @@
-﻿using CsvHelper;
+using CsvHelper;
 using CsvHelper.Configuration;
 using System.Globalization;
 using OrderSense.ML.Training;
@@ -309,6 +309,7 @@ var testData = mlContext.Data.LoadFromEnumerable(testRows);
 
 var numericCols = new[] { "ItemsCount", "TotalPrice", "FreightShare", "TotalWeightG", "PromisedDays", "DistanceKm", "Installments", "PurchaseDayOfWeek" };
 
+
 var pipeline = mlContext.Transforms
     .ReplaceMissingValues(numericCols.Select(c => new InputOutputColumnPair(c)).ToArray(), MissingValueReplacingEstimator.ReplacementMode.Mean)
     .Append(mlContext.Transforms.Categorical.OneHotEncoding(new[]
@@ -318,7 +319,7 @@ var pipeline = mlContext.Transforms
         new InputOutputColumnPair("MainCategoryEnc", "MainCategory"),
         new InputOutputColumnPair("PaymentTypeEnc", "PaymentType"),
     }))
-    .Append(mlContext.Transforms.Concatenate("Features", numericCols.Concat(new[] { "CustomerStateEnc", "SellerStateEnc", "MainCategoryEnc", "PaymentTypeEnc" }).ToArray()))
+    .Append(mlContext.Transforms.Concatenate("Features", numericCols.Concat(CategoricalEncodedCols).ToArray()))
     .Append(mlContext.BinaryClassification.Trainers.FastTree(labelColumnName: "IsProblem", featureColumnName: "Features"));
 
 Console.WriteLine("\nНавчаю модель...");
@@ -355,3 +356,14 @@ Console.WriteLine($"\nБазова модель: ROC-AUC {baseMetrics.AreaUnderR
 Console.WriteLine($"Модель v1:     ROC-AUC {metrics.AreaUnderRocCurve:F4}, PR-AUC {metrics.AreaUnderPrecisionRecallCurve:F4}");
 
 ModelInfoWriter.Write(mlContext, model, trainRows, testRows, metrics, baseMetrics, modelDir, modelVersion);
+
+internal partial class Program
+{
+    private static readonly string[] CategoricalEncodedCols =
+    [
+        "CustomerStateEnc",
+        "SellerStateEnc",
+        "MainCategoryEnc",
+        "PaymentTypeEnc"
+    ];
+}

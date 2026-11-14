@@ -1,4 +1,5 @@
-﻿using OrderSense.Api.Data.Entities;
+using System.Globalization;
+using OrderSense.Api.Data.Entities;
 
 namespace OrderSense.Api.Demo;
 
@@ -209,7 +210,7 @@ public sealed class DemoDataGenerator
 
     private string CreateZip(State state)
     {
-        var zip = _random.Next(state.ZipFrom, state.ZipTo + 1).ToString("D5");
+        var zip = _random.Next(state.ZipFrom, state.ZipTo + 1).ToString("D5", CultureInfo.InvariantCulture);
 
         if (!_geoZips.ContainsKey(zip))
         {

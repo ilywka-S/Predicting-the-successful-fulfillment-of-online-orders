@@ -1,4 +1,4 @@
-﻿namespace OrderSense.Api.Data.Entities;
+namespace OrderSense.Api.Data.Entities;
 
 public class RiskFactor
 {

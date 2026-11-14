@@ -1,4 +1,4 @@
-﻿using OrderSense.Api.Auth;
+using OrderSense.Api.Auth;
 using OrderSense.Api.Data.Entities;
 using OrderSense.Api.Tests.Infrastructure;
 

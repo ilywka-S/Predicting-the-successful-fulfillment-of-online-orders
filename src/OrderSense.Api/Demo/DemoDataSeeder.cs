@@ -1,5 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using OrderSense.Api.Data;
+using OrderSense.Api.Logging;
 
 namespace OrderSense.Api.Demo;
 
@@ -20,7 +21,7 @@ public static class DemoDataSeeder
         db.Orders.AddRange(data.Orders);
         await db.SaveChangesAsync(ct);
 
-        logger.LogInformation("Seeded {Count} demo orders", orderCount);
+        logger.DemoOrdersSeeded(orderCount);
 
         return orderCount;
     }

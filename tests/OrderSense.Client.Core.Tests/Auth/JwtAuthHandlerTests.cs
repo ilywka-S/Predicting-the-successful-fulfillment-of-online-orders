@@ -89,7 +89,7 @@ public class JwtAuthHandlerTests
         Assert.Equal(1, innerHandler.CallCount);
     }
 
-    private class TestHttpMessageHandler : HttpMessageHandler
+    private sealed class TestHttpMessageHandler : HttpMessageHandler
     {
         private readonly Func<HttpRequestMessage, HttpResponseMessage> _responseFunc;
 

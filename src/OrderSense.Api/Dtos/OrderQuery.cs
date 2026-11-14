@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using OrderSense.Api.Data.Entities;
 
 namespace OrderSense.Api.Dtos;
@@ -31,7 +31,7 @@ public class OrderQuery : IValidatableObject
     [Range(1, 100)]
     public int PageSize { get; init; } = 20;
 
-    public IEnumerable<ValidationResult> Validate(ValidationContext context)
+    public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
         if (From > To)
         {

@@ -1,5 +1,6 @@
-﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity;
 using OrderSense.Api.Data.Entities;
+using OrderSense.Api.Logging;
 
 namespace OrderSense.Api.Auth;
 
@@ -42,6 +43,6 @@ public static class IdentitySeeder
 
         await userManager.AddToRoleAsync(admin, Roles.Admin);
 
-        logger.LogInformation("Admin user {Email} created", email);
+        logger.AdminUserCreated(email);
     }
 }

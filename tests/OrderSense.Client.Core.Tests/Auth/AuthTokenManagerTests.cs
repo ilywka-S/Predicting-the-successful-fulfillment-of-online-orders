@@ -11,7 +11,7 @@ using Xunit;
 
 namespace OrderSense.Client.Core.Tests.Auth;
 
-public class AuthTokenManagerTests
+public class AuthTokenManagerTests : IDisposable
 {
     private readonly Mock<ITokenStorage> _storageMock = new();
     private readonly Mock<IHttpClientFactory> _factoryMock = new();
@@ -165,5 +165,11 @@ public class AuthTokenManagerTests
         Assert.Null(result);
         _storageMock.Verify(x => x.ClearAsync(), Times.Never);
         _navigationMock.Verify(x => x.NavigateToLoginAsync(), Times.Never);
+    }
+
+    public void Dispose()
+    {
+        _tokenManager.Dispose();
+        GC.SuppressFinalize(this);
     }
 }

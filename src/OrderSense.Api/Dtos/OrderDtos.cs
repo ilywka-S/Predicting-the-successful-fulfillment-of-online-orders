@@ -1,4 +1,4 @@
-﻿using OrderSense.Api.Data.Entities;
+using OrderSense.Api.Data.Entities;
 
 namespace OrderSense.Api.Dtos;
 
