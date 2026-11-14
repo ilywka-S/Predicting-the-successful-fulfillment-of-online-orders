@@ -17,11 +17,11 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
     public const string AdminEmail = "admin@ordersense.test";
     public const string AdminPassword = "Admin12345";
     public const string UserPassword = "Password123";
-    
+
     private const string JwtKey = "integration-tests-signing-key-0123456789";
 
     private readonly string _connectionString = TestConnectionString.CreateUnique();
-    
+
     public FakePredictionService Prediction { get; } = new();
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -31,7 +31,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         builder.UseSetting("Seed:AdminEmail", AdminEmail);
         builder.UseSetting("Seed:AdminPassword", AdminPassword);
         builder.UseSetting("services:prediction:http:0", "http://prediction.test");
-        
+
 #pragma warning disable EXTEXP0001
         builder.ConfigureTestServices(services =>
         {

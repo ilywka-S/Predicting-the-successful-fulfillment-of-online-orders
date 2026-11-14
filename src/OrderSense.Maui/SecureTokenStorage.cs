@@ -5,7 +5,7 @@ namespace OrderSense.Maui;
 public class SecureTokenStorage : ITokenStorage
 {
     public Task<string?> GetAccessTokenAsync() => SecureStorage.Default.GetAsync("access_token");
-    
+
     public Task<string?> GetRefreshTokenAsync() => SecureStorage.Default.GetAsync("refresh_token");
 
     public async Task SaveTokensAsync(string accessToken, string refreshToken)

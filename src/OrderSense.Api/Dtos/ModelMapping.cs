@@ -1,5 +1,6 @@
 using OrderSense.Contracts;
 namespace OrderSense.Api.Dtos;
+
 public static class ModelMapping
 {
     public static ModelInfoDto ToDto(ModelDetails details)

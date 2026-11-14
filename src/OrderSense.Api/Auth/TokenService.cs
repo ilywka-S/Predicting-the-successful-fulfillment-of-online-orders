@@ -34,7 +34,7 @@ public class TokenService(
             new(JwtRegisteredClaimNames.Email, userDto.Email),
             new("name", userDto.Name ?? userDto.Email),
         };
-        
+
         if (role != "")
         {
             claims.Add(new Claim("role", role));
@@ -53,7 +53,7 @@ public class TokenService(
         });
 
         var refreshToken = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
-        
+
         db.RefreshTokens.Add(new RefreshToken
         {
             UserId = user.Id,
@@ -61,7 +61,7 @@ public class TokenService(
             CreatedAt = now,
             ExpiresAt = now.AddDays(_jwt.RefreshTokenDays),
         });
-        
+
         await db.SaveChangesAsync(ct);
 
         return new AuthResponse(accessToken, refreshToken, expiresAt, userDto);
@@ -72,7 +72,7 @@ public class TokenService(
         var now = timeProvider.GetUtcNow();
         var hash = Hash(refreshToken);
         var token = await db.RefreshTokens.SingleOrDefaultAsync(t => t.TokenHash == hash, ct);
-        
+
         if (token is null || token.ExpiresAt <= now)
         {
             return null;
@@ -81,11 +81,11 @@ public class TokenService(
         if (token.RevokedAt is not null)
         {
             logger.LogWarning("Reuse of revoked refresh token for user {UserId}; revoking all sessions", token.UserId);
-            
+
             await db.RefreshTokens
                 .Where(t => t.UserId == token.UserId && t.RevokedAt == null)
                 .ExecuteUpdateAsync(s => s.SetProperty(t => t.RevokedAt, now), ct);
-            
+
             return null;
         }
 
@@ -97,19 +97,19 @@ public class TokenService(
         {
             return null;
         }
-        
+
         return await userManager.FindByIdAsync(token.UserId.ToString());
     }
-    
+
     public async Task RevokeAsync(string refreshToken, CancellationToken ct)
     {
         var hash = Hash(refreshToken);
         var token = await db.RefreshTokens.SingleOrDefaultAsync(t => t.TokenHash == hash && t.RevokedAt == null, ct);
-        
+
         if (token is not null)
         {
             token.RevokedAt = timeProvider.GetUtcNow();
-            
+
             await db.SaveChangesAsync(ct);
         }
     }

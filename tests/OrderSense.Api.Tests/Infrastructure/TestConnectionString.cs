@@ -6,7 +6,7 @@ namespace OrderSense.Api.Tests.Infrastructure;
 public static class TestConnectionString
 {
     private const string UserSecretsId = "ordersense-api-tests";
-    
+
     public static string CreateUnique()
     {
         var configuration = new ConfigurationBuilder()

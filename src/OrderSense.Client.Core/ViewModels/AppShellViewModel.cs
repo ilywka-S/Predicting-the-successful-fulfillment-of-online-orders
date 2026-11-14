@@ -27,8 +27,8 @@ public partial class AppShellViewModel : ObservableObject
     public async Task UpdateVisibilityAsync()
     {
         var role = await _tokenStorage.GetRoleAsync();
-        
-        IsManagerVisible = role == "manager"; 
+
+        IsManagerVisible = role == "manager";
         IsAnalystVisible = role == "analyst";
         IsAdminVisible = role == "admin";
 

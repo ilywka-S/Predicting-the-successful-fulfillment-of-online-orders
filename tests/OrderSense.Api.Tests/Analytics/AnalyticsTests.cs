@@ -5,6 +5,7 @@ using OrderSense.Api.Dtos;
 using OrderSense.Api.Tests.Infrastructure;
 using OrderSense.Api.Tests.Orders;
 namespace OrderSense.Api.Tests.Analytics;
+
 [Collection(ApiCollection.Name)]
 public class AnalyticsTests(ApiFactory factory)
 {

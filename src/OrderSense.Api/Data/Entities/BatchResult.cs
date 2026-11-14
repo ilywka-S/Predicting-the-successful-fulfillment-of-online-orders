@@ -14,7 +14,7 @@ public class BatchResult
 
     [Column(TypeName = "jsonb")]
     public required string Input { get; set; }
-    
+
     public float? Probability { get; set; }
 
     public RiskLevel? RiskLevel { get; set; }

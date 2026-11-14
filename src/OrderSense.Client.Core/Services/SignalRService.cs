@@ -45,8 +45,8 @@ public class SignalRService : ISignalRService
         _hubConnection.Reconnected += async (connectionId) =>
             Debug.WriteLine($"[SignalR] Успішно перепідключено! ConnectionId: {connectionId}");
 
-            RegisterHandlers();
-        }
+        RegisterHandlers();
+    }
 
     private void RegisterHandlers()
     {

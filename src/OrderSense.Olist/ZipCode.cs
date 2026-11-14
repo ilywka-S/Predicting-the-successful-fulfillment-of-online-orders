@@ -1,4 +1,5 @@
 namespace OrderSense.Olist;
+
 public static class ZipCode
 {
     public static string Normalize(string? zip)

@@ -31,7 +31,7 @@ public class UsersController(AppDbContext db, UserManager<AppUser> userManager) 
                     .FirstOrDefault() ?? ""))
             .ToListAsync(ct);
     }
-    
+
     [HttpPost]
     [ProducesResponseType<UserDto>(StatusCodes.Status201Created)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]

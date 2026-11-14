@@ -4,6 +4,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using OrderSense.Contracts;
 namespace OrderSense.Api.Tests.Infrastructure;
+
 public sealed class FakePredictionService : HttpMessageHandler
 {
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web)
@@ -11,66 +12,66 @@ public sealed class FakePredictionService : HttpMessageHandler
         NumberHandling = JsonNumberHandling.AllowNamedFloatingPointLiterals,
     };
     private bool _failNextCall;
-    public OrderPrediction Result 
-    { 
-        get; 
-        set; 
+    public OrderPrediction Result
+    {
+        get;
+        set;
     } = new() { Probability = 0.9f, RiskLevel = "low", ModelVersion = "v-test" };
-    public ModelDetails? Model 
-    { 
-        get; 
-        set; 
+    public ModelDetails? Model
+    {
+        get;
+        set;
     } = CreateModel();
-    public OrderExplanation Explanation 
-    { 
-        get; 
-        set; 
+    public OrderExplanation Explanation
+    {
+        get;
+        set;
     } = CreateExplanation();
-    public bool FailExplain 
-    { 
-        get; 
-        set; 
+    public bool FailExplain
+    {
+        get;
+        set;
     }
-    public OrderFeatures? LastFeatures 
-    { 
-        get; 
-        private set; 
+    public OrderFeatures? LastFeatures
+    {
+        get;
+        private set;
     }
-    public string? LastPath 
-    { 
-        get; 
-        private set; 
+    public string? LastPath
+    {
+        get;
+        private set;
     }
-    public int Calls 
-    { 
-        get; 
-        private set; 
+    public int Calls
+    {
+        get;
+        private set;
     }
-    public int ExplainCalls 
-    { 
-        get; 
-        private set; 
+    public int ExplainCalls
+    {
+        get;
+        private set;
     }
-    public int BatchCalls 
-    { 
-        get; 
-        private set; 
+    public int BatchCalls
+    {
+        get;
+        private set;
     }
-    public bool RejectBatches 
-    { 
-        get; 
-        set; 
+    public bool RejectBatches
+    {
+        get;
+        set;
     }
 
-    public int? SucceedSinglesCount 
-    { 
-        get; 
-        set; 
+    public int? SucceedSinglesCount
+    {
+        get;
+        set;
     }
-    public Func<Task>? BeforeBatch 
-    { 
-        get; 
-        set; 
+    public Func<Task>? BeforeBatch
+    {
+        get;
+        set;
     }
     private int _singleCalls;
     public void FailNextCall() => _failNextCall = true;
@@ -173,7 +174,7 @@ public sealed class FakePredictionService : HttpMessageHandler
             return new HttpResponseMessage(HttpStatusCode.OK) { Content = JsonContent.Create(list, options: Json) };
         }
         LastFeatures = await request.Content!.ReadFromJsonAsync<OrderFeatures>(Json, cancellationToken);
-        
+
         return new HttpResponseMessage(HttpStatusCode.OK) { Content = JsonContent.Create(Result, options: Json) };
     }
 }

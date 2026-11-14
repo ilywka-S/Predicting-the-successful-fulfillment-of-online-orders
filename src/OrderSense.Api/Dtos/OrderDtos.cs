@@ -59,4 +59,4 @@ public record PredictionHistoryItemDto(
     DateTimeOffset CreatedAt,
     string ModelVersion,
     float Probability,
-    RiskLevel RiskLevel);   
+    RiskLevel RiskLevel);

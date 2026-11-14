@@ -3,6 +3,7 @@ using OrderSense.Api.Data.Entities;
 using OrderSense.Api.Dtos;
 using OrderSense.Contracts;
 namespace OrderSense.Api.Predictions;
+
 public class WhatIfValidationException(string field, string message) : Exception(message)
 {
     public string Field { get; } = field;

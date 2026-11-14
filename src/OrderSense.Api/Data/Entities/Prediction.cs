@@ -16,11 +16,11 @@ public class Prediction
     public int ModelVersionId { get; set; }
 
     public ModelVersion ModelVersion { get; set; } = null!;
-    
+
     public float Probability { get; set; }
 
     public RiskLevel RiskLevel { get; set; }
-    
+
     public List<RiskFactor> Factors { get; set; } = [];
 
     public DateTimeOffset CreatedAt { get; set; }

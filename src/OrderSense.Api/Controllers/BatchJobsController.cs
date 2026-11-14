@@ -10,7 +10,7 @@ using OrderSense.Api.Data;
 using OrderSense.Api.Data.Entities;
 using OrderSense.Api.Dtos;
 using OrderSense.Api.Predictions;
-using System.Text.Json; 
+using System.Text.Json;
 using Hangfire;
 using Npgsql;
 namespace OrderSense.Api.Controllers;
@@ -101,7 +101,7 @@ public class BatchJobsController(AppDbContext db, IBackgroundJobClient jobs, Tim
         var dto = BatchJobMapping.ToDto(job);
         return AcceptedAtRoute("GetBatchJob", new { id = job.Id }, dto);
     }
-        [HttpPost("predict-missing", Name = "PredictMissingOrders")]
+    [HttpPost("predict-missing", Name = "PredictMissingOrders")]
     [Authorize(Roles = Roles.Admin)]
     [ProducesResponseType<BatchJobDto>(StatusCodes.Status202Accepted)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]

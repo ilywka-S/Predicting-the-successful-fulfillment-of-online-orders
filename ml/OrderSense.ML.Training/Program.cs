@@ -71,7 +71,7 @@ string? GetLabel(OrderRow order)
 OrderCard? BuildCard(OrderRow order)
 {
     var orderItems = itemsByOrder[order.OrderId].ToList();
-    if (orderItems.Count == 0) 
+    if (orderItems.Count == 0)
     {
         return null; //замовлення без позицій пропускаємо
     }
@@ -96,7 +96,7 @@ OrderCard? BuildCard(OrderRow order)
         .OrderByDescending(g => g.Sum(i => i.Price))
         .First().Key;
     if (sellersById.TryGetValue(mainSellerId, out var mainSeller))
-    { 
+    {
         card.SellerState = mainSeller.SellerState;
     }
 
@@ -114,14 +114,14 @@ OrderCard? BuildCard(OrderRow order)
     bool anyVolume = false;
     foreach (var item in orderItems)
     {
-        if (!productsById.TryGetValue(item.ProductId, out var p)) 
+        if (!productsById.TryGetValue(item.ProductId, out var p))
         {
             continue;
         }
-        if (p.ProductWeightG.HasValue) 
-        { 
-            totalWeight += p.ProductWeightG.Value; 
-            anyWeight = true; 
+        if (p.ProductWeightG.HasValue)
+        {
+            totalWeight += p.ProductWeightG.Value;
+            anyWeight = true;
         }
         if (p.ProductLengthCm.HasValue && p.ProductHeightCm.HasValue && p.ProductWidthCm.HasValue)
         {
@@ -177,13 +177,13 @@ OrderCard? BuildCard(OrderRow order)
 TrainingRow? BuildTrainingRow(OrderRow order)
 {
     var label = GetLabel(order);
-    if (label == null || !order.OrderPurchaseTimestamp.HasValue) 
+    if (label == null || !order.OrderPurchaseTimestamp.HasValue)
     {
         return null;
     }
 
     var orderItems = itemsByOrder[order.OrderId].ToList();
-    if (orderItems.Count == 0) 
+    if (orderItems.Count == 0)
     {
         return null;
     }
@@ -233,7 +233,7 @@ var cards = new List<OrderCard>();
 foreach (var order in orders)
 {
     var card = BuildCard(order);
-    if (card != null) 
+    if (card != null)
     {
         cards.Add(card);
     }

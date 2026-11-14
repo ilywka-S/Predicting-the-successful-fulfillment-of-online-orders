@@ -7,6 +7,7 @@ using OrderSense.Api.Data;
 using OrderSense.Api.Data.Entities;
 using OrderSense.Contracts;
 namespace OrderSense.Api.Predictions;
+
 public sealed class BatchPredictor(AppDbContext db, HttpClient http, TimeProvider? timeProvider = null)
 {
     private readonly TimeProvider _clock = timeProvider ?? TimeProvider.System;

@@ -47,17 +47,17 @@ public class AuthTokenManager : IAuthTokenManager, IDisposable
             }
 
             using var client = _httpClientFactory.CreateClient("AuthClient");
-            
+
             var response = await client.PostAsJsonAsync("/api/auth/refresh", new { refreshToken }, CancellationToken.None);
 
             if (!response.IsSuccessStatusCode)
             {
-                if (response.StatusCode == HttpStatusCode.Unauthorized || 
+                if (response.StatusCode == HttpStatusCode.Unauthorized ||
                     response.StatusCode == HttpStatusCode.BadRequest)
                 {
                     await ForceLogoutAsync();
                 }
-                return null; 
+                return null;
             }
 
             var result = await response.Content.ReadFromJsonAsync<AuthResponse>(cancellationToken: CancellationToken.None);
@@ -89,7 +89,7 @@ public class AuthTokenManager : IAuthTokenManager, IDisposable
     private static bool IsTokenExpired(string? token)
     {
         if (string.IsNullOrEmpty(token)) return true;
-        
+
         try
         {
             var parts = token.Split('.');
@@ -98,19 +98,19 @@ public class AuthTokenManager : IAuthTokenManager, IDisposable
             var payload = parts[1];
             payload = payload.PadRight(payload.Length + (4 - payload.Length % 4) % 4, '=');
             payload = payload.Replace('-', '+').Replace('_', '/');
-            
+
             var jsonBytes = Convert.FromBase64String(payload);
             var jsonDoc = JsonDocument.Parse(jsonBytes);
-            
+
             if (jsonDoc.RootElement.TryGetProperty("exp", out var expElement))
             {
                 var exp = expElement.GetInt64();
                 var expirationTime = DateTimeOffset.FromUnixTimeSeconds(exp).UtcDateTime;
-                
+
                 return expirationTime <= DateTime.UtcNow.AddMinutes(1);
             }
         }
-        catch { } 
+        catch { }
 
         return true;
     }

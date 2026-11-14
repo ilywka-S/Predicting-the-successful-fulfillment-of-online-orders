@@ -35,11 +35,11 @@ public class DashboardViewModelTests
     public void OnPredictionUpdated_AddsPredictionToCollection()
     {
         // Arrange
-        var testPrediction = new OrderPrediction 
-        { 
-            Probability = 0.85f, 
-            RiskLevel = "low", 
-            ModelVersion = "v1.0" 
+        var testPrediction = new OrderPrediction
+        {
+            Probability = 0.85f,
+            RiskLevel = "low",
+            ModelVersion = "v1.0"
         };
 
         // Act
@@ -59,7 +59,7 @@ public class DashboardViewModelTests
             JobId: Guid.NewGuid(),
             ProcessedRows: 75,
             TotalRows: 100,
-            Status: "running" 
+            Status: "running"
         );
 
         // Act

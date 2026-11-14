@@ -12,7 +12,7 @@ public class OrderPayment
     public Order Order { get; set; } = null!;
 
     public int Sequential { get; set; }
-    
+
     [MaxLength(20)]
     public required string Type { get; set; }
 

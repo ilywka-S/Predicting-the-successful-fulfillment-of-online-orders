@@ -1,6 +1,7 @@
 using OrderSense.Api.Data.Entities;
 using OrderSense.Api.Dtos;
 namespace OrderSense.Api.Tests.Orders;
+
 public class RiskFactorMappingTests
 {
     [Theory]

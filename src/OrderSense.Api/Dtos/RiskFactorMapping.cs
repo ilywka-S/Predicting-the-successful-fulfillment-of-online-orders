@@ -1,6 +1,7 @@
 ﻿using System.Globalization;
 using OrderSense.Api.Data.Entities;
 namespace OrderSense.Api.Dtos;
+
 public sealed record FactorContext(string? CustomerState, string? SellerState, string? Category, string? PaymentType);
 public static class RiskFactorMapping
 {

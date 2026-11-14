@@ -61,7 +61,7 @@ public class OrdersHubTests(ApiFactory factory)
 
         Assert.Equal(new BatchJobProgressDto(job.Id, 4, 10, BatchJobStatus.Running), progress);
     }
-    
+
     private HubConnection CreateConnection(string? accessToken) => new HubConnectionBuilder()
         .WithUrl(new Uri(factory.Server.BaseAddress, "/hubs/orders"), o =>
         {

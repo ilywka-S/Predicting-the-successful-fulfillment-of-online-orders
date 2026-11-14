@@ -4,6 +4,7 @@ using OrderSense.Api.Data;
 using OrderSense.Api.Data.Entities;
 using OrderSense.Api.Predictions;
 namespace OrderSense.PredictAll;
+
 public static class PredictAllProgram
 {
     public static async Task<int> Main(string[] args)

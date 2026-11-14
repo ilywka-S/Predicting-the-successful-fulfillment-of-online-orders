@@ -15,10 +15,10 @@ public partial class BatchPredictionViewModel : ObservableObject, IDisposable
     private readonly ISignalRService _signalRService;
     private readonly IFileService _fileService;
     private readonly SynchronizationContext? _syncContext;
-    
+
     private Guid? _currentJobId;
     private CancellationTokenSource? _pollingCts;
-    
+
     private FileSelectionResult? _selectedFile;
 
     [ObservableProperty]
@@ -35,7 +35,7 @@ public partial class BatchPredictionViewModel : ObservableObject, IDisposable
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(StartBatchJobCommand))]
-    [NotifyCanExecuteChangedFor(nameof(SelectCsvCommand))]    
+    [NotifyCanExecuteChangedFor(nameof(SelectCsvCommand))]
     private bool _isProcessing;
 
     [ObservableProperty]
@@ -70,7 +70,7 @@ public partial class BatchPredictionViewModel : ObservableObject, IDisposable
 
     private void HandleProgress(BatchJobProgress data)
     {
-        if (_currentJobId == null || data.JobId != _currentJobId.Value) 
+        if (_currentJobId == null || data.JobId != _currentJobId.Value)
             return;
 
         PostToUI(() =>
@@ -79,17 +79,17 @@ public partial class BatchPredictionViewModel : ObservableObject, IDisposable
             StatusMessage = $"Обробка: {data.ProcessedRows} / {data.TotalRows}";
 
             var statusStr = data.Status?.ToString();
-            
-            if (string.Equals(statusStr, "done", StringComparison.OrdinalIgnoreCase) || 
+
+            if (string.Equals(statusStr, "done", StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(statusStr, "failed", StringComparison.OrdinalIgnoreCase))
             {
                 var isDone = string.Equals(statusStr, "done", StringComparison.OrdinalIgnoreCase);
                 IsFinished = true;
-                IsSuccess = isDone; 
+                IsSuccess = isDone;
                 IsProcessing = false;
                 StatusMessage = isDone ? "Готово! Можна завантажувати." : "Помилка обробки.";
                 StopPolling();
-            } 
+            }
         });
     }
 
@@ -105,15 +105,15 @@ public partial class BatchPredictionViewModel : ObservableObject, IDisposable
             {
                 try
                 {
-                    await Task.Delay(5000, token); 
+                    await Task.Delay(5000, token);
 
                     var jobStatus = await _apiClient.GetBatchJobAsync(jobId, token);
                     if (jobStatus != null)
                     {
                         PostToUI(() =>
                         {
-                            var currentProgress = jobStatus.TotalRows > 0 
-                                ? (double)jobStatus.ProcessedRows / jobStatus.TotalRows 
+                            var currentProgress = jobStatus.TotalRows > 0
+                                ? (double)jobStatus.ProcessedRows / jobStatus.TotalRows
                                 : 0;
 
                             Progress = currentProgress;
@@ -158,12 +158,12 @@ public partial class BatchPredictionViewModel : ObservableObject, IDisposable
         try
         {
             StatusMessage = "Завантаження результату...";
-            
+
             var response = await _apiClient.ExportBatchJobAsync(_currentJobId.Value);
-            using var stream = response.Stream; 
-            
+            using var stream = response.Stream;
+
             var isSaved = await _fileService.SaveFileAsync($"batch_result_{_currentJobId}.csv", stream);
-            
+
             if (isSaved)
             {
                 StatusMessage = "Файл успішно збережено!";
@@ -218,14 +218,14 @@ public partial class BatchPredictionViewModel : ObservableObject, IDisposable
         IsProcessing = true;
         Progress = 0;
         StatusMessage = "Відправка файлу на сервер...";
-        
+
         try
         {
             using var stream = await _selectedFile.OpenReadAsync();
-            
+
             var response = await _apiClient.CreateBatchJobAsync(new FileParameter(stream, _selectedFile.FileName));
-            _currentJobId = response.Id; 
-            
+            _currentJobId = response.Id;
+
             if (_currentJobId.HasValue)
             {
                 StatusMessage = "Файл відправлено. Очікування даних...";

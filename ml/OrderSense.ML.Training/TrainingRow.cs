@@ -1,81 +1,82 @@
 using OrderSense.Contracts;
 namespace OrderSense.ML.Training;
+
 public sealed class TrainingRow
 {
-    public float ItemsCount 
-    { 
-        get; 
-        set; 
+    public float ItemsCount
+    {
+        get;
+        set;
     }
-    public float TotalPrice 
-    { 
-        get; 
-        set; 
+    public float TotalPrice
+    {
+        get;
+        set;
     }
-    public float FreightShare 
-    { 
-        get; 
-        set; 
+    public float FreightShare
+    {
+        get;
+        set;
     }
-    public float TotalWeightG 
-    { 
-        get; 
-        set; 
+    public float TotalWeightG
+    {
+        get;
+        set;
     }
-    public float PromisedDays 
-    { 
-        get; 
-        set; 
+    public float PromisedDays
+    {
+        get;
+        set;
     }
-    public float DistanceKm 
-    { 
-        get; 
-        set; 
+    public float DistanceKm
+    {
+        get;
+        set;
     }
-    public string CustomerState 
-    { 
-        get; 
-        set; 
+    public string CustomerState
+    {
+        get;
+        set;
     } = "";
-    public string SellerState 
-    { 
-        get; 
-        set; 
+    public string SellerState
+    {
+        get;
+        set;
     } = "";
-    public string MainCategory 
-    { 
-        get; 
-        set; 
+    public string MainCategory
+    {
+        get;
+        set;
     } = "";
-    public string PaymentType 
-    { 
-        get; 
-        set; 
+    public string PaymentType
+    {
+        get;
+        set;
     } = "";
-    public float Installments 
-    { 
-        get; 
-        set; 
+    public float Installments
+    {
+        get;
+        set;
     }
-    public float PurchaseDayOfWeek 
-    { 
+    public float PurchaseDayOfWeek
+    {
         get; set;
     }
-    public bool Label 
-    { 
-        get; 
-        set; 
-    }            
-    public DateTime PurchasedAt 
-    { 
-        get; 
+    public bool Label
+    {
+        get;
+        set;
+    }
+    public DateTime PurchasedAt
+    {
+        get;
         set;
     }  // лише для поділу за часом
 
-    public bool IsProblem 
-    { 
-        get; 
-        set; 
+    public bool IsProblem
+    {
+        get;
+        set;
     }        // true = проблема (для навчання й метрик)
 
     public static TrainingRow From(OrderFeatures f, bool isSuccess, DateTime purchasedAt) => new()

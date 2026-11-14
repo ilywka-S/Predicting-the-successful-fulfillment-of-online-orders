@@ -14,6 +14,6 @@ public interface IOrdersClient
     Task PredictionUpdated(string orderId, PredictionDto prediction);
 
     Task BatchJobProgress(BatchJobDto job);
-    
+
     Task BatchJobProgress(BatchJobProgressDto progress);
 }
