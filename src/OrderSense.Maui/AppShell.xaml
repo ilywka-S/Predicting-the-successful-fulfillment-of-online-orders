@@ -24,15 +24,22 @@
             </Tab.Icon>
             <ShellContent Route="OrdersPage" ContentTemplate="{DataTemplate views:OrdersPage}" />
         </Tab>
-        <Tab>
-            <ShellContent Title="Dashboard"
-                          Icon="icon_dashboard.png"
-                          ContentTemplate="{DataTemplate views:DashboardPage}"
-                          Route="DashboardPage" />
+        <Tab Title="Дашборд">
+            <Tab.Icon>
+                <FontImageSource FontFamily="Lucide"
+                                 Glyph="{x:Static controls:Icons.LayoutDashboard}"
+                                 Color="{AppThemeBinding Light={StaticResource ForegroundLight}, Dark={StaticResource ForegroundDark}}" />
+            </Tab.Icon>
+            <ShellContent Route="DashboardPage" ContentTemplate="{DataTemplate views:DashboardPage}" />
         </Tab>
+
         <Tab Title="Пакетний прогноз" IsVisible="{Binding IsBatchPredictionVisible}">
-            <ShellContent 
-                ContentTemplate="{DataTemplate views:BatchPredictionPage}" />
+            <Tab.Icon>
+                <FontImageSource FontFamily="Lucide"
+                                 Glyph="{x:Static controls:Icons.FileSpreadsheet}"
+                                 Color="{AppThemeBinding Light={StaticResource ForegroundLight}, Dark={StaticResource ForegroundDark}}" />
+            </Tab.Icon>
+            <ShellContent ContentTemplate="{DataTemplate views:BatchPredictionPage}" />
         </Tab>
 
         <Tab Title="Про модель">
