@@ -38,6 +38,24 @@
             <ShellContent 
                 ContentTemplate="{DataTemplate views:BatchPredictionPage}" />
         </Tab>
+
+        <Tab Title="Про модель">
+            <Tab.Icon>
+                <FontImageSource FontFamily="Lucide"
+                                 Glyph="{x:Static controls:Icons.BrainCircuit}"
+                                 Color="{AppThemeBinding Light={StaticResource ForegroundLight}, Dark={StaticResource ForegroundDark}}" />
+            </Tab.Icon>
+            <ShellContent Route="ModelInfoPage" ContentTemplate="{DataTemplate views:ModelInfoPage}" />
+        </Tab>
+
+        <Tab Title="Налаштування">
+            <Tab.Icon>
+                <FontImageSource FontFamily="Lucide"
+                                 Glyph="{x:Static controls:Icons.Settings}"
+                                 Color="{AppThemeBinding Light={StaticResource ForegroundLight}, Dark={StaticResource ForegroundDark}}" />
+            </Tab.Icon>
+            <ShellContent Route="SettingsPage" ContentTemplate="{DataTemplate views:SettingsPage}" />
+        </Tab>
     </TabBar>
 
 </Shell>
