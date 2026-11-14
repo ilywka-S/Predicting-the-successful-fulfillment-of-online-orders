@@ -5,6 +5,7 @@ using Microsoft.ML.Data;
 using Microsoft.ML.Transforms;
 using OrderSense.Contracts;
 namespace OrderSense.ML.Training;
+
 public static partial class ModelExperiments
 {
     private const int AutoMlSeconds = 600;
@@ -19,15 +20,15 @@ public static partial class ModelExperiments
     private sealed record Result(string Name, double RocAuc, double PrAuc, double LogLoss, double Brier, double Ece, double MeanProbability);
     private sealed class ScoredRow
     {
-        public bool IsProblem 
-        { 
-            get; 
-            set; 
+        public bool IsProblem
+        {
+            get;
+            set;
         }
-        public float Probability 
-        { 
-            get; 
-            set; 
+        public float Probability
+        {
+            get;
+            set;
         }
     }
     public static void Run(MLContext ml, List<TrainingRow> trainRows, List<TrainingRow> testRows)

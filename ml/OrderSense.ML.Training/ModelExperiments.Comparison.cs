@@ -1,6 +1,7 @@
 using System.Globalization;
 using Microsoft.ML;
 namespace OrderSense.ML.Training;
+
 public static partial class ModelExperiments
 {
     public static void RunComparison(MLContext ml, List<TrainingRow> allRows)
