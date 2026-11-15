@@ -223,6 +223,37 @@ public class BatchJobsController(AppDbContext db, IBackgroundJobClient jobs, Tim
         return new PagedResponse<BatchResultDto>(items.Select(BatchJobMapping.ToDto).ToList(), page, pageSize, total);
     }
 
+    [HttpGet("{id:guid}/summary", Name = "GetBatchJobSummary")]
+    [ProducesResponseType<BatchJobSummaryDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<BatchJobSummaryDto>> GetSummary(Guid id, [Range(1, 50)] int top = 8, CancellationToken ct = default)
+    {
+        var job = await VisibleJobs().SingleOrDefaultAsync(j => j.Id == id, ct);
+
+        if (job is null)
+        {
+            return JobNotFound(id);
+        }
+
+        var results = await db.BatchResults
+            .AsNoTracking()
+            .Where(r => r.JobId == id)
+            .ToListAsync(ct);
+
+        var categories = await db.Products
+            .AsNoTracking()
+            .Where(p => p.Category != null && p.CategoryEn != null)
+            .Select(p => new { Category = p.Category!, CategoryEn = p.CategoryEn! })
+            .Distinct()
+            .ToListAsync(ct);
+
+        var categoryNames = categories
+            .GroupBy(c => c.Category)
+            .ToDictionary(g => g.Key, g => g.First().CategoryEn);
+
+        return BatchSummary.Build(job, results, categoryNames, top);
+    }
+
     [HttpGet("{id:guid}/export", Name = "ExportBatchJob")]
     [ProducesResponseType(typeof(Stream), StatusCodes.Status200OK, "text/csv")]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
