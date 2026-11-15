@@ -226,6 +226,7 @@ public class BatchJobsController(AppDbContext db, IBackgroundJobClient jobs, Tim
     [HttpGet("{id:guid}/summary", Name = "GetBatchJobSummary")]
     [ProducesResponseType<BatchJobSummaryDto>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
     public async Task<ActionResult<BatchJobSummaryDto>> GetSummary(Guid id, [Range(1, 50)] int top = 8, CancellationToken ct = default)
     {
         var job = await VisibleJobs().SingleOrDefaultAsync(j => j.Id == id, ct);
@@ -233,6 +234,11 @@ public class BatchJobsController(AppDbContext db, IBackgroundJobClient jobs, Tim
         if (job is null)
         {
             return JobNotFound(id);
+        }
+
+        if (job.Status is BatchJobStatus.Queued or BatchJobStatus.Running)
+        {
+            return Problem(statusCode: StatusCodes.Status409Conflict, title: "Batch job is not finished yet");
         }
 
         var results = await db.BatchResults

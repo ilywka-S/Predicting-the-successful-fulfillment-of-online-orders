@@ -145,6 +145,22 @@ public class BatchSummaryTests(ApiFactory factory)
     }
 
     [Theory]
+    [InlineData(BatchJobStatus.Queued)]
+    [InlineData(BatchJobStatus.Running)]
+    public async Task Summary_OfUnfinishedJob_Returns409(BatchJobStatus status)
+    {
+        var (client, userId) = await AnalystAsync();
+        var job = await SeedJobAsync(userId);
+        await factory.WithDbAsync(db => db.BatchJobs
+            .Where(j => j.Id == job.Id)
+            .ExecuteUpdateAsync(s => s.SetProperty(j => j.Status, status)));
+
+        var response = await client.GetAsync($"/api/batch-jobs/{job.Id}/summary");
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+    }
+
+    [Theory]
     [InlineData(0)]
     [InlineData(51)]
     public async Task Summary_WithInvalidTop_Returns400(int top)
