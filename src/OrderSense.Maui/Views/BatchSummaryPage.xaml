@@ -135,7 +135,7 @@
                             Grid.Column="{OnIdiom Phone=1, Default=3}"
                             Style="{StaticResource StatTile}">
                         <VerticalStackLayout Spacing="4">
-                            <Label Style="{StaticResource TextSmall}" Text="Середня ймовірність" />
+                            <Label Style="{StaticResource TextSmall}" Text="Середня ймовірність успіху" />
                             <Label Style="{StaticResource TextStat}" Text="{Binding Summary.AverageProbability, Converter={StaticResource Percent}}" />
                         </VerticalStackLayout>
                     </Border>
