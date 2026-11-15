@@ -122,10 +122,21 @@
                            IsVisible="{Binding HasResultsError}"
                            Text="{Binding ResultsError}" />
 
-                    <Button HorizontalOptions="{OnIdiom Phone=Fill, Default=Start}"
-                            Text="Завантажити результат CSV"
-                            IsVisible="{Binding IsSuccess}"
-                            Command="{Binding DownloadResultCommand}" />
+                    <Grid ColumnDefinitions="{OnIdiom Phone='*', Default='Auto,Auto'}"
+                          RowDefinitions="{OnIdiom Phone='Auto,Auto', Default='Auto'}"
+                          HorizontalOptions="{OnIdiom Phone=Fill, Default=Start}"
+                          ColumnSpacing="8"
+                          RowSpacing="8">
+                        <Button Text="Завантажити результат CSV"
+                                IsVisible="{Binding IsSuccess}"
+                                Command="{Binding DownloadResultCommand}" />
+                        <Button Grid.Row="{OnIdiom Phone=1, Default=0}"
+                                Grid.Column="{OnIdiom Phone=0, Default=1}"
+                                Style="{StaticResource ButtonOutline}"
+                                Text="Відкрити дашборд"
+                                IsVisible="{Binding CanOpenSummary}"
+                                Command="{Binding OpenSummaryCommand}" />
+                    </Grid>
 
                 </VerticalStackLayout>
             </Border>
