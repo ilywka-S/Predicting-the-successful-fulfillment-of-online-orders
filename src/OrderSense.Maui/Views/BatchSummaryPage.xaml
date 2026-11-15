@@ -112,13 +112,13 @@
                     <Border Style="{StaticResource StatTile}">
                         <VerticalStackLayout Spacing="4">
                             <Label Style="{StaticResource TextSmall}" Text="Рядків" />
-                            <Label Style="{StaticResource TextStat}" Text="{Binding Summary.TotalRows, StringFormat='{0:N0}'}" />
+                            <Label Style="{StaticResource TextStat}" Text="{Binding Summary.TotalRows, Converter={StaticResource Number}}" />
                         </VerticalStackLayout>
                     </Border>
                     <Border Grid.Column="1" Style="{StaticResource StatTile}">
                         <VerticalStackLayout Spacing="4">
                             <Label Style="{StaticResource TextSmall}" Text="З прогнозом" />
-                            <Label Style="{StaticResource TextStat}" Text="{Binding Summary.PredictedRows, StringFormat='{0:N0}'}" />
+                            <Label Style="{StaticResource TextStat}" Text="{Binding Summary.PredictedRows, Converter={StaticResource Number}}" />
                         </VerticalStackLayout>
                     </Border>
                     <Border Grid.Row="{OnIdiom Phone=1, Default=0}"

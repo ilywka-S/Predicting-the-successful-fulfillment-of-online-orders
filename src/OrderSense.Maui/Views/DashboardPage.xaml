@@ -73,13 +73,13 @@
                     <Border Style="{StaticResource StatTile}">
                         <VerticalStackLayout Spacing="4">
                             <Label Style="{StaticResource TextSmall}" Text="Замовлень" />
-                            <Label Style="{StaticResource TextStat}" Text="{Binding TotalOrders, StringFormat='{0:N0}'}" />
+                            <Label Style="{StaticResource TextStat}" Text="{Binding TotalOrders, Converter={StaticResource Number}}" />
                         </VerticalStackLayout>
                     </Border>
                     <Border Grid.Column="1" Style="{StaticResource StatTile}">
                         <VerticalStackLayout Spacing="4">
                             <Label Style="{StaticResource TextSmall}" Text="З прогнозом" />
-                            <Label Style="{StaticResource TextStat}" Text="{Binding PredictedOrders, StringFormat='{0:N0}'}" />
+                            <Label Style="{StaticResource TextStat}" Text="{Binding PredictedOrders, Converter={StaticResource Number}}" />
                         </VerticalStackLayout>
                     </Border>
                     <Border Grid.Column="2" Style="{StaticResource StatTile}">

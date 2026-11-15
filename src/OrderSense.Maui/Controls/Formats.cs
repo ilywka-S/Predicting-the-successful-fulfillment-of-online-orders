@@ -25,6 +25,8 @@ public static class Formats
         : grams < 1000 ? grams.ToString("0", Numbers) + Nbsp + "г"
         : (grams / 1000).ToString("#,0.##", Numbers) + Nbsp + "кг";
 
+    public static string Number(long n) => n.ToString("#,0", Numbers);
+
     public static string Count(long n, string one, string few, string many)
     {
         var lastTwo = n % 100;

@@ -25,6 +25,8 @@
 
     <controls:CountConverter x:Key="Count" />
 
+    <controls:NumberConverter x:Key="Number" />
+
     <controls:FactorValueConverter x:Key="FactorValue" />
 
     <controls:TopFactorConverter x:Key="TopFactor" />
