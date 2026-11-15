@@ -111,42 +111,21 @@
                       ColumnSpacing="24"
                       RowSpacing="16">
 
-                    <Border Style="{StaticResource ChartCard}">
-                        <VerticalStackLayout Spacing="12">
-                            <Label Style="{StaticResource TextH3}" Text="За категоріями" />
-                            <lvc:CartesianChart HeightRequest="340"
-                                                Series="{Binding RiskByCategory, Converter={StaticResource RiskSeries}, ConverterParameter=rows}"
-                                                YAxes="{Binding RiskByCategory, Converter={StaticResource RiskLabelAxes}, ConverterParameter=category}"
-                                                XAxes="{Binding RiskByCategory, Converter={StaticResource PercentAxes}}"
-                                                TooltipPosition="Right" />
-                        </VerticalStackLayout>
-                    </Border>
+                    <controls:RiskChartCard Title="За категоріями"
+                                            Dimension="category"
+                                            Points="{Binding RiskByCategory}" />
 
-                    <Border Grid.Row="{OnIdiom Phone=1, Default=0}"
-                            Grid.Column="{OnIdiom Phone=0, Default=1}"
-                            Style="{StaticResource ChartCard}">
-                        <VerticalStackLayout Spacing="12">
-                            <Label Style="{StaticResource TextH3}" Text="За штатами клієнтів" />
-                            <lvc:CartesianChart HeightRequest="340"
-                                                Series="{Binding RiskByState, Converter={StaticResource RiskSeries}, ConverterParameter=rows}"
-                                                YAxes="{Binding RiskByState, Converter={StaticResource RiskLabelAxes}, ConverterParameter=state}"
-                                                XAxes="{Binding RiskByState, Converter={StaticResource PercentAxes}}"
-                                                TooltipPosition="Right" />
-                        </VerticalStackLayout>
-                    </Border>
+                    <controls:RiskChartCard Grid.Row="{OnIdiom Phone=1, Default=0}"
+                                            Grid.Column="{OnIdiom Phone=0, Default=1}"
+                                            Title="За штатами клієнтів"
+                                            Dimension="state"
+                                            Points="{Binding RiskByState}" />
 
-                    <Border Grid.Row="{OnIdiom Phone=2, Default=0}"
-                            Grid.Column="{OnIdiom Phone=0, Default=2}"
-                            Style="{StaticResource ChartCard}">
-                        <VerticalStackLayout Spacing="12">
-                            <Label Style="{StaticResource TextH3}" Text="За продавцями" />
-                            <lvc:CartesianChart HeightRequest="340"
-                                                Series="{Binding RiskBySeller, Converter={StaticResource RiskSeries}, ConverterParameter=rows}"
-                                                YAxes="{Binding RiskBySeller, Converter={StaticResource RiskLabelAxes}, ConverterParameter=seller}"
-                                                XAxes="{Binding RiskBySeller, Converter={StaticResource PercentAxes}}"
-                                                TooltipPosition="Right" />
-                        </VerticalStackLayout>
-                    </Border>
+                    <controls:RiskChartCard Grid.Row="{OnIdiom Phone=2, Default=0}"
+                                            Grid.Column="{OnIdiom Phone=0, Default=2}"
+                                            Title="За продавцями"
+                                            Dimension="seller"
+                                            Points="{Binding RiskBySeller}" />
 
                 </Grid>
 

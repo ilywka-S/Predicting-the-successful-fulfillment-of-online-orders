@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:lvc="clr-namespace:LiveChartsCore.SkiaSharpView.Maui;assembly=LiveChartsCore.SkiaSharpView.Maui"
              xmlns:vm="clr-namespace:OrderSense.Client.Core.ViewModels;assembly=OrderSense.Client.Core"
              xmlns:controls="clr-namespace:OrderSense.Maui.Controls"
              x:Class="OrderSense.Maui.Views.BatchSummaryPage"
@@ -11,9 +10,6 @@
     <ContentPage.Resources>
         <Style x:Key="StatTile" TargetType="Border" BasedOn="{StaticResource Card}">
             <Setter Property="Padding" Value="{OnIdiom Phone='12', Default='20'}" />
-        </Style>
-        <Style x:Key="ChartCard" TargetType="Border" BasedOn="{StaticResource Card}">
-            <Setter Property="Padding" Value="{OnIdiom Phone='12,16', Default='20'}" />
         </Style>
 
         <DataTemplate x:Key="RiskLevelTemplate" x:DataType="vm:BatchRiskItem">
@@ -180,42 +176,21 @@
                       ColumnSpacing="24"
                       RowSpacing="16">
 
-                    <Border Style="{StaticResource ChartCard}">
-                        <VerticalStackLayout Spacing="12">
-                            <Label Style="{StaticResource TextH3}" Text="За категоріями" />
-                            <lvc:CartesianChart HeightRequest="320"
-                                                Series="{Binding ByCategory, Converter={StaticResource RiskSeries}, ConverterParameter=rows}"
-                                                YAxes="{Binding ByCategory, Converter={StaticResource RiskLabelAxes}, ConverterParameter=category}"
-                                                XAxes="{Binding ByCategory, Converter={StaticResource PercentAxes}}"
-                                                TooltipPosition="Right" />
-                        </VerticalStackLayout>
-                    </Border>
+                    <controls:RiskChartCard Title="За категоріями"
+                                            Dimension="category"
+                                            Points="{Binding ByCategory}" />
 
-                    <Border Grid.Row="{OnIdiom Phone=1, Default=0}"
-                            Grid.Column="{OnIdiom Phone=0, Default=1}"
-                            Style="{StaticResource ChartCard}">
-                        <VerticalStackLayout Spacing="12">
-                            <Label Style="{StaticResource TextH3}" Text="За штатами клієнтів" />
-                            <lvc:CartesianChart HeightRequest="320"
-                                                Series="{Binding ByCustomerState, Converter={StaticResource RiskSeries}, ConverterParameter=rows}"
-                                                YAxes="{Binding ByCustomerState, Converter={StaticResource RiskLabelAxes}, ConverterParameter=state}"
-                                                XAxes="{Binding ByCustomerState, Converter={StaticResource PercentAxes}}"
-                                                TooltipPosition="Right" />
-                        </VerticalStackLayout>
-                    </Border>
+                    <controls:RiskChartCard Grid.Row="{OnIdiom Phone=1, Default=0}"
+                                            Grid.Column="{OnIdiom Phone=0, Default=1}"
+                                            Title="За штатами клієнтів"
+                                            Dimension="state"
+                                            Points="{Binding ByCustomerState}" />
 
-                    <Border Grid.Row="{OnIdiom Phone=2, Default=0}"
-                            Grid.Column="{OnIdiom Phone=0, Default=2}"
-                            Style="{StaticResource ChartCard}">
-                        <VerticalStackLayout Spacing="12">
-                            <Label Style="{StaticResource TextH3}" Text="За способом оплати" />
-                            <lvc:CartesianChart HeightRequest="320"
-                                                Series="{Binding ByPaymentType, Converter={StaticResource RiskSeries}, ConverterParameter=rows}"
-                                                YAxes="{Binding ByPaymentType, Converter={StaticResource RiskLabelAxes}, ConverterParameter=payment}"
-                                                XAxes="{Binding ByPaymentType, Converter={StaticResource PercentAxes}}"
-                                                TooltipPosition="Right" />
-                        </VerticalStackLayout>
-                    </Border>
+                    <controls:RiskChartCard Grid.Row="{OnIdiom Phone=2, Default=0}"
+                                            Grid.Column="{OnIdiom Phone=0, Default=2}"
+                                            Title="За способом оплати"
+                                            Dimension="payment"
+                                            Points="{Binding ByPaymentType}" />
                 </Grid>
 
             </VerticalStackLayout>
