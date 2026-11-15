@@ -98,6 +98,7 @@ public static class RiskCharts
             => day.ToString("dd.MM", CultureInfo.InvariantCulture),
         "category" => Formats.Category(key),
         "seller" => Formats.ShortId(key),
+        "payment" => Formats.PaymentType(key),
         _ => key ?? "—",
     };
 

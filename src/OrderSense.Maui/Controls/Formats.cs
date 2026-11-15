@@ -110,7 +110,7 @@ public static class Formats
 
     public static string Category(string? category)
     {
-        if (string.IsNullOrEmpty(category))
+        if (string.IsNullOrEmpty(category) || category == "unknown")
         {
             return "Без категорії";
         }
