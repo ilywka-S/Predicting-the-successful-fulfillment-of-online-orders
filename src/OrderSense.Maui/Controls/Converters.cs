@@ -53,6 +53,11 @@ public class CategoryConverter : FormatConverter
     protected override string Format(object value) => Formats.Category(value.ToString());
 }
 
+public class NumberConverter : FormatConverter
+{
+    protected override string Format(object value) => Formats.Number(System.Convert.ToInt64(value, CultureInfo.InvariantCulture));
+}
+
 public class RoleConverter : FormatConverter
 {
     protected override string Format(object value) => Formats.Role(value.ToString());

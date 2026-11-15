@@ -22,7 +22,8 @@ public class BatchPredictionViewModelTests
         var viewModel = new BatchPredictionViewModel(
             apiClientMock.Object,
             signalRServiceMock.Object,
-            fileServiceMock.Object);
+            fileServiceMock.Object,
+            Mock.Of<IBatchNavigation>());
 
         viewModel.Subscribe();
 

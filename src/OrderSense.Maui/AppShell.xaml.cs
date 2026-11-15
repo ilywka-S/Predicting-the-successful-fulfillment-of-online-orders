@@ -7,6 +7,7 @@ public partial class AppShell : Shell
     {
         Routing.RegisterRoute(MauiOrderNavigation.OrderDetailsRoute, typeof(Views.OrderDetailsPage));
         Routing.RegisterRoute(MauiOrderNavigation.WhatIfRoute, typeof(Views.WhatIfPage));
+        Routing.RegisterRoute(MauiBatchNavigation.SummaryRoute, typeof(Views.BatchSummaryPage));
     }
 
     public AppShell()

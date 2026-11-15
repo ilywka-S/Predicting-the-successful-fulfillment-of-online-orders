@@ -81,9 +81,13 @@ public static class RiskFactorMapping
     {
         return ToDto(factor, null);
     }
+    public static string Label(string feature)
+    {
+        return Labels.GetValueOrDefault(feature, feature);
+    }
     public static RiskFactorDto ToDto(RiskFactor factor, FactorContext? context)
     {
-        string label = Labels.GetValueOrDefault(factor.Feature, factor.Feature);
+        string label = Label(factor.Feature);
         FactorImpact impact = factor.Contribution > 0 ? FactorImpact.Increases : FactorImpact.Decreases;
         return new RiskFactorDto(factor.Feature, label, factor.Value, impact, FormatValue(factor.Feature, factor.Value, context));
     }

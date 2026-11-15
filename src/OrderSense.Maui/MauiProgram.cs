@@ -44,6 +44,8 @@ public static class MauiProgram
         builder.Services.AddTransient<LoadingPage>();
         builder.Services.AddTransient<OrdersViewModel>();
         builder.Services.AddTransient<OrdersPage>();
+        builder.Services.AddTransient<BatchSummaryViewModel>();
+        builder.Services.AddTransient<BatchSummaryPage>();
         builder.Services.AddTransient<AppShell>();
         builder.Services.AddSingleton<AppShellViewModel>();
         builder.Services.AddTransient<BatchPredictionViewModel>();
@@ -55,6 +57,7 @@ public static class MauiProgram
         builder.Services.AddTransient<JwtAuthHandler>();
         builder.Services.AddSingleton<IAuthNavigation, MauiAuthNavigation>();
         builder.Services.AddSingleton<IOrderNavigation, MauiOrderNavigation>();
+        builder.Services.AddSingleton<IBatchNavigation, MauiBatchNavigation>();
         builder.Services.AddTransient<DashboardViewModel>();
         builder.Services.AddTransient<IAnalyticsService, ApiAnalyticsService>();
         builder.Services.AddTransient<IWhatIfService, ApiWhatIfService>();

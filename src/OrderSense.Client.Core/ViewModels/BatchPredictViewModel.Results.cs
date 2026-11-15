@@ -89,6 +89,12 @@ public partial class BatchPredictionViewModel
 
     private bool CanLoadMoreResults() => !IsLoadingResults && HasMoreResults;
 
+    public bool CanOpenSummary => _currentJobId is not null && HasResults;
+
+    [RelayCommand(CanExecute = nameof(CanOpenSummary))]
+    private Task OpenSummaryAsync() =>
+        _currentJobId is { } jobId ? _batchNavigation.OpenSummaryAsync(jobId) : Task.CompletedTask;
+
     private async Task LoadFinishedJobAsync(Guid jobId)
     {
         try
@@ -167,7 +173,9 @@ public partial class BatchPredictionViewModel
         OnPropertyChanged(nameof(HasResults));
         OnPropertyChanged(nameof(HasMoreResults));
         OnPropertyChanged(nameof(HasRowErrors));
+        OnPropertyChanged(nameof(CanOpenSummary));
         LoadMoreResultsCommand.NotifyCanExecuteChanged();
+        OpenSummaryCommand.NotifyCanExecuteChanged();
     }
 
     private static int? RowNumber(string key) =>
