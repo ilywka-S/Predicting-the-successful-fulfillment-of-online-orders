@@ -30,10 +30,8 @@ public static class MauiProgram
 #endif
 
         // ViewModels & Pages
-        builder.Services.AddTransient<MainViewModel>();
         builder.Services.AddTransient<OrderDetailsViewModel>();
 
-        builder.Services.AddTransient<MainPage>();
         builder.Services.AddTransient<DashboardPage>();
         builder.Services.AddTransient<OrderDetailsPage>();
         builder.Services.AddTransient<WhatIfViewModel>();
@@ -50,6 +48,10 @@ public static class MauiProgram
         builder.Services.AddSingleton<AppShellViewModel>();
         builder.Services.AddTransient<BatchPredictionViewModel>();
         builder.Services.AddTransient<BatchPredictionPage>();
+        builder.Services.AddTransient<ModelInfoViewModel>();
+        builder.Services.AddTransient<ModelInfoPage>();
+        builder.Services.AddTransient<SettingsViewModel>();
+        builder.Services.AddTransient<SettingsPage>();
 
         // Services & Handlers
         builder.Services.AddSingleton<ITokenStorage, SecureTokenStorage>();
@@ -63,6 +65,7 @@ public static class MauiProgram
         builder.Services.AddTransient<IWhatIfService, ApiWhatIfService>();
         builder.Services.AddSingleton<IFileSaver>(FileSaver.Default);
         builder.Services.AddSingleton<IFileService, MauiFileService>();
+        builder.Services.AddSingleton<IThemeService, MauiThemeService>();
 
 
         // SignalR Service

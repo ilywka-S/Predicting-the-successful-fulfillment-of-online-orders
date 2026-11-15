@@ -23,6 +23,8 @@
 
     <controls:RoleConverter x:Key="Role" />
 
+    <controls:MetricConverter x:Key="Metric" />
+
     <controls:CountConverter x:Key="Count" />
 
     <controls:NumberConverter x:Key="Number" />
@@ -36,6 +38,12 @@
     <controls:RiskLabelAxesConverter x:Key="RiskLabelAxes" />
 
     <controls:PercentAxesConverter x:Key="PercentAxes" />
+
+    <controls:ImportanceSeriesConverter x:Key="ImportanceSeries" />
+
+    <controls:ImportanceAxesConverter x:Key="ImportanceAxes" />
+
+    <controls:ImportanceValueAxesConverter x:Key="ImportanceValueAxes" />
 
     <toolkit:InvertedBoolConverter x:Key="Not" />
     <toolkit:IsStringNotNullOrEmptyConverter x:Key="HasText" />
