@@ -97,6 +97,10 @@ public partial class BatchSummaryViewModel : ObservableObject
         {
             ErrorMessage = "Пакет не знайдено або він вам недоступний.";
         }
+        catch (ApiException ex) when (ex.StatusCode == 409)
+        {
+            ErrorMessage = "Пакет ще обробляється. Відкрийте дашборд, коли обробка завершиться.";
+        }
         catch (Exception ex) when (ex is ApiException or HttpRequestException or OperationCanceledException)
         {
             ErrorMessage = ApiErrorMessages.For(ex, "Не вдалося завантажити дашборд пакета.");

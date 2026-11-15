@@ -62,6 +62,18 @@ public class BatchSummaryViewModelTests
     }
 
     [Fact]
+    public async Task Open_UnfinishedJob_ShowsProcessingMessage()
+    {
+        _apiClientMock.Setup(x => x.GetBatchJobSummaryAsync(_jobId, It.IsAny<int?>()))
+            .ThrowsAsync(new ApiException("Conflict", 409, null, null, null));
+
+        await _viewModel.OpenAsync(_jobId);
+
+        _viewModel.ErrorMessage.Should().Be("Пакет ще обробляється. Відкрийте дашборд, коли обробка завершиться.");
+        _viewModel.IsContentVisible.Should().BeFalse();
+    }
+
+    [Fact]
     public async Task Reload_AfterNetworkError_RetriesSameJob()
     {
         _apiClientMock.SetupSequence(x => x.GetBatchJobSummaryAsync(_jobId, It.IsAny<int?>()))
