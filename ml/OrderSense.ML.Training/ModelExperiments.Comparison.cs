@@ -1,5 +1,6 @@
 using System.Globalization;
 using Microsoft.ML;
+using Microsoft.ML.Data;
 namespace OrderSense.ML.Training;
 
 public static partial class ModelExperiments
@@ -34,9 +35,9 @@ public static partial class ModelExperiments
             {
                 try
                 {
-                    ITransformer model = Build(ml, candidate).Fit(ml.Data.LoadFromEnumerable(fit));
+                    TransformerChain<ITransformer> model = Build(ml, candidate).Fit(ml.Data.LoadFromEnumerable(fit));
                     IDataView calibScored = DropProbability(ml, model.Transform(ml.Data.LoadFromEnumerable(calib)));
-                    ITransformer platt = ml.BinaryClassification.Calibrators.Platt(labelColumnName: "IsProblem").Fit(calibScored);
+                    var platt = ml.BinaryClassification.Calibrators.Platt(labelColumnName: "IsProblem").Fit(calibScored);
                     Result? raw = Evaluate(ml, $"{label} · {candidate.Name} · raw", model, test);
                     Result? calibrated = Evaluate(ml, $"{label} · {candidate.Name} · Platt", model, test, scored => platt.Transform(DropProbability(ml, scored)));
                     if (raw is not null)
@@ -64,7 +65,7 @@ public static partial class ModelExperiments
             Bootstrap(foldC);
         }
     }
-    private static (float[] P, bool[] Y) Scores(MLContext ml, ITransformer model, List<TrainingRow> rows)
+    private static (float[] P, bool[] Y) Scores(MLContext ml, TransformerChain<ITransformer> model, List<TrainingRow> rows)
     {
         List<ScoredRow> items = ml.Data.CreateEnumerable<ScoredRow>(model.Transform(ml.Data.LoadFromEnumerable(rows)), reuseRowObject: false).ToList();
         return (items.Select(x => x.Probability).ToArray(), items.Select(x => x.IsProblem).ToArray());
