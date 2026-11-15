@@ -1,4 +1,5 @@
-using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
+using OrderSense.Api.Data;
 using OrderSense.Api.Data.Entities;
 using OrderSense.Api.Dtos;
 
@@ -8,103 +9,122 @@ public static class BatchSummary
 {
     public const int MaxFactors = 5;
 
-    public static BatchJobSummaryDto Build(BatchJob job, IReadOnlyList<BatchResult> results, IReadOnlyDictionary<string, string> categoryNames, int top)
+    private const string RowsCte = """
+        WITH rows AS
+        (
+            SELECT r.probability,
+                   r.risk_level,
+                   r.probability IS NOT NULL AND r.risk_level IS NOT NULL AS predicted,
+                   COALESCE(c.category_en, r.input->>'MainCategory', '') AS category,
+                   COALESCE(r.input->>'CustomerState', '') AS customer_state,
+                   COALESCE(r.input->>'PaymentType', '') AS payment_type
+            FROM batch_results r
+            LEFT JOIN
+            (
+                SELECT DISTINCT ON (p.category) p.category, p.category_en
+                FROM products p
+                WHERE p.category IS NOT NULL AND p.category_en IS NOT NULL
+                ORDER BY p.category, p.category_en
+            ) c ON c.category = r.input->>'MainCategory'
+            WHERE r.job_id = {0}
+        )
+        """;
+
+    private const string TotalsSql = RowsCte + """
+        SELECT COUNT(*)::int AS "Total",
+               (COUNT(*) FILTER (WHERE predicted))::int AS "Predicted",
+               (COUNT(*) FILTER (WHERE predicted AND risk_level = 'Low'))::int AS "Low",
+               (COUNT(*) FILTER (WHERE predicted AND risk_level = 'Medium'))::int AS "Medium",
+               (COUNT(*) FILTER (WHERE predicted AND risk_level = 'High'))::int AS "High",
+               AVG(probability) FILTER (WHERE predicted) AS "Average"
+        FROM rows
+        """;
+
+    private const string GroupSql = RowsCte + """
+        SELECT __KEY__ AS "Key",
+               COUNT(*)::int AS "Orders",
+               (COUNT(*) FILTER (WHERE predicted))::int AS "Predicted",
+               (COUNT(*) FILTER (WHERE predicted AND risk_level = 'Low'))::int AS "Low",
+               (COUNT(*) FILTER (WHERE predicted AND risk_level = 'Medium'))::int AS "Medium",
+               (COUNT(*) FILTER (WHERE predicted AND risk_level = 'High'))::int AS "High"
+        FROM rows
+        GROUP BY __KEY__
+        ORDER BY COUNT(*) DESC, __KEY__ COLLATE "C"
+        LIMIT {1}
+        """;
+
+    private const string FactorsSql = """
+        SELECT f.feature AS "Feature", COUNT(*)::int AS "Rows"
+        FROM batch_results r
+        CROSS JOIN LATERAL
+        (
+            SELECT e->>'Feature' AS feature
+            FROM jsonb_array_elements(CASE WHEN jsonb_typeof(r.factors) = 'array' THEN r.factors ELSE '[]'::jsonb END) e
+            WHERE (e->>'Contribution')::double precision > 0
+            ORDER BY (e->>'Contribution')::double precision DESC
+            LIMIT 1
+        ) f
+        WHERE r.job_id = {0}
+          AND r.probability IS NOT NULL
+          AND r.risk_level IN ('Medium', 'High')
+        GROUP BY f.feature
+        ORDER BY COUNT(*) DESC, f.feature COLLATE "C"
+        LIMIT {1}
+        """;
+
+    public static async Task<BatchJobSummaryDto> BuildAsync(AppDbContext db, BatchJob job, int top, CancellationToken ct)
     {
-        List<SummaryRow> rows = results.Select(ToRow).ToList();
-        List<SummaryRow> predicted = rows.Where(r => r.Risk is not null).ToList();
-        double? average = predicted.Count > 0 ? predicted.Average(r => (double)r.Probability!.Value) : null;
+        BatchTotalsRow totals = (await db.Database.SqlQueryRaw<BatchTotalsRow>(TotalsSql, job.Id).ToListAsync(ct)).Single();
+        List<AnalyticsPointDto> byCategory = await GroupAsync(db, job.Id, "category", top, ct);
+        List<AnalyticsPointDto> byState = await GroupAsync(db, job.Id, "customer_state", top, ct);
+        List<AnalyticsPointDto> byPayment = await GroupAsync(db, job.Id, "payment_type", top, ct);
+        List<BatchFactorRow> factors = await db.Database.SqlQueryRaw<BatchFactorRow>(FactorsSql, job.Id, MaxFactors).ToListAsync(ct);
 
         return new BatchJobSummaryDto(
             job.Id,
             job.FileName,
-            rows.Count,
-            predicted.Count,
-            predicted.Count(r => r.Risk == RiskLevel.Low),
-            predicted.Count(r => r.Risk == RiskLevel.Medium),
-            predicted.Count(r => r.Risk == RiskLevel.High),
-            average,
-            Group(rows, r => categoryNames.GetValueOrDefault(r.Category, r.Category), top),
-            Group(rows, r => r.CustomerState, top),
-            Group(rows, r => r.PaymentType, top),
-            TopFactors(predicted));
+            totals.Total,
+            totals.Predicted,
+            totals.Low,
+            totals.Medium,
+            totals.High,
+            totals.Average,
+            byCategory,
+            byState,
+            byPayment,
+            factors.Select(f => new BatchFactorCountDto(f.Feature, RiskFactorMapping.Label(f.Feature), f.Rows)).ToList());
     }
 
-    private static List<AnalyticsPointDto> Group(List<SummaryRow> rows, Func<SummaryRow, string> key, int top)
+    private static async Task<List<AnalyticsPointDto>> GroupAsync(AppDbContext db, Guid jobId, string keyColumn, int top, CancellationToken ct)
     {
+        List<AnalyticsRow> rows = await db.Database
+            .SqlQueryRaw<AnalyticsRow>(GroupSql.Replace("__KEY__", keyColumn, StringComparison.Ordinal), jobId, top)
+            .ToListAsync(ct);
+
         return rows
-            .GroupBy(key)
-            .Select(g =>
-            {
-                int predicted = g.Count(r => r.Risk is not null);
-                int medium = g.Count(r => r.Risk == RiskLevel.Medium);
-                int high = g.Count(r => r.Risk == RiskLevel.High);
-                double? share = predicted > 0 ? (double)(medium + high) / predicted : null;
-
-                return new AnalyticsPointDto(g.Key, g.Count(), predicted, g.Count(r => r.Risk == RiskLevel.Low), medium, high, share);
-            })
-            .OrderByDescending(p => p.Orders)
-            .ThenBy(p => p.Key, StringComparer.Ordinal)
-            .Take(top)
+            .Select(r => new AnalyticsPointDto(r.Key, r.Orders, r.Predicted, r.Low, r.Medium, r.High, r.Predicted > 0 ? (double)(r.Medium + r.High) / r.Predicted : null))
             .ToList();
     }
+}
 
-    private static List<BatchFactorCountDto> TopFactors(List<SummaryRow> predicted)
-    {
-        return predicted
-            .Where(r => r.Risk is RiskLevel.Medium or RiskLevel.High)
-            .Select(r => r.Factors.Where(f => f.Contribution > 0).MaxBy(f => f.Contribution))
-            .OfType<RiskFactor>()
-            .GroupBy(f => f.Feature)
-            .Select(g => new BatchFactorCountDto(g.Key, RiskFactorMapping.Label(g.Key), g.Count()))
-            .OrderByDescending(f => f.Rows)
-            .ThenBy(f => f.Feature, StringComparer.Ordinal)
-            .Take(MaxFactors)
-            .ToList();
-    }
+public sealed class BatchTotalsRow
+{
+    public int Total { get; set; }
 
-    private static SummaryRow ToRow(BatchResult result)
-    {
-        JsonElement? input = ParseInput(result.Input);
-        RiskLevel? risk = result.Probability is null ? null : result.RiskLevel;
+    public int Predicted { get; set; }
 
-        return new SummaryRow(
-            Text(input, "MainCategory") ?? string.Empty,
-            Text(input, "CustomerState") ?? string.Empty,
-            Text(input, "PaymentType") ?? string.Empty,
-            result.Probability,
-            risk,
-            result.Factors);
-    }
+    public int Low { get; set; }
 
-    private static JsonElement? ParseInput(string input)
-    {
-        try
-        {
-            using JsonDocument document = JsonDocument.Parse(input);
+    public int Medium { get; set; }
 
-            return document.RootElement.Clone();
-        }
-        catch (JsonException)
-        {
-            return null;
-        }
-    }
+    public int High { get; set; }
 
-    private static string? Text(JsonElement? root, string name)
-    {
-        return root is { ValueKind: JsonValueKind.Object } element
-            && element.TryGetProperty(name, out JsonElement value)
-            && value.ValueKind == JsonValueKind.String
-            && value.GetString() is { Length: > 0 } text
-                ? text
-                : null;
-    }
+    public double? Average { get; set; }
+}
 
-    private sealed record SummaryRow(
-        string Category,
-        string CustomerState,
-        string PaymentType,
-        float? Probability,
-        RiskLevel? Risk,
-        List<RiskFactor> Factors);
+public sealed class BatchFactorRow
+{
+    public string Feature { get; set; } = string.Empty;
+
+    public int Rows { get; set; }
 }

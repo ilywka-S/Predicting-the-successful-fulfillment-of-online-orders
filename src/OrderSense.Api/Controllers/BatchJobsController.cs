@@ -241,23 +241,7 @@ public class BatchJobsController(AppDbContext db, IBackgroundJobClient jobs, Tim
             return Problem(statusCode: StatusCodes.Status409Conflict, title: "Batch job is not finished yet");
         }
 
-        var results = await db.BatchResults
-            .AsNoTracking()
-            .Where(r => r.JobId == id)
-            .ToListAsync(ct);
-
-        var categories = await db.Products
-            .AsNoTracking()
-            .Where(p => p.Category != null && p.CategoryEn != null)
-            .Select(p => new { Category = p.Category!, CategoryEn = p.CategoryEn! })
-            .Distinct()
-            .ToListAsync(ct);
-
-        var categoryNames = categories
-            .GroupBy(c => c.Category)
-            .ToDictionary(g => g.Key, g => g.First().CategoryEn);
-
-        return BatchSummary.Build(job, results, categoryNames, top);
+        return await BatchSummary.BuildAsync(db, job, top, ct);
     }
 
     [HttpGet("{id:guid}/export", Name = "ExportBatchJob")]
