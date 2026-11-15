@@ -45,8 +45,8 @@ public class BatchSummaryTests(ApiFactory factory)
         Assert.Equal(0.5, summary.ByCustomerState[1].RiskyShare);
         Assert.Equal(3, summary.ByCategory.Count);
         Assert.Equal(2, summary.ByCategory[0].Orders);
-        Assert.Equal("unknown", summary.ByCategory[2].Key);
-        Assert.Equal(["credit_card", "boleto", "not_defined"], summary.ByPaymentType.Select(p => p.Key));
+        Assert.Equal("", summary.ByCategory[1].Key);
+        Assert.Equal(["credit_card", "", "boleto"], summary.ByPaymentType.Select(p => p.Key));
     }
 
     [Fact]

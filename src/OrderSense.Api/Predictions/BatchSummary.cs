@@ -7,9 +7,6 @@ namespace OrderSense.Api.Predictions;
 public static class BatchSummary
 {
     public const int MaxFactors = 5;
-    private const string UnknownCategory = "unknown";
-    private const string UnknownState = "unknown";
-    private const string UnknownPayment = "not_defined";
 
     public static BatchJobSummaryDto Build(BatchJob job, IReadOnlyList<BatchResult> results, IReadOnlyDictionary<string, string> categoryNames, int top)
     {
@@ -71,9 +68,9 @@ public static class BatchSummary
         RiskLevel? risk = result.Probability is null ? null : result.RiskLevel;
 
         return new SummaryRow(
-            Text(input, "MainCategory") ?? UnknownCategory,
-            Text(input, "CustomerState") ?? UnknownState,
-            Text(input, "PaymentType") ?? UnknownPayment,
+            Text(input, "MainCategory") ?? string.Empty,
+            Text(input, "CustomerState") ?? string.Empty,
+            Text(input, "PaymentType") ?? string.Empty,
             result.Probability,
             risk,
             result.Factors);
