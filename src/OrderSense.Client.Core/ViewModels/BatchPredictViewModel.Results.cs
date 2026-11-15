@@ -89,13 +89,11 @@ public partial class BatchPredictionViewModel
 
     private bool CanLoadMoreResults() => !IsLoadingResults && HasMoreResults;
 
-    public bool CanOpenSummary => _batchNavigation is not null && _currentJobId is not null && HasResults;
+    public bool CanOpenSummary => _currentJobId is not null && HasResults;
 
     [RelayCommand(CanExecute = nameof(CanOpenSummary))]
     private Task OpenSummaryAsync() =>
-        _batchNavigation is { } navigation && _currentJobId is { } jobId
-            ? navigation.OpenSummaryAsync(jobId)
-            : Task.CompletedTask;
+        _currentJobId is { } jobId ? _batchNavigation.OpenSummaryAsync(jobId) : Task.CompletedTask;
 
     private async Task LoadFinishedJobAsync(Guid jobId)
     {

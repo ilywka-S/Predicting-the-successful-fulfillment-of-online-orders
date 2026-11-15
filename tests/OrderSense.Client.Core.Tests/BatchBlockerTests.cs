@@ -24,7 +24,7 @@ public class BatchBlockerTests
             OpenReadAsync = () => Task.FromResult<Stream>(new MemoryStream())
         });
 
-        return (new BatchPredictionViewModel(api.Object, signalR.Object, files.Object), api, signalR);
+        return (new BatchPredictionViewModel(api.Object, signalR.Object, files.Object, Mock.Of<IBatchNavigation>()), api, signalR);
     }
 
     private static async Task WaitUntil(Func<bool> condition)
