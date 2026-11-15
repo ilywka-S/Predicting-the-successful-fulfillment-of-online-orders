@@ -40,7 +40,7 @@ public static partial class ModelExperiments
         Console.WriteLine($"Частка проблем: fit {Rate(fitRows):P1}, valid {Rate(validRows):P1}, test {Rate(testRows):P1}");
         FeatureSet allFeatures = new FeatureSet("усі 12", Numeric, Categorical);
         Candidate probe = new Candidate("probe", allFeatures, FastTree(20, 0.2, 100));
-        ITransformer probeModel = Build(ml, probe).Fit(ml.Data.LoadFromEnumerable(fitRows));
+        TransformerChain<ITransformer> probeModel = Build(ml, probe).Fit(ml.Data.LoadFromEnumerable(fitRows));
         var probeMetrics = ml.BinaryClassification.Evaluate(probeModel.Transform(ml.Data.LoadFromEnumerable(validRows)), "IsProblem");
         List<FeatureImportance> importances = ModelInfoWriter.ComputeImportances(ml, probeModel, validRows, (float)probeMetrics.AreaUnderPrecisionRecallCurve);
         Console.WriteLine("\n--- PFI на валідації (падіння PR-AUC при перемішуванні) ---");
@@ -85,8 +85,8 @@ public static partial class ModelExperiments
                 PrintRow(result);
             }
         }
-        Candidate bestFastTree = gridResults.Where(x => x.Candidate.Name.StartsWith("FastTree")).MaxBy(x => x.Result.PrAuc).Candidate;
-        Candidate bestLightGbm = gridResults.Where(x => x.Candidate.Name.StartsWith("LightGBM")).MaxBy(x => x.Result.PrAuc).Candidate;
+        Candidate bestFastTree = gridResults.Where(x => x.Candidate.Name.StartsWith("FastTree", StringComparison.Ordinal)).MaxBy(x => x.Result.PrAuc).Candidate;
+        Candidate bestLightGbm = gridResults.Where(x => x.Candidate.Name.StartsWith("LightGBM", StringComparison.Ordinal)).MaxBy(x => x.Result.PrAuc).Candidate;
         Candidate bestOnAll = gridResults.MaxBy(x => x.Result.PrAuc).Candidate;
         Console.WriteLine($"\nКраща FastTree: {bestFastTree.Name}\nКраща LightGBM: {bestLightGbm.Name}\nКраща загалом: {bestOnAll.Name}");
 
@@ -183,10 +183,10 @@ public static partial class ModelExperiments
     {
         Console.WriteLine($"\n=== Калібрування ({best.Name}) ===");
         Console.WriteLine("Модель навчена на fit, калібратор — на valid (2018-04 – 2018-05), оцінка на test");
-        ITransformer model = Build(ml, best).Fit(ml.Data.LoadFromEnumerable(fitRows));
+        TransformerChain<ITransformer> model = Build(ml, best).Fit(ml.Data.LoadFromEnumerable(fitRows));
         IDataView validScored = DropProbability(ml, model.Transform(ml.Data.LoadFromEnumerable(validRows)));
-        ITransformer platt = ml.BinaryClassification.Calibrators.Platt(labelColumnName: "IsProblem").Fit(validScored);
-        ITransformer isotonic = ml.BinaryClassification.Calibrators.Isotonic(labelColumnName: "IsProblem").Fit(validScored);
+        var platt = ml.BinaryClassification.Calibrators.Platt(labelColumnName: "IsProblem").Fit(validScored);
+        var isotonic = ml.BinaryClassification.Calibrators.Isotonic(labelColumnName: "IsProblem").Fit(validScored);
         Console.WriteLine("| Варіант | ROC-AUC | PR-AUC | LogLoss | Brier | ECE | Середня p |");
         Result? raw = Evaluate(ml, "без калібрування", model, testRows);
         Result? withPlatt = Evaluate(ml, "Platt", model, testRows, scored => platt.Transform(DropProbability(ml, scored)));
@@ -206,7 +206,7 @@ public static partial class ModelExperiments
     {
         return ml.Transforms.DropColumns("Probability").Fit(data).Transform(data);
     }
-    private static IEstimator<ITransformer> Build(MLContext ml, Candidate candidate)
+    private static EstimatorChain<ITransformer> Build(MLContext ml, Candidate candidate)
     {
         string[] numeric = candidate.Features.Numeric;
         string[] categorical = candidate.Features.Categorical;
@@ -297,7 +297,7 @@ public static partial class ModelExperiments
         }
         return total / sorted.Count;
     }
-    private static void PrintBins(MLContext ml, string name, ITransformer model, List<TrainingRow> rows, Func<IDataView, IDataView>? post)
+    private static void PrintBins(MLContext ml, string name, TransformerChain<ITransformer> model, List<TrainingRow> rows, Func<IDataView, IDataView>? post)
     {
         IDataView scored = model.Transform(ml.Data.LoadFromEnumerable(rows));
         if (post is not null)

@@ -22,14 +22,14 @@ public static partial class ModelExperiments
         Console.WriteLine($"\n=== Навчання {V2Version}: fit {fitRows.Count}, calib {calibRows.Count}, test {testRows.Count} ===");
 
         IDataView fitData = ml.Data.LoadFromEnumerable(fitRows);
-        ITransformer model = Build(ml, candidate).Fit(fitData);
+        TransformerChain<ITransformer> model = Build(ml, candidate).Fit(fitData);
 
         IDataView calibScored = model.Transform(ml.Data.LoadFromEnumerable(calibRows));
-        ITransformer dropProbability = ml.Transforms.DropColumns("Probability").Fit(calibScored);
+        var dropProbability = ml.Transforms.DropColumns("Probability").Fit(calibScored);
         ITransformer platt = ml.BinaryClassification.Calibrators.Platt(labelColumnName: "IsProblem")
             .Fit(dropProbability.Transform(calibScored));
 
-        ITransformer calibratedModel = new TransformerChain<ITransformer>(new ITransformer[] { model, dropProbability, platt });
+        var calibratedModel = new TransformerChain<ITransformer>(new ITransformer[] { model, dropProbability, platt });
 
         IDataView testScored = calibratedModel.Transform(ml.Data.LoadFromEnumerable(testRows));
         var metrics = ml.BinaryClassification.Evaluate(testScored, labelColumnName: "IsProblem");

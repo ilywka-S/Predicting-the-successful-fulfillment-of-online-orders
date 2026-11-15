@@ -14,6 +14,7 @@ public partial class BatchPredictionViewModel : ObservableObject, IDisposable
     private readonly IClient _apiClient;
     private readonly ISignalRService _signalRService;
     private readonly IFileService _fileService;
+    private readonly IBatchNavigation _batchNavigation;
     private readonly SynchronizationContext? _syncContext;
 
     private Guid? _currentJobId;
@@ -41,11 +42,12 @@ public partial class BatchPredictionViewModel : ObservableObject, IDisposable
     [ObservableProperty]
     private bool _isSuccess;
 
-    public BatchPredictionViewModel(IClient apiClient, ISignalRService signalRService, IFileService fileService)
+    public BatchPredictionViewModel(IClient apiClient, ISignalRService signalRService, IFileService fileService, IBatchNavigation batchNavigation)
     {
         _apiClient = apiClient;
         _signalRService = signalRService;
         _fileService = fileService;
+        _batchNavigation = batchNavigation;
         _syncContext = SynchronizationContext.Current;
     }
 

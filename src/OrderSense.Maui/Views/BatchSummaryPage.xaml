@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:OrderSense.Client.Core.ViewModels;assembly=OrderSense.Client.Core"
+             xmlns:controls="clr-namespace:OrderSense.Maui.Controls"
+             x:Class="OrderSense.Maui.Views.BatchSummaryPage"
+             x:DataType="vm:BatchSummaryViewModel"
+             Title="Дашборд пакета">
+
+    <ContentPage.Resources>
+        <Style x:Key="StatTile" TargetType="Border" BasedOn="{StaticResource Card}">
+            <Setter Property="Padding" Value="{OnIdiom Phone='12', Default='20'}" />
+        </Style>
+
+        <DataTemplate x:Key="RiskLevelTemplate" x:DataType="vm:BatchRiskItem">
+            <Grid ColumnDefinitions="{OnIdiom Phone='96,*', Default='140,*,120'}"
+                  RowDefinitions="{OnIdiom Phone='Auto,Auto', Default='Auto'}"
+                  ColumnSpacing="12"
+                  RowSpacing="4"
+                  Padding="0,6">
+                <controls:RiskBadge Compact="True" Level="{Binding Level}" VerticalOptions="Center" />
+                <controls:Meter Grid.Column="1" VerticalOptions="Center" Value="{Binding Share}" Level="{Binding Level}" />
+                <Label Grid.Row="{OnIdiom Phone=1, Default=0}"
+                       Grid.Column="{OnIdiom Phone=1, Default=2}"
+                       Style="{StaticResource TextMuted}"
+                       HorizontalOptions="{OnIdiom Phone=Start, Default=End}"
+                       VerticalOptions="Center">
+                    <Label.FormattedText>
+                        <FormattedString>
+                            <Span Text="{Binding Rows, Converter={StaticResource Count}, ConverterParameter='рядок|рядки|рядків'}" />
+                            <Span Text=" · " />
+                            <Span Text="{Binding Share, Converter={StaticResource Percent}}" />
+                        </FormattedString>
+                    </Label.FormattedText>
+                </Label>
+            </Grid>
+        </DataTemplate>
+
+        <DataTemplate x:Key="FactorTemplate" x:DataType="vm:BatchFactorItem">
+            <VerticalStackLayout Spacing="6" Padding="0,6">
+                <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+                    <Label Style="{StaticResource TextMedium}" Text="{Binding Label}" />
+                    <Label Grid.Column="1"
+                           Style="{StaticResource TextMuted}"
+                           Text="{Binding Rows, Converter={StaticResource Count}, ConverterParameter='рядок|рядки|рядків'}" />
+                </Grid>
+                <controls:Meter Value="{Binding Share}" />
+            </VerticalStackLayout>
+        </DataTemplate>
+    </ContentPage.Resources>
+
+    <ScrollView>
+        <VerticalStackLayout Style="{StaticResource PageStack}">
+
+            <VerticalStackLayout IsVisible="{Binding IsLoading}" Spacing="16">
+                <controls:Skeleton HeightRequest="64" />
+                <Grid ColumnDefinitions="*,*,*,*" ColumnSpacing="12">
+                    <controls:Skeleton HeightRequest="88" />
+                    <controls:Skeleton Grid.Column="1" HeightRequest="88" />
+                    <controls:Skeleton Grid.Column="2" HeightRequest="88" />
+                    <controls:Skeleton Grid.Column="3" HeightRequest="88" />
+                </Grid>
+                <controls:Skeleton HeightRequest="160" />
+                <controls:Skeleton HeightRequest="340" />
+            </VerticalStackLayout>
+
+            <controls:EmptyState IsVisible="{Binding HasError}"
+                                 IsError="True"
+                                 Icon="{x:Static controls:Icons.ServerCrash}"
+                                 Title="Не вдалося відкрити дашборд"
+                                 Description="{Binding ErrorMessage}"
+                                 ActionText="Спробувати знову"
+                                 ActionCommand="{Binding LoadCommand}" />
+
+            <controls:EmptyState IsVisible="{Binding IsEmpty}"
+                                 Icon="{x:Static controls:Icons.Inbox}"
+                                 Title="У пакеті немає рядків із прогнозом"
+                                 Description="Дашборд з'явиться, коли модель оцінить хоча б один рядок." />
+
+            <VerticalStackLayout IsVisible="{Binding IsContentVisible}" Spacing="{OnIdiom Phone=16, Default=24}">
+
+                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                    <Border Style="{StaticResource IconTile}" VerticalOptions="Center">
+                        <Label Style="{StaticResource Icon}"
+                               HorizontalOptions="Center"
+                               VerticalOptions="Center"
+                               Text="{x:Static controls:Icons.FileSpreadsheet}" />
+                    </Border>
+                    <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
+                        <Label Style="{StaticResource TextH3}"
+                               LineBreakMode="TailTruncation"
+                               Text="{Binding Summary.FileName}" />
+                        <Label Style="{StaticResource TextSmall}" Text="Підсумок пакетного прогнозу" />
+                    </VerticalStackLayout>
+                    <Button Grid.Column="2"
+                            Style="{StaticResource ButtonIconOutline}"
+                            VerticalOptions="Center"
+                            Text="{x:Static controls:Icons.RefreshCw}"
+                            SemanticProperties.Description="Оновити"
+                            ToolTipProperties.Text="Оновити"
+                            Command="{Binding LoadCommand}" />
+                </Grid>
+
+                <Grid ColumnDefinitions="{OnIdiom Phone='*,*', Default='*,*,*,*'}"
+                      RowDefinitions="{OnIdiom Phone='Auto,Auto', Default='Auto'}"
+                      ColumnSpacing="12"
+                      RowSpacing="12">
+                    <Border Style="{StaticResource StatTile}">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Style="{StaticResource TextSmall}" Text="Рядків" />
+                            <Label Style="{StaticResource TextStat}" Text="{Binding Summary.TotalRows, Converter={StaticResource Number}}" />
+                        </VerticalStackLayout>
+                    </Border>
+                    <Border Grid.Column="1" Style="{StaticResource StatTile}">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Style="{StaticResource TextSmall}" Text="З прогнозом" />
+                            <Label Style="{StaticResource TextStat}" Text="{Binding Summary.PredictedRows, Converter={StaticResource Number}}" />
+                        </VerticalStackLayout>
+                    </Border>
+                    <Border Grid.Row="{OnIdiom Phone=1, Default=0}"
+                            Grid.Column="{OnIdiom Phone=0, Default=2}"
+                            Style="{StaticResource StatTile}">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Style="{StaticResource TextSmall}" Text="Ризикові" />
+                            <Label Style="{StaticResource TextStat}"
+                                   TextColor="{AppThemeBinding Light={StaticResource RiskMediumTextLight}, Dark={StaticResource RiskMediumTextDark}}"
+                                   Text="{Binding RiskyShare, Converter={StaticResource Percent}}" />
+                        </VerticalStackLayout>
+                    </Border>
+                    <Border Grid.Row="{OnIdiom Phone=1, Default=0}"
+                            Grid.Column="{OnIdiom Phone=1, Default=3}"
+                            Style="{StaticResource StatTile}">
+                        <VerticalStackLayout Spacing="4">
+                            <Label Style="{StaticResource TextSmall}" Text="Середня ймовірність успіху" />
+                            <Label Style="{StaticResource TextStat}" Text="{Binding Summary.AverageProbability, Converter={StaticResource Percent}}" />
+                        </VerticalStackLayout>
+                    </Border>
+                </Grid>
+
+                <Grid ColumnDefinitions="{OnIdiom Phone='*', Default='*,*'}"
+                      RowDefinitions="{OnIdiom Phone='Auto,Auto', Default='Auto'}"
+                      ColumnSpacing="24"
+                      RowSpacing="16">
+
+                    <Border Style="{StaticResource Card}" VerticalOptions="Start">
+                        <VerticalStackLayout Spacing="8">
+                            <VerticalStackLayout Spacing="2">
+                                <Label Style="{StaticResource TextH3}" Text="Розподіл за ризиком" />
+                                <Label Style="{StaticResource TextSmall}" Text="Частка серед рядків із прогнозом" />
+                            </VerticalStackLayout>
+                            <VerticalStackLayout BindableLayout.ItemsSource="{Binding RiskLevels}"
+                                                 BindableLayout.ItemTemplate="{StaticResource RiskLevelTemplate}" />
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <Border Grid.Row="{OnIdiom Phone=1, Default=0}"
+                            Grid.Column="{OnIdiom Phone=0, Default=1}"
+                            Style="{StaticResource Card}"
+                            VerticalOptions="Start">
+                        <VerticalStackLayout Spacing="8">
+                            <VerticalStackLayout Spacing="2">
+                                <Label Style="{StaticResource TextH3}" Text="Головні чинники ризику" />
+                                <Label Style="{StaticResource TextSmall}" Text="Найсильніший чинник у рядках із середнім або високим ризиком" />
+                            </VerticalStackLayout>
+                            <Label Style="{StaticResource TextMuted}"
+                                   IsVisible="{Binding Factors.Count, Converter={StaticResource IsEqual}, ConverterParameter={x:Int32 0}}"
+                                   Text="Ризикових рядків із чинниками немає." />
+                            <VerticalStackLayout BindableLayout.ItemsSource="{Binding Factors}"
+                                                 BindableLayout.ItemTemplate="{StaticResource FactorTemplate}" />
+                        </VerticalStackLayout>
+                    </Border>
+                </Grid>
+
+                <Grid ColumnDefinitions="{OnIdiom Phone='*', Default='*,*,*'}"
+                      RowDefinitions="{OnIdiom Phone='Auto,Auto,Auto', Default='Auto'}"
+                      ColumnSpacing="24"
+                      RowSpacing="16">
+
+                    <controls:RiskChartCard Title="За категоріями"
+                                            Dimension="category"
+                                            Points="{Binding ByCategory}" />
+
+                    <controls:RiskChartCard Grid.Row="{OnIdiom Phone=1, Default=0}"
+                                            Grid.Column="{OnIdiom Phone=0, Default=1}"
+                                            Title="За штатами клієнтів"
+                                            Dimension="state"
+                                            Points="{Binding ByCustomerState}" />
+
+                    <controls:RiskChartCard Grid.Row="{OnIdiom Phone=2, Default=0}"
+                                            Grid.Column="{OnIdiom Phone=0, Default=2}"
+                                            Title="За способом оплати"
+                                            Dimension="payment"
+                                            Points="{Binding ByPaymentType}" />
+                </Grid>
+
+            </VerticalStackLayout>
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

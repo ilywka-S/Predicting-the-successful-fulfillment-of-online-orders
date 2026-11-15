@@ -34,7 +34,7 @@ public sealed class BatchPredictor(AppDbContext db, HttpClient http, TimeProvide
             }
             else
             {
-                query = query.Where(o => !o.Predictions.Any(p => p.ModelVersion.Version == targetVersion) && string.Compare(o.Id, lastId) > 0);
+                query = query.Where(o => !o.Predictions.Any(p => p.ModelVersion.Version == targetVersion) && o.Id.CompareTo(lastId) > 0);
             }
             List<string> ids = await query
                 .OrderBy(o => o.Id)

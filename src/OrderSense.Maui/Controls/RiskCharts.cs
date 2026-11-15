@@ -97,8 +97,10 @@ public static class RiskCharts
         "day" when DateTime.TryParseExact(key, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var day)
             => day.ToString("dd.MM", CultureInfo.InvariantCulture),
         "category" => Formats.Category(key),
+        _ when string.IsNullOrEmpty(key) => "Не вказано",
         "seller" => Formats.ShortId(key),
-        _ => key ?? "—",
+        "payment" => Formats.PaymentType(key),
+        _ => key,
     };
 
     public static string Tooltip(IReadOnlyList<AnalyticsPointDto> points, int index)

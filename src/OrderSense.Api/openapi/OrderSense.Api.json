@@ -911,6 +911,98 @@
         }
       }
     },
+    "/api/batch-jobs/{id}/summary": {
+      "get": {
+        "tags": [
+          "BatchJobs"
+        ],
+        "operationId": "GetBatchJobSummary",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "top",
+            "in": "query",
+            "schema": {
+              "maximum": 50,
+              "minimum": 1,
+              "type": "integer",
+              "format": "int32",
+              "default": 8
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/BatchJobSummaryDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BatchJobSummaryDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BatchJobSummaryDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/batch-jobs/{id}/export": {
       "get": {
         "tags": [
@@ -1742,6 +1834,26 @@
           }
         }
       },
+      "BatchFactorCountDto": {
+        "required": [
+          "feature",
+          "label",
+          "rows"
+        ],
+        "type": "object",
+        "properties": {
+          "feature": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "rows": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
       "BatchJobDto": {
         "required": [
           "id",
@@ -1799,6 +1911,83 @@
           "done",
           "failed"
         ]
+      },
+      "BatchJobSummaryDto": {
+        "required": [
+          "jobId",
+          "fileName",
+          "totalRows",
+          "predictedRows",
+          "low",
+          "medium",
+          "high",
+          "averageProbability",
+          "byCategory",
+          "byCustomerState",
+          "byPaymentType",
+          "topFactors"
+        ],
+        "type": "object",
+        "properties": {
+          "jobId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fileName": {
+            "type": "string"
+          },
+          "totalRows": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "predictedRows": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "low": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "medium": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "high": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "averageProbability": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "byCategory": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsPointDto"
+            }
+          },
+          "byCustomerState": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsPointDto"
+            }
+          },
+          "byPaymentType": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsPointDto"
+            }
+          },
+          "topFactors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BatchFactorCountDto"
+            }
+          }
+        }
       },
       "BatchResultDto": {
         "required": [
