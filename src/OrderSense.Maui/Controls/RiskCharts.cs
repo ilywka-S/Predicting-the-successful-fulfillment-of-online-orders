@@ -73,6 +73,7 @@ public static class RiskCharts
                 LabelsPaint = new SolidColorPaint(Muted),
                 SeparatorsPaint = null,
                 MinStep = 1,
+                ForceStepToMin = dimension != "day",
             },
         ];
     }

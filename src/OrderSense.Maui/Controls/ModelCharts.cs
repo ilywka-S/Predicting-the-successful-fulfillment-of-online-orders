@@ -34,6 +34,7 @@ public static class ModelCharts
             LabelsPaint = new SolidColorPaint(Muted),
             SeparatorsPaint = null,
             MinStep = 1,
+            ForceStepToMin = true,
         },
     ];
 
