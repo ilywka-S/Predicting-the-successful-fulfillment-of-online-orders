@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 using CommunityToolkit.Maui;
 using OrderSense.Client.Core;
 using OrderSense.Maui.Views;
@@ -15,25 +15,23 @@ public static class MauiProgram
     public static MauiApp CreateMauiApp()
     {
         var builder = MauiApp.CreateBuilder();
-        
+
         builder
             .UseMauiApp<App>()
             .UseMauiCommunityToolkit()
             .UseDesignSystem();
 
 #if DEBUG
-        var baseAddress = DeviceInfo.Platform == DevicePlatform.Android 
-            ? "https://10.0.2.2:7250" 
+        var baseAddress = DeviceInfo.Platform == DevicePlatform.Android
+            ? "https://10.0.2.2:7250"
             : "https://localhost:7250";
 #else
-        var baseAddress = "https://ordersense-api.onrender.com"; 
+        var baseAddress = "https://ordersense-api-bzau.onrender.com";
 #endif
 
         // ViewModels & Pages
-        builder.Services.AddTransient<MainViewModel>();
         builder.Services.AddTransient<OrderDetailsViewModel>();
 
-        builder.Services.AddTransient<MainPage>();
         builder.Services.AddTransient<DashboardPage>();
         builder.Services.AddTransient<OrderDetailsPage>();
         builder.Services.AddTransient<WhatIfViewModel>();
@@ -44,10 +42,16 @@ public static class MauiProgram
         builder.Services.AddTransient<LoadingPage>();
         builder.Services.AddTransient<OrdersViewModel>();
         builder.Services.AddTransient<OrdersPage>();
+        builder.Services.AddTransient<BatchSummaryViewModel>();
+        builder.Services.AddTransient<BatchSummaryPage>();
         builder.Services.AddTransient<AppShell>();
         builder.Services.AddSingleton<AppShellViewModel>();
         builder.Services.AddTransient<BatchPredictionViewModel>();
         builder.Services.AddTransient<BatchPredictionPage>();
+        builder.Services.AddTransient<ModelInfoViewModel>();
+        builder.Services.AddTransient<ModelInfoPage>();
+        builder.Services.AddTransient<SettingsViewModel>();
+        builder.Services.AddTransient<SettingsPage>();
 
         // Services & Handlers
         builder.Services.AddSingleton<ITokenStorage, SecureTokenStorage>();
@@ -55,22 +59,24 @@ public static class MauiProgram
         builder.Services.AddTransient<JwtAuthHandler>();
         builder.Services.AddSingleton<IAuthNavigation, MauiAuthNavigation>();
         builder.Services.AddSingleton<IOrderNavigation, MauiOrderNavigation>();
+        builder.Services.AddSingleton<IBatchNavigation, MauiBatchNavigation>();
         builder.Services.AddTransient<DashboardViewModel>();
         builder.Services.AddTransient<IAnalyticsService, ApiAnalyticsService>();
         builder.Services.AddTransient<IWhatIfService, ApiWhatIfService>();
         builder.Services.AddSingleton<IFileSaver>(FileSaver.Default);
         builder.Services.AddSingleton<IFileService, MauiFileService>();
+        builder.Services.AddSingleton<IThemeService, MauiThemeService>();
 
 
         // SignalR Service
-        builder.Services.AddSingleton<ISignalRService>(sp => 
+        builder.Services.AddSingleton<ISignalRService>(sp =>
         {
             var tokenManager = sp.GetRequiredService<IAuthTokenManager>();
-            return new SignalRService(tokenManager, baseAddress); 
+            return new SignalRService(tokenManager, baseAddress);
         });
 
         // HTTP Clients
-        builder.Services.AddHttpClient("AuthClient", client => 
+        builder.Services.AddHttpClient("AuthClient", client =>
         {
             client.BaseAddress = new Uri(baseAddress);
         });

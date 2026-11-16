@@ -11,7 +11,7 @@ using Xunit;
 
 namespace OrderSense.Client.Core.Tests.Auth;
 
-public class AuthTokenManagerTests
+public class AuthTokenManagerTests : IDisposable
 {
     private readonly Mock<ITokenStorage> _storageMock = new();
     private readonly Mock<IHttpClientFactory> _factoryMock = new();
@@ -28,8 +28,8 @@ public class AuthTokenManagerTests
         _factoryMock.Setup(x => x.CreateClient("AuthClient")).Returns(httpClient);
 
         _tokenManager = new AuthTokenManager(
-            _storageMock.Object, 
-            _factoryMock.Object, 
+            _storageMock.Object,
+            _factoryMock.Object,
             _navigationMock.Object);
     }
 
@@ -54,9 +54,9 @@ public class AuthTokenManagerTests
         // Assert
         Assert.Equal(validToken, result);
         _httpHandlerMock.Protected().Verify(
-            "SendAsync", 
-            Times.Never(), 
-            ItExpr.IsAny<HttpRequestMessage>(), 
+            "SendAsync",
+            Times.Never(),
+            ItExpr.IsAny<HttpRequestMessage>(),
             ItExpr.IsAny<CancellationToken>());
     }
 
@@ -76,8 +76,8 @@ public class AuthTokenManagerTests
 
         _httpHandlerMock.Protected()
             .Setup<Task<HttpResponseMessage>>(
-                "SendAsync", 
-                ItExpr.Is<HttpRequestMessage>(req => req.RequestUri!.PathAndQuery == "/api/auth/refresh"), 
+                "SendAsync",
+                ItExpr.Is<HttpRequestMessage>(req => req.RequestUri!.PathAndQuery == "/api/auth/refresh"),
                 ItExpr.IsAny<CancellationToken>())
             .ReturnsAsync(httpResponse);
 
@@ -101,8 +101,8 @@ public class AuthTokenManagerTests
 
         _httpHandlerMock.Protected()
             .Setup<Task<HttpResponseMessage>>(
-                "SendAsync", 
-                ItExpr.IsAny<HttpRequestMessage>(), 
+                "SendAsync",
+                ItExpr.IsAny<HttpRequestMessage>(),
                 ItExpr.IsAny<CancellationToken>())
             .ReturnsAsync(httpResponse);
 
@@ -129,11 +129,11 @@ public class AuthTokenManagerTests
         // Assert
         Assert.Null(result);
         _httpHandlerMock.Protected().Verify(
-            "SendAsync", 
-            Times.Never(), 
-            ItExpr.IsAny<HttpRequestMessage>(), 
+            "SendAsync",
+            Times.Never(),
+            ItExpr.IsAny<HttpRequestMessage>(),
             ItExpr.IsAny<CancellationToken>());
-            
+
         _storageMock.Verify(x => x.ClearAsync(), Times.Once);
         _navigationMock.Verify(x => x.NavigateToLoginAsync(), Times.Once);
     }
@@ -153,8 +153,8 @@ public class AuthTokenManagerTests
 
         _httpHandlerMock.Protected()
             .Setup<Task<HttpResponseMessage>>(
-                "SendAsync", 
-                ItExpr.IsAny<HttpRequestMessage>(), 
+                "SendAsync",
+                ItExpr.IsAny<HttpRequestMessage>(),
                 ItExpr.IsAny<CancellationToken>())
             .ReturnsAsync(httpResponse);
 
@@ -165,5 +165,11 @@ public class AuthTokenManagerTests
         Assert.Null(result);
         _storageMock.Verify(x => x.ClearAsync(), Times.Never);
         _navigationMock.Verify(x => x.NavigateToLoginAsync(), Times.Never);
+    }
+
+    public void Dispose()
+    {
+        _tokenManager.Dispose();
+        GC.SuppressFinalize(this);
     }
 }

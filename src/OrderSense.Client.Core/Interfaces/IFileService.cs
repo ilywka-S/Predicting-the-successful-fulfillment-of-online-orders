@@ -12,6 +12,6 @@ public class FileSelectionResult
 public interface IFileService
 {
     Task<bool> SaveFileAsync(string fileName, Stream stream);
-    
-    Task<FileSelectionResult?> PickCsvAsync(); 
+
+    Task<FileSelectionResult?> PickCsvAsync();
 }

@@ -12,6 +12,7 @@ public sealed class BatchResultsTests : IDisposable
     private readonly Mock<IClient> _apiClientMock = new();
     private readonly Mock<ISignalRService> _signalRMock = new();
     private readonly Mock<IFileService> _fileServiceMock = new();
+    private readonly Mock<IBatchNavigation> _navigationMock = new();
     private readonly BatchPredictionViewModel _viewModel;
 
     public BatchResultsTests()
@@ -23,7 +24,7 @@ public sealed class BatchResultsTests : IDisposable
             .Setup(x => x.CreateBatchJobAsync(It.IsAny<FileParameter>()))
             .ReturnsAsync(new BatchJobDto { Id = _jobId, Status = BatchJobStatus.Queued, TotalRows = 45 });
 
-        _viewModel = new BatchPredictionViewModel(_apiClientMock.Object, _signalRMock.Object, _fileServiceMock.Object);
+        _viewModel = new BatchPredictionViewModel(_apiClientMock.Object, _signalRMock.Object, _fileServiceMock.Object, _navigationMock.Object);
         _viewModel.Subscribe();
     }
 
@@ -74,6 +75,35 @@ public sealed class BatchResultsTests : IDisposable
         _viewModel.Results.Select(r => r.RowNo).Should().BeInAscendingOrder().And.OnlyHaveUniqueItems();
         _viewModel.HasMoreResults.Should().BeFalse();
         _viewModel.LoadMoreResultsCommand.CanExecute(null).Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task FinishedJob_OpensDashboardForThatJob()
+    {
+        SetupJob(BatchJobStatus.Done, null);
+        SetupResults(total: 5);
+        await StartAsync();
+        _viewModel.CanOpenSummary.Should().BeFalse();
+
+        RaiseProgress("done");
+        await WaitUntilAsync(() => _viewModel.HasResults);
+        await _viewModel.OpenSummaryCommand.ExecuteAsync(null);
+
+        _viewModel.CanOpenSummary.Should().BeTrue();
+        _navigationMock.Verify(x => x.OpenSummaryAsync(_jobId), Times.Once);
+    }
+
+    [Fact]
+    public async Task FailedJob_CannotOpenDashboard()
+    {
+        SetupJob(BatchJobStatus.Failed, "No rows could be predicted");
+        await StartAsync();
+
+        RaiseProgress("failed");
+        await WaitUntilAsync(() => _viewModel.HasJobMessage);
+
+        _viewModel.CanOpenSummary.Should().BeFalse();
+        _viewModel.OpenSummaryCommand.CanExecute(null).Should().BeFalse();
     }
 
     [Fact]

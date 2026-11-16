@@ -53,9 +53,27 @@ public class CategoryConverter : FormatConverter
     protected override string Format(object value) => Formats.Category(value.ToString());
 }
 
+public class NumberConverter : FormatConverter
+{
+    protected override string Format(object value) => Formats.Number(System.Convert.ToInt64(value, CultureInfo.InvariantCulture));
+}
+
 public class RoleConverter : FormatConverter
 {
     protected override string Format(object value) => Formats.Role(value.ToString());
+}
+
+public class MetricConverter : IValueConverter
+{
+    public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        value is null
+            ? "—"
+            : Formats.Metric(
+                System.Convert.ToDouble(value, CultureInfo.InvariantCulture),
+                int.TryParse(parameter as string, CultureInfo.InvariantCulture, out var decimals) ? decimals : 3);
+
+    public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
+        throw new NotSupportedException();
 }
 
 public class CountConverter : IValueConverter

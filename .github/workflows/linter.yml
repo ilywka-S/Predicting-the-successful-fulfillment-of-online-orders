@@ -1,0 +1,30 @@
+name: .NET Lint & Format
+
+on:
+  push:
+    branches: [ "main", "staging" ]
+  pull_request:
+    branches: [ "main", "staging" ]
+
+jobs:
+  lint:
+    name: Code Format & Static Analysis
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore OrderSense.Backend.slnf
+
+      - name: Verify code formatting (dotnet format)
+        run: dotnet format OrderSense.Backend.slnf --verify-no-changes --no-restore
+
+      - name: Build & Run Roslyn Analyzers
+        run: dotnet build OrderSense.Backend.slnf --configuration Release --no-restore --warnaserror

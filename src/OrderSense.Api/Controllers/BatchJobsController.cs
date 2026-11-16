@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -10,7 +10,7 @@ using OrderSense.Api.Data;
 using OrderSense.Api.Data.Entities;
 using OrderSense.Api.Dtos;
 using OrderSense.Api.Predictions;
-using System.Text.Json; 
+using System.Text.Json;
 using Hangfire;
 using Npgsql;
 namespace OrderSense.Api.Controllers;
@@ -101,7 +101,7 @@ public class BatchJobsController(AppDbContext db, IBackgroundJobClient jobs, Tim
         var dto = BatchJobMapping.ToDto(job);
         return AcceptedAtRoute("GetBatchJob", new { id = job.Id }, dto);
     }
-        [HttpPost("predict-missing", Name = "PredictMissingOrders")]
+    [HttpPost("predict-missing", Name = "PredictMissingOrders")]
     [Authorize(Roles = Roles.Admin)]
     [ProducesResponseType<BatchJobDto>(StatusCodes.Status202Accepted)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -221,6 +221,27 @@ public class BatchJobsController(AppDbContext db, IBackgroundJobClient jobs, Tim
             .ToListAsync(ct);
 
         return new PagedResponse<BatchResultDto>(items.Select(BatchJobMapping.ToDto).ToList(), page, pageSize, total);
+    }
+
+    [HttpGet("{id:guid}/summary", Name = "GetBatchJobSummary")]
+    [ProducesResponseType<BatchJobSummaryDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
+    public async Task<ActionResult<BatchJobSummaryDto>> GetSummary(Guid id, [Range(1, 50)] int top = 8, CancellationToken ct = default)
+    {
+        var job = await VisibleJobs().SingleOrDefaultAsync(j => j.Id == id, ct);
+
+        if (job is null)
+        {
+            return JobNotFound(id);
+        }
+
+        if (job.Status is BatchJobStatus.Queued or BatchJobStatus.Running)
+        {
+            return Problem(statusCode: StatusCodes.Status409Conflict, title: "Batch job is not finished yet");
+        }
+
+        return await BatchSummary.BuildAsync(db, job, top, ct);
     }
 
     [HttpGet("{id:guid}/export", Name = "ExportBatchJob")]

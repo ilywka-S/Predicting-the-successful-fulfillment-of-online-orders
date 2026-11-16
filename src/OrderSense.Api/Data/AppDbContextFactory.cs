@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
 namespace OrderSense.Api.Data;
@@ -11,7 +11,7 @@ public class AppDbContextFactory : IDesignTimeDbContextFactory<AppDbContext>
             .UseNpgsql("Host=localhost;Database=ordersense")
             .UseSnakeCaseNamingConvention()
             .Options;
-        
+
         return new AppDbContext(options);
     }
 }

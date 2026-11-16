@@ -1,5 +1,6 @@
 using OrderSense.Contracts;
 namespace OrderSense.PredictionService;
+
 public static class ModelEndpoints
 {
     public static IResult Get(ModelInfoService service)

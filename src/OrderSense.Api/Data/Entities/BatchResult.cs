@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
 namespace OrderSense.Api.Data.Entities;
@@ -14,7 +14,7 @@ public class BatchResult
 
     [Column(TypeName = "jsonb")]
     public required string Input { get; set; }
-    
+
     public float? Probability { get; set; }
 
     public RiskLevel? RiskLevel { get; set; }

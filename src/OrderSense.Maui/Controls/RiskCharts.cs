@@ -73,11 +73,12 @@ public static class RiskCharts
                 LabelsPaint = new SolidColorPaint(Muted),
                 SeparatorsPaint = null,
                 MinStep = 1,
+                ForceStepToMin = dimension != "day",
             },
         ];
     }
 
-    public static ICartesianAxis[] PercentAxes() =>
+    public static ICartesianAxis[] PercentAxes(IReadOnlyList<AnalyticsPointDto> points, bool rows = false) =>
     [
         new Axis
         {
@@ -85,20 +86,29 @@ public static class RiskCharts
             NamePaint = new SolidColorPaint(Muted),
             NameTextSize = 11,
             MinLimit = 0,
-            Labeler = Percent,
+            MaxLimit = rows ? RowLimit(points) : LineLimit(points),
+            Labeler = value => value > 100 ? string.Empty : Percent(value),
             TextSize = 11,
             LabelsPaint = new SolidColorPaint(Muted),
             SeparatorsPaint = new SolidColorPaint(Grid, 1),
         },
     ];
 
+    public static double? RowLimit(IReadOnlyList<AnalyticsPointDto> points) =>
+        points.Max(Share) is double max && max > 0 ? max * 1.3 : null;
+
+    public static double? LineLimit(IReadOnlyList<AnalyticsPointDto> points) =>
+        points.Max(Share) is double max && max > 0 ? Math.Min(100, Math.Ceiling(max * 1.1 / 10) * 10) : null;
+
     public static string Label(string? key, string dimension) => dimension switch
     {
         "day" when DateTime.TryParseExact(key, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var day)
             => day.ToString("dd.MM", CultureInfo.InvariantCulture),
         "category" => Formats.Category(key),
+        _ when string.IsNullOrEmpty(key) => "Не вказано",
         "seller" => Formats.ShortId(key),
-        _ => key ?? "—",
+        "payment" => Formats.PaymentType(key),
+        _ => key,
     };
 
     public static string Tooltip(IReadOnlyList<AnalyticsPointDto> points, int index)
@@ -147,7 +157,7 @@ public class RiskLabelAxesConverter : IValueConverter
 public class PercentAxesConverter : IValueConverter
 {
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
-        RiskCharts.PercentAxes();
+        RiskCharts.PercentAxes(value as IReadOnlyList<AnalyticsPointDto> ?? []);
 
     public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
         throw new NotSupportedException();

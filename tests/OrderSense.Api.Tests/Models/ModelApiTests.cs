@@ -4,6 +4,7 @@ using OrderSense.Api.Dtos;
 using OrderSense.Api.Tests.Infrastructure;
 using OrderSense.Api.Tests.Orders;
 namespace OrderSense.Api.Tests.Models;
+
 [Collection(ApiCollection.Name)]
 public class ModelApiTests(ApiFactory factory)
 {

@@ -20,7 +20,7 @@ public class JwtAuthHandlerTests
         var innerHandler = new TestHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK));
         var handler = new JwtAuthHandler(tokenManagerMock.Object) { InnerHandler = innerHandler };
         var client = new HttpClient(handler);
-        
+
         var request = new HttpRequestMessage(HttpMethod.Get, "https://api.ordersense.local/test");
 
         // Act
@@ -39,15 +39,15 @@ public class JwtAuthHandlerTests
         var tokenManagerMock = new Mock<IAuthTokenManager>();
         tokenManagerMock.Setup(x => x.GetAccessTokenAsync(false, It.IsAny<CancellationToken>()))
             .ReturnsAsync("old_token");
-        
+
         tokenManagerMock.Setup(x => x.GetAccessTokenAsync(true, It.IsAny<CancellationToken>()))
             .ReturnsAsync("new_token");
 
-        var innerHandler = new TestHttpMessageHandler(req => 
+        var innerHandler = new TestHttpMessageHandler(req =>
         {
             if (req.Headers.Authorization?.Parameter == "old_token")
                 return new HttpResponseMessage(HttpStatusCode.Unauthorized);
-            
+
             return new HttpResponseMessage(HttpStatusCode.OK);
         });
 
@@ -71,7 +71,7 @@ public class JwtAuthHandlerTests
         var tokenManagerMock = new Mock<IAuthTokenManager>();
         tokenManagerMock.Setup(x => x.GetAccessTokenAsync(false, It.IsAny<CancellationToken>()))
             .ReturnsAsync("old_token");
-        
+
         tokenManagerMock.Setup(x => x.GetAccessTokenAsync(true, It.IsAny<CancellationToken>()))
             .ReturnsAsync((string?)null);
 
@@ -89,7 +89,7 @@ public class JwtAuthHandlerTests
         Assert.Equal(1, innerHandler.CallCount);
     }
 
-    private class TestHttpMessageHandler : HttpMessageHandler
+    private sealed class TestHttpMessageHandler : HttpMessageHandler
     {
         private readonly Func<HttpRequestMessage, HttpResponseMessage> _responseFunc;
 

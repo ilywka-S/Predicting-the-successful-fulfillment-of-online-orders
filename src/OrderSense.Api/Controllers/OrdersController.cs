@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OrderSense.Api.Data;
@@ -44,10 +44,10 @@ public class OrdersController(AppDbContext db) : ControllerBase
 
         if (query.RiskLevel is { } risk)
         {
-            orders = orders.Where(o => o.Predictions
-                .OrderByDescending(p => p.CreatedAt)
-                .Select(p => (RiskLevel?)p.RiskLevel)
-                .FirstOrDefault() == risk);
+            orders = orders
+                .Where(o => o.Predictions
+                    .Any(p => p.RiskLevel == risk && !db.Predictions
+                        .Any(n => n.OrderId == p.OrderId && n.CreatedAt > p.CreatedAt)));
         }
 
         if (!string.IsNullOrWhiteSpace(query.Search))
@@ -60,7 +60,7 @@ public class OrdersController(AppDbContext db) : ControllerBase
         orders = query.Sort == OrderSort.DateAsc
             ? orders.OrderBy(o => o.PurchasedAt).ThenBy(o => o.Id)
             : orders.OrderByDescending(o => o.PurchasedAt).ThenBy(o => o.Id);
-        
+
         var items = await orders
             .Skip((query.Page - 1) * query.PageSize)
             .Take(query.PageSize)
@@ -77,7 +77,7 @@ public class OrdersController(AppDbContext db) : ControllerBase
 
         return new PagedResponse<OrderListItemDto>(items, query.Page, query.PageSize, total);
     }
-    
+
     [HttpGet("{id}", Name = "GetOrder")]
     [ProducesResponseType<OrderDetailsDto>(StatusCodes.Status200OK)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]

@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Hosting.Internal;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -17,7 +17,7 @@ public class DemoDataSeederTests
     {
         await using var database = await TestDatabase.CreateAsync();
         await using var db = database.CreateContext();
-        
+
         var seeded = await DemoDataSeeder.SeedAsync(db, Development, 200, NullLogger.Instance);
 
         await using var check = database.CreateContext();

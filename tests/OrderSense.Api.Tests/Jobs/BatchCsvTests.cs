@@ -5,6 +5,7 @@ using OrderSense.Api.Dtos;
 using OrderSense.Api.Predictions;
 using OrderSense.Api.Tests.Infrastructure;
 namespace OrderSense.Api.Tests.Jobs;
+
 public class BatchCsvTests
 {
     private const string Header = "itemsCount,totalPrice,freightShare,totalWeightG,promisedDays,distanceKm,customerState,sellerState,mainCategory,paymentType,installments,purchaseDayOfWeek";
@@ -121,7 +122,7 @@ public class BatchCsvTests
         Assert.Contains("Too many rows", result.FileErrors[0]);
         Assert.True(stream.BytesRead < stream.Length - 100000, $"Read {stream.BytesRead} of {stream.Length} bytes");
     }
-        [Theory]
+    [Theory]
     [InlineData("1.5,120.50,0.15,800,20,450,SP,RJ,cama_mesa_banho,credit_card,1,2", "itemsCount")]
     [InlineData("1,120.50,0.15,800,20,450,SP,RJ,cama_mesa_banho,credit_card,1,2.5", "purchaseDayOfWeek")]
     [InlineData("1,120.50,0.15,800,20,450,SP,RJ,cama_mesa_banho,credit_card,1.5,2", "installments")]

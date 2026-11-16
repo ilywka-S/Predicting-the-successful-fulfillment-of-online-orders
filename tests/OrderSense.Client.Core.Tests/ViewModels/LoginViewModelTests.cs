@@ -20,8 +20,8 @@ public class LoginViewModelTests
         _navigationMock = new Mock<IAuthNavigation>();
 
         _viewModel = new LoginViewModel(
-            _apiClientMock.Object, 
-            _tokenStorageMock.Object, 
+            _apiClientMock.Object,
+            _tokenStorageMock.Object,
             _navigationMock.Object
         );
     }
@@ -34,9 +34,9 @@ public class LoginViewModelTests
         _viewModel.Password = "password123";
 
         var loginResponse = new AuthResponse
-        { 
-            AccessToken = "fake_access", 
-            RefreshToken = "fake_refresh" 
+        {
+            AccessToken = "fake_access",
+            RefreshToken = "fake_refresh"
         };
 
         var userProfile = new UserDto { Role = "manager" };
@@ -68,17 +68,56 @@ public class LoginViewModelTests
 
         _apiClientMock
             .Setup(x => x.LoginAsync(It.IsAny<LoginRequest>()))
-            .ThrowsAsync(new Exception("Invalid credentials")); 
+            .ThrowsAsync(new UnauthorizedAccessException("Invalid credentials"));
 
         // Act
         await _viewModel.LoginCommand.ExecuteAsync(null);
 
         // Assert
         _tokenStorageMock.Verify(x => x.SaveTokensAsync(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
-        
+
         _navigationMock.Verify(x => x.NavigateToMainAsync(), Times.Never);
-        
+
         _viewModel.ErrorMessage.Should().NotBeNullOrEmpty();
+    }
+
+    [Fact]
+    public async Task LoginAsync_WrongPassword_ShowsInvalidCredentials()
+    {
+        _viewModel.Email = "test@example.com";
+        _viewModel.Password = "WrongPass1";
+        SetupLoginFailure("Invalid email or password");
+
+        await _viewModel.LoginCommand.ExecuteAsync(null);
+
+        _viewModel.ErrorMessage.Should().Be("Невірний email або пароль.");
+    }
+
+    [Fact]
+    public async Task LoginAsync_LockedAccount_ShowsLockoutMessage()
+    {
+        _viewModel.Email = "test@example.com";
+        _viewModel.Password = "Password1";
+        SetupLoginFailure("Account is temporarily locked after too many failed attempts");
+
+        await _viewModel.LoginCommand.ExecuteAsync(null);
+
+        _viewModel.ErrorMessage.Should().Be("Забагато невдалих спроб входу. Спробуйте через 5 хвилин.");
+        _navigationMock.Verify(x => x.NavigateToMainAsync(), Times.Never);
+    }
+
+    [Fact]
+    public async Task LoginAsync_ServerError_ShowsServerMessage()
+    {
+        _viewModel.Email = "test@example.com";
+        _viewModel.Password = "Password1";
+        _apiClientMock
+            .Setup(x => x.LoginAsync(It.IsAny<LoginRequest>()))
+            .ThrowsAsync(new ApiException("Server error", 500, null, null, null));
+
+        await _viewModel.LoginCommand.ExecuteAsync(null);
+
+        _viewModel.ErrorMessage.Should().Be("Помилка сервера. Спробуйте пізніше.");
     }
 
     [Fact]
@@ -93,7 +132,12 @@ public class LoginViewModelTests
 
         // Assert
         _apiClientMock.Verify(x => x.LoginAsync(It.IsAny<LoginRequest>()), Times.Never);
-        
+
         _navigationMock.Verify(x => x.NavigateToMainAsync(), Times.Never);
     }
+
+    private void SetupLoginFailure(string title) =>
+        _apiClientMock
+            .Setup(x => x.LoginAsync(It.IsAny<LoginRequest>()))
+            .ThrowsAsync(new ApiException<ProblemDetails>("Unauthorized", 401, null, null, new ProblemDetails { Title = title }, null));
 }

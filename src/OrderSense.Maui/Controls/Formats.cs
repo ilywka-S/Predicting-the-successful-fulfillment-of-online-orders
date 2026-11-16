@@ -25,6 +25,8 @@ public static class Formats
         : grams < 1000 ? grams.ToString("0", Numbers) + Nbsp + "г"
         : (grams / 1000).ToString("#,0.##", Numbers) + Nbsp + "кг";
 
+    public static string Number(long n) => n.ToString("#,0", Numbers);
+
     public static string Count(long n, string one, string few, string many)
     {
         var lastTwo = n % 100;
@@ -58,6 +60,28 @@ public static class Formats
             _ => number.ToString("#,0.##", Numbers),
         };
     }
+
+    public static string Metric(double value, int decimals = 3) =>
+        double.IsNaN(value) ? "—" : value.ToString("0." + new string('0', decimals), Numbers);
+
+    public static string Feature(string? feature) =>
+        feature is not null && Features.TryGetValue(feature, out var label) ? label : feature ?? "—";
+
+    private static readonly Dictionary<string, string> Features = new()
+    {
+        ["ItemsCount"] = "Кількість товарів",
+        ["TotalPrice"] = "Сума замовлення",
+        ["FreightShare"] = "Частка вартості доставки",
+        ["TotalWeightG"] = "Загальна вага",
+        ["PromisedDays"] = "Обіцяний термін доставки",
+        ["DistanceKm"] = "Відстань продавець → клієнт",
+        ["CustomerState"] = "Штат клієнта",
+        ["SellerState"] = "Штат продавця",
+        ["MainCategory"] = "Категорія товару",
+        ["PaymentType"] = "Спосіб оплати",
+        ["Installments"] = "Кількість платежів",
+        ["PurchaseDayOfWeek"] = "День тижня покупки",
+    };
 
     public static string DayOfWeek(long day) => day switch
     {
@@ -110,7 +134,7 @@ public static class Formats
 
     public static string Category(string? category)
     {
-        if (string.IsNullOrEmpty(category))
+        if (string.IsNullOrEmpty(category) || category == "unknown")
         {
             return "Без категорії";
         }

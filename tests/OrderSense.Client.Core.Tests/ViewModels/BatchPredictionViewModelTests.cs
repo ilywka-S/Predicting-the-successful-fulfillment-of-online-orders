@@ -16,30 +16,31 @@ public class BatchPredictionViewModelTests
         // Arrange
         var apiClientMock = new Mock<IClient>();
         var signalRServiceMock = new Mock<ISignalRService>();
-        
+
         var fileServiceMock = new Mock<IFileService>();
 
         var viewModel = new BatchPredictionViewModel(
-            apiClientMock.Object, 
-            signalRServiceMock.Object, 
-            fileServiceMock.Object);
+            apiClientMock.Object,
+            signalRServiceMock.Object,
+            fileServiceMock.Object,
+            Mock.Of<IBatchNavigation>());
 
         viewModel.Subscribe();
 
         var foreignJobId = Guid.NewGuid();
-        
+
         var incomingProgress = new BatchJobProgress(
             JobId: foreignJobId,
             ProcessedRows: 50,
             TotalRows: 100,
-            Status: "running" 
+            Status: "running"
         );
 
         // Act
         signalRServiceMock.Raise(s => s.OnBatchJobProgress += null, incomingProgress);
 
         // Assert
-        Assert.Equal(0.0, viewModel.Progress); 
+        Assert.Equal(0.0, viewModel.Progress);
         Assert.False(viewModel.IsFinished);
     }
 }

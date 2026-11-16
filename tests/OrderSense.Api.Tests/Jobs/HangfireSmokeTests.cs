@@ -4,6 +4,7 @@ using Hangfire.Storage.Monitoring;
 using Microsoft.Extensions.DependencyInjection;
 using OrderSense.Api.Tests.Infrastructure;
 namespace OrderSense.Api.Tests.Jobs;
+
 public static class SmokeJob
 {
     public static void Run()

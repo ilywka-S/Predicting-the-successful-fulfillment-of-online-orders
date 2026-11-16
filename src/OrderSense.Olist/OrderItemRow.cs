@@ -1,55 +1,55 @@
-﻿using CsvHelper.Configuration.Attributes;
+using CsvHelper.Configuration.Attributes;
 
 namespace OrderSense.Olist;
 
 public sealed class OrderItemRow
 {
     [Name("order_id")]
-    public string OrderId 
-    { 
-        get; 
-        set; 
+    public string OrderId
+    {
+        get;
+        set;
     } = "";
 
     [Name("order_item_id")]
-    public int OrderItemId 
-    { 
-        get; 
-        set; 
+    public int OrderItemId
+    {
+        get;
+        set;
     }
 
     [Name("product_id")]
-    public string ProductId 
-    { 
-        get; 
-        set; 
+    public string ProductId
+    {
+        get;
+        set;
     } = "";
 
     [Name("seller_id")]
-    public string SellerId 
-    { 
-        get; 
-        set; 
+    public string SellerId
+    {
+        get;
+        set;
     } = "";
 
     [Name("shipping_limit_date")]
-    public DateTime? ShippingLimitDate 
-    { 
-        get; 
-        set; 
+    public DateTime? ShippingLimitDate
+    {
+        get;
+        set;
     }
 
     [Name("price")]
-    public decimal Price 
-    { 
-        get; 
-        set; 
+    public decimal Price
+    {
+        get;
+        set;
     }
 
     [Name("freight_value")]
-    public decimal FreightValue 
-    { 
-        get; 
-        set; 
+    public decimal FreightValue
+    {
+        get;
+        set;
     }
 }

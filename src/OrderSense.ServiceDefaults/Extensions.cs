@@ -112,7 +112,7 @@ public static class Extensions
         {
             Predicate = r => r.Tags.Contains("live")
         });
-        
+
         if (app.Environment.IsDevelopment())
         {
             app.MapHealthChecks(HealthEndpointPath);
