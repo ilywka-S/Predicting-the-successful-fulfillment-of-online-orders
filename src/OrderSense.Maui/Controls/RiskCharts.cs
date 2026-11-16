@@ -86,7 +86,7 @@ public static class RiskCharts
             NamePaint = new SolidColorPaint(Muted),
             NameTextSize = 11,
             MinLimit = 0,
-            MaxLimit = rows ? RowLimit(points) : null,
+            MaxLimit = rows ? RowLimit(points) : LineLimit(points),
             Labeler = value => value > 100 ? string.Empty : Percent(value),
             TextSize = 11,
             LabelsPaint = new SolidColorPaint(Muted),
@@ -96,6 +96,9 @@ public static class RiskCharts
 
     public static double? RowLimit(IReadOnlyList<AnalyticsPointDto> points) =>
         points.Max(Share) is double max && max > 0 ? max * 1.3 : null;
+
+    public static double? LineLimit(IReadOnlyList<AnalyticsPointDto> points) =>
+        points.Max(Share) is double max && max > 0 ? Math.Min(100, Math.Ceiling(max * 1.1 / 10) * 10) : null;
 
     public static string Label(string? key, string dimension) => dimension switch
     {
