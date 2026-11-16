@@ -38,7 +38,7 @@ public class WhatIfViewModelTests
 
     [Theory]
     [InlineData("0")]
-    [InlineData("181")]
+    [InlineData("366")]
     [InlineData("abc")]
     [InlineData("")]
     public async Task PromisedDays_OutOfRange_ShowsErrorAndBlocksRun(string days)
@@ -50,6 +50,30 @@ public class WhatIfViewModelTests
         _viewModel.PromisedDaysError.Should().NotBeEmpty();
         _viewModel.IsValid.Should().BeFalse();
         _viewModel.RunCommand.CanExecute(null).Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task PromisedDays_AboveLimit_ShowsApiLimit()
+    {
+        await _viewModel.LoadCommand.ExecuteAsync(OrderId);
+
+        _viewModel.PromisedDaysText = "366";
+
+        _viewModel.PromisedDaysError.Should().Be("Вкажіть від 1 до 365 днів.");
+    }
+
+    [Theory]
+    [InlineData("1")]
+    [InlineData("181")]
+    [InlineData("365")]
+    public async Task PromisedDays_WithinApiLimit_AllowsRun(string days)
+    {
+        await _viewModel.LoadCommand.ExecuteAsync(OrderId);
+
+        _viewModel.PromisedDaysText = days;
+
+        _viewModel.PromisedDaysError.Should().BeEmpty();
+        _viewModel.RunCommand.CanExecute(null).Should().BeTrue();
     }
 
     [Fact]
