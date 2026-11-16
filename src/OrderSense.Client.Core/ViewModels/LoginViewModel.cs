@@ -62,6 +62,10 @@ public partial class LoginViewModel : ObservableObject
             await _tokenStorage.SetRoleAsync(userRole);
             await _navigation.NavigateToMainAsync();
         }
+        catch (ApiException<ProblemDetails> ex) when (ex.StatusCode == 401 && IsLockout(ex.Result))
+        {
+            ErrorMessage = "Забагато невдалих спроб входу. Спробуйте через 5 хвилин.";
+        }
         catch (ApiException ex)
         {
             if (ex.StatusCode == 401)
@@ -70,7 +74,7 @@ public partial class LoginViewModel : ObservableObject
             }
             else
             {
-                ErrorMessage = "Помилка сервера або обліковий запис заблоковано.";
+                ErrorMessage = "Помилка сервера. Спробуйте пізніше.";
             }
         }
         catch (HttpRequestException)
@@ -86,4 +90,7 @@ public partial class LoginViewModel : ObservableObject
             IsBusy = false;
         }
     }
+
+    private static bool IsLockout(ProblemDetails? problem) =>
+        problem?.Title?.Contains("locked", StringComparison.OrdinalIgnoreCase) == true;
 }

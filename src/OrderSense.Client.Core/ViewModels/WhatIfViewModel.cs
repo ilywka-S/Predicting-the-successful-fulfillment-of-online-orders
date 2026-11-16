@@ -8,7 +8,7 @@ namespace OrderSense.Client.Core.ViewModels;
 
 public partial class WhatIfViewModel : ObservableObject
 {
-    public const int MaxPromisedDays = 180;
+    public const int MaxPromisedDays = 365;
     public const int MaxInstallments = 24;
 
     private static readonly FilterOption[] Payments =

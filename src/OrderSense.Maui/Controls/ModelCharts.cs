@@ -34,16 +34,20 @@ public static class ModelCharts
             LabelsPaint = new SolidColorPaint(Muted),
             SeparatorsPaint = null,
             MinStep = 1,
+            ForceStepToMin = true,
         },
     ];
 
-    public static ICartesianAxis[] ValueAxes() =>
+    public static ICartesianAxis[] ValueAxes(IReadOnlyList<FeatureImportanceDto> importances) =>
     [
         new Axis
         {
             Name = "Падіння PR-AUC без ознаки",
             NamePaint = new SolidColorPaint(Muted),
             NameTextSize = 11,
+            MinLimit = ValueLimit(importances, -1),
+            MaxLimit = ValueLimit(importances, 1),
+            MinStep = ValueStep(importances),
             Labeler = value => value.ToString("0.000", CultureInfo.InvariantCulture),
             TextSize = 11,
             LabelsPaint = new SolidColorPaint(Muted),
@@ -53,6 +57,39 @@ public static class ModelCharts
 
     public static string Importance(double value) =>
         (value > 0 ? "+" : string.Empty) + value.ToString("0.0000", CultureInfo.InvariantCulture);
+
+    public static double? ValueLimit(IReadOnlyList<FeatureImportanceDto> importances, int side)
+    {
+        var (min, max) = Range(importances);
+        if (max == min)
+        {
+            return null;
+        }
+
+        var edge = side < 0 ? min : max;
+
+        return edge == 0 ? 0 : edge + (side * (max - min) * 0.15);
+    }
+
+    public static double ValueStep(IReadOnlyList<FeatureImportanceDto> importances)
+    {
+        var (min, max) = Range(importances);
+        if (max == min)
+        {
+            return 0;
+        }
+
+        var raw = (max - min) / 3;
+        var magnitude = Math.Pow(10, Math.Floor(Math.Log10(raw)));
+        var residual = raw / magnitude;
+
+        return magnitude * (residual > 5 ? 10 : residual > 2 ? 5 : residual > 1 ? 2 : 1);
+    }
+
+    private static (double Min, double Max) Range(IReadOnlyList<FeatureImportanceDto> importances) =>
+        importances.Count == 0
+            ? (0, 0)
+            : (Math.Min(0, importances.Min(f => (double)f.Importance)), Math.Max(0, importances.Max(f => (double)f.Importance)));
 
     private static List<FeatureImportanceDto> Rows(IReadOnlyList<FeatureImportanceDto> importances) =>
         importances.Reverse().ToList();
@@ -95,7 +132,7 @@ public class ImportanceAxesConverter : IValueConverter
 public class ImportanceValueAxesConverter : IValueConverter
 {
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
-        ModelCharts.ValueAxes();
+        ModelCharts.ValueAxes(value as IReadOnlyList<FeatureImportanceDto> ?? []);
 
     public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
         throw new NotSupportedException();

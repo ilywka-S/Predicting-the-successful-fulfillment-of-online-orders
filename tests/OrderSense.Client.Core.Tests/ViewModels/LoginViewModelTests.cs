@@ -82,6 +82,45 @@ public class LoginViewModelTests
     }
 
     [Fact]
+    public async Task LoginAsync_WrongPassword_ShowsInvalidCredentials()
+    {
+        _viewModel.Email = "test@example.com";
+        _viewModel.Password = "WrongPass1";
+        SetupLoginFailure("Invalid email or password");
+
+        await _viewModel.LoginCommand.ExecuteAsync(null);
+
+        _viewModel.ErrorMessage.Should().Be("Невірний email або пароль.");
+    }
+
+    [Fact]
+    public async Task LoginAsync_LockedAccount_ShowsLockoutMessage()
+    {
+        _viewModel.Email = "test@example.com";
+        _viewModel.Password = "Password1";
+        SetupLoginFailure("Account is temporarily locked after too many failed attempts");
+
+        await _viewModel.LoginCommand.ExecuteAsync(null);
+
+        _viewModel.ErrorMessage.Should().Be("Забагато невдалих спроб входу. Спробуйте через 5 хвилин.");
+        _navigationMock.Verify(x => x.NavigateToMainAsync(), Times.Never);
+    }
+
+    [Fact]
+    public async Task LoginAsync_ServerError_ShowsServerMessage()
+    {
+        _viewModel.Email = "test@example.com";
+        _viewModel.Password = "Password1";
+        _apiClientMock
+            .Setup(x => x.LoginAsync(It.IsAny<LoginRequest>()))
+            .ThrowsAsync(new ApiException("Server error", 500, null, null, null));
+
+        await _viewModel.LoginCommand.ExecuteAsync(null);
+
+        _viewModel.ErrorMessage.Should().Be("Помилка сервера. Спробуйте пізніше.");
+    }
+
+    [Fact]
     public async Task LoginAsync_EmptyCredentials_DoesNotCallApi()
     {
         // Arrange
@@ -96,4 +135,9 @@ public class LoginViewModelTests
 
         _navigationMock.Verify(x => x.NavigateToMainAsync(), Times.Never);
     }
+
+    private void SetupLoginFailure(string title) =>
+        _apiClientMock
+            .Setup(x => x.LoginAsync(It.IsAny<LoginRequest>()))
+            .ThrowsAsync(new ApiException<ProblemDetails>("Unauthorized", 401, null, null, new ProblemDetails { Title = title }, null));
 }
