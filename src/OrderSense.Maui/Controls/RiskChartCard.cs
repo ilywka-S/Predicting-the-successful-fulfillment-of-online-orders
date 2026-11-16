@@ -60,6 +60,6 @@ public class RiskChartCard : ContentView
 
         _chart.Series = RiskCharts.RowSeries(points);
         _chart.YAxes = RiskCharts.LabelAxes(points, Dimension);
-        _chart.XAxes = RiskCharts.PercentAxes();
+        _chart.XAxes = RiskCharts.PercentAxes(points, rows: true);
     }
 }

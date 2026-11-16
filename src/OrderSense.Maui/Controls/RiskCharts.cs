@@ -78,7 +78,7 @@ public static class RiskCharts
         ];
     }
 
-    public static ICartesianAxis[] PercentAxes() =>
+    public static ICartesianAxis[] PercentAxes(IReadOnlyList<AnalyticsPointDto> points, bool rows = false) =>
     [
         new Axis
         {
@@ -86,12 +86,16 @@ public static class RiskCharts
             NamePaint = new SolidColorPaint(Muted),
             NameTextSize = 11,
             MinLimit = 0,
-            Labeler = Percent,
+            MaxLimit = rows ? RowLimit(points) : null,
+            Labeler = value => value > 100 ? string.Empty : Percent(value),
             TextSize = 11,
             LabelsPaint = new SolidColorPaint(Muted),
             SeparatorsPaint = new SolidColorPaint(Grid, 1),
         },
     ];
+
+    public static double? RowLimit(IReadOnlyList<AnalyticsPointDto> points) =>
+        points.Max(Share) is double max && max > 0 ? max * 1.3 : null;
 
     public static string Label(string? key, string dimension) => dimension switch
     {
@@ -150,7 +154,7 @@ public class RiskLabelAxesConverter : IValueConverter
 public class PercentAxesConverter : IValueConverter
 {
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture) =>
-        RiskCharts.PercentAxes();
+        RiskCharts.PercentAxes(value as IReadOnlyList<AnalyticsPointDto> ?? []);
 
     public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture) =>
         throw new NotSupportedException();
